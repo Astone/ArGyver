@@ -63,5 +63,7 @@ To do list
 					>	Create a hard link to one of the files in the index
 				>	Add the file to the index
 			  	
-			
-		
+Requirements
+------------
+python2.7
+python-paramiko
