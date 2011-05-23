@@ -15,6 +15,7 @@ class Config():
     defaults = {
         'hasher'            : 'client',
         'archive_snapshot'  : False,
+        'root'              : '.',
         'snapshot'          : 'snapshot/',
         'archive'           : 'archive/',
         'index'             : 'index.pkl',
