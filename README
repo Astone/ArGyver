@@ -16,10 +16,10 @@ To do list
 ----------
 
 1.  Basics
-	1.	Read a config file.
-	2.	Parse arguments on the command line.
-	3.	Display notices, warnings, errors etc.
-	4.	Maintain a log file with notices, warnings, errors etc.
+	1 X	Read a config file.
+	2	Parse arguments on the command line.
+	3 X	Display notices, warnings, errors etc.
+	4 X Maintain a log file with notices, warnings, errors etc.
 
 2.	Communication
 	1.	Assuming the script exists on both the server and the client, we need
