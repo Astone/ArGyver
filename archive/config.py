@@ -11,14 +11,15 @@ class Config():
     parser = None
 
     defaults = {
-        'hasher'   : 'client',
-        'snapshot' : 'snapshot/',
-        'archive'  : 'archive/',
-        'index'    : 'index.pkl',
-        'hostname' : 'localhost',
-        'port'     : '22',
-        'username' : None,
-        'password' : None,
+        'hasher'            : 'client',
+        'archive_snapshot'  : False,
+        'snapshot'          : 'snapshot/',
+        'archive'           : 'archive/',
+        'index'             : 'index.pkl',
+        'hostname'          : 'localhost',
+        'port'              : '22',
+        'username'          : None,
+        'password'          : None,
     }
     
     vars = {}
@@ -50,6 +51,7 @@ class Config():
     def config_check(self):
         notice('Configuration check')
         self.get_hasher()
+        self.get_archive_snapshot()
         self.get_server_root()
         self.get_server_snapshot()
         self.get_server_archive()
@@ -67,6 +69,14 @@ class Config():
                 fatal('options.hasher should be "client" or "server".')
             self.vars['hasher'] = hasher
         return self.vars['hasher']
+
+    def get_archive_snapshot(self):
+        if not 'archive_snapshot' in self.vars:
+            archive_snapshot = self.get('options', 'archive_snapshot')
+            if not archive_snapshot in ['true', 'false']:
+                fatal('options.archive_snapshot should be "true" or "false".')
+            self.vars['archive_snapshot'] = {'true': True, 'false': False}[archive_snapshot]
+        return self.vars['archive_snapshot']
 
     def get_server_root(self, auto_fix = True):
         if not 'server_root' in self.vars:
@@ -166,7 +176,7 @@ class Config():
             root = self.get('client', 'root')
             ssh = self.get_client_ssh()
             if not ssh.is_folder(root):
-                fatal("The client root \"%s\" does not exist." % root)
+                fatal("The client root \"%s\" does not exist or is not readable." % root)
             self.vars['client_root'] = root
         return self.vars['client_root']
 
@@ -179,7 +189,7 @@ class Config():
                 if s[:4] == 'src-':
                     path = os.path.join(root, self.get('client', s))
                     if not ssh.is_folder(path):
-                        error("The client source folder \"%s\" does not exist." % path)
+                        error("The client source folder \"%s\" does not exist or is not readable." % path)
                     else:
                         src[s[4:]] = path
             if len(src) == 0:

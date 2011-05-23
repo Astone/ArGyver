@@ -31,13 +31,19 @@ class SshClient(paramiko.SSHClient):
             notice('OK')
         
     def is_folder(self, path):
+        debug("Is \"%s\" a readable folder on the client?" % path, False)
         try:
             self.sftp.listdir_attr(path)
         except Exception as e:
             if e.errno == 2:
+                debug("no, it does not exist")
+                return False
+            elif e.errno == 13:
+                debug("no, it is not readable")
                 return False
             else:
                 fatal(e)
         else:
+            debug("yes")
             return True 
     
