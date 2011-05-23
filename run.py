@@ -1,6 +1,5 @@
 #!/usr/bin/python
 from archive import *
-from archive.verbose import *
 
-c = config.Config('archive.conf')
+c = config.Config()
 print c.vars

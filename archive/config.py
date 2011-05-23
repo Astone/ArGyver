@@ -1,5 +1,6 @@
 from verbose import *
 from ssh import SshClient
+from argparse import ArgumentParser
 from ConfigParser import SafeConfigParser
 from stat import *
 import pickle
@@ -7,8 +8,9 @@ import os
 
 class Config():
     
+    argparser = None
     config_file = None
-    parser = None
+    confparser = None
 
     defaults = {
         'hasher'   : 'client',
@@ -20,14 +22,39 @@ class Config():
         'username' : None,
         'password' : None,
     }
-    
+
+    args = {}    
     vars = {}
 
-    def __init__(self, config_file):
-        self.set_file(config_file)
-        self.load()
-    
-    def set_file(self, config_file):
+    def __init__(self):
+        self.parse_arguments()
+        set_log_file(self.args.log_file, self.args.log_level)
+        set_verbosity(self.args.verbosity)
+        self.load_config_file(self.args.config_file)
+
+    def parse_arguments(self):
+        self.argparser = ArgumentParser(description='Create a snapshot and archive of your files.')
+
+        self.argparser.add_argument(
+            '-c', dest='config_file', required=True,
+            help='Specify a valid config file')
+
+        self.argparser.add_argument(
+            '-l', dest='log_file',
+            help='The verbosity level. 0=quiet, 1=fatal errors, 2=errors, 3=warnings, 4=notices, 5=debug')
+
+        self.argparser.add_argument(
+            '-ll', dest='log_level', type=int, choices=range(0, 6), default=5,
+            help='The verbosity level for the log file. 0=quiet, 1=fatal errors, 2=errors, 3=warnings, 4=notices, 5=debug')
+
+        self.argparser.add_argument(
+            '-v', dest='verbosity', type=int, choices=range(0, 6), default=4,
+            help='The verbosity level. 0=quiet, 1=fatal errors, 2=errors, 3=warnings, 4=notices, 5=debug')
+
+        self.args = self.argparser.parse_args()
+        
+    def load_config_file(self, config_file):
+        config_file = str(config_file)
         notice("Loading config file \"%s\"" % config_file, False)
         if os.path.exists(config_file):
             self.config_file = config_file
@@ -35,11 +62,10 @@ class Config():
         else:
             fatal("FAILED")
 
-    def load(self):
         notice("Parsing config file \"%s\"" % self.config_file, False)
         try:
-            self.parser = SafeConfigParser(defaults=self.defaults, allow_no_value=True)
-            self.parser.read(self.config_file)
+            self.confparser = SafeConfigParser(defaults=self.defaults, allow_no_value=True)
+            self.confparser.read(self.config_file)
         except Exception as e:
             error("FAILED")
             fatal(str(e))
@@ -175,7 +201,7 @@ class Config():
         root = self.get_client_root()
         if not 'client_src_list' in self.vars:
             src = {}
-            for s in self.parser.options('client'):
+            for s in self.confparser.options('client'):
                 if s[:4] == 'src-':
                     path = os.path.join(root, self.get('client', s))
                     if not ssh.is_folder(path):
@@ -190,20 +216,23 @@ class Config():
     def get(self, section, option):
         debug("Get config option %s.%s" % (section, option), False)
         try:
-            value = self.parser.get(section, option)
+            value = self.confparser.get(section, option)
         except Exception as e:
             error("FAILED")
             fatal(str(e))
         else:
             if value == '':
                 value = None
-            debug(value)
+            if option == 'password' and not value == None:
+                debug('***')
+            else:
+                debug(value)
             return value
 
     def getint(self, section, option):
         debug("Get config option %s.%s as integer" % (section, option), False)
         try:
-            value = self.parser.getint(section, option)
+            value = self.confparser.getint(section, option)
         except Exception as e:
             error("FAILED")
             fatal(str(e))

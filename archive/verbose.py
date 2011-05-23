@@ -7,13 +7,44 @@ WARNING = 4
 ERROR   = 8
 FATAL   = 16
 
-SCREEN_LEVEL = DEBUG | NOTICE | WARNING | ERROR | FATAL
-LOG_LEVEL    = DEBUG | NOTICE | WARNING | ERROR | FATAL
+SCREEN_LEVEL = 0
+LOG_LEVEL    = 0
 
 VERBOSE_TEXT = ""
-VERBOSE_LOG_FILE = open("/tmp/archive.log", 'w')
+VERBOSE_LOG_FILE = None
 VERBOSE_TIME = datetime.now()
- 
+
+def set_log_file(log_file, v):
+    global VERBOSE_LOG_FILE, LOG_LEVEL
+    if log_file == None:
+        return
+    VERBOSE_LOG_FILE = open(log_file, 'w')
+    (LOG_LEVEL, v) = get_verbosity(v)
+    notice("Log level set to: %s" % v)
+
+def set_verbosity(v):
+    global SCREEN_LEVEL
+    (SCREEN_LEVEL, v) = get_verbosity(v)
+    notice("Verbosity level set to: %s" % v)
+
+def get_verbosity(v = None):
+    global SCREEN_LEVEL
+    
+    if v == None:
+        v = SCREEN_LEVEL 
+
+    v_int = [
+        0,
+        FATAL,
+        FATAL | ERROR,
+        FATAL | ERROR | WARNING,
+        FATAL | ERROR | WARNING | NOTICE,
+        FATAL | ERROR | WARNING | NOTICE | DEBUG]
+
+    v_str = ['quiet', 'fatal errors', 'errors', 'warnings', 'notices', 'debug']
+
+    return (v_int[v], v_str[v])
+
 def debug(msg, show=True):
     verbose(DEBUG, msg, 'magenta', show)
 
