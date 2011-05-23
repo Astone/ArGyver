@@ -29,7 +29,7 @@ class SshClient(paramiko.SSHClient):
             fatal(str(e))
         else:
             notice('OK')
-        
+       
     def is_folder(self, path):
         debug("Is \"%s\" a readable folder on the client?" % path, False)
         try:

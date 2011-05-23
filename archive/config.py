@@ -1,12 +1,13 @@
 from verbose import *
 from ssh import SshClient
+from index import *
 from argparse import ArgumentParser
 from ConfigParser import SafeConfigParser
 from stat import *
 import pickle
 import os
 
-class Config():
+class Config(object):
     
     argparser = None
     config_file = None
@@ -33,7 +34,7 @@ class Config():
         set_log_file(self.args.log_file, self.args.log_level)
         set_verbosity(self.args.verbosity)
         self.load_config_file(self.args.config_file)
-
+        
     def parse_arguments(self):
         self.argparser = ArgumentParser(description='Create a snapshot and archive of your files.')
 
@@ -161,13 +162,18 @@ class Config():
     def get_server_index(self, auto_fix = True):
         if not 'server_index' in self.vars:
             index = self.get_server_index_file(auto_fix)
-            notice("Loading index file \"%s\"" % index)
+            notice("Loading index file \"%s\"" % index, False)
             try:
-                index = pickle.load(open(index, 'w'))
+                index = pickle.load(open(index, 'r'))
             except Exception as e:
-                fatal(str(e))
-            else:
-                notice("OK")
+                e = str(e)
+                if e == "":
+                    e = 'Invalid index file! File cannot be read.'
+                fatal(e)
+            for idx in INITIAL_INDEX.keys():
+                if not idx in index:
+                    fatal("Invalid index file! Index \"%s\" not found." % idx)
+            notice("OK")
             self.vars['server_index'] = index
         return self.vars['server_index']
 
@@ -179,7 +185,7 @@ class Config():
                 debug("The index file \"%s\" does not exist." % index)
                 if auto_fix:
                     try:
-                        pickle.dump({}, open(index, 'w'))
+                        pickle.dump(INITIAL_INDEX, open(index, 'w'), 2)
                     except Exception as e:
                         fatal(str(e))
                     else:

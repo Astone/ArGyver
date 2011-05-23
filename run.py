@@ -1,5 +1,10 @@
 #!/usr/bin/python
 from archive import *
 
-c = config.Config()
-print c.vars
+cnf = config.Config()
+
+idx = index.Index(cnf)
+idx.rebuild()
+#idx.update()
+
+#print idx.index
