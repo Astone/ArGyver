@@ -1,5 +1,6 @@
 import paramiko
 from verbose import *
+from binascii import a2b_hex
 
 class SshClient(paramiko.SSHClient): 
     
@@ -47,3 +48,11 @@ class SshClient(paramiko.SSHClient):
             debug("yes")
             return True 
     
+    def md5(self, path):
+        debug("Get the md5 hash of \"%s\"" % path)
+        (stdin, stdout, stderr) = self.exec_command("md5sum %s" % path)
+        err = stderr.read()
+        if not err == "":
+            fatal (err) 
+        else:
+            return a2b_hex(stdout.read().split()[0])

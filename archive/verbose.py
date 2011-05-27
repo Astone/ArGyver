@@ -7,8 +7,8 @@ WARNING = 4
 ERROR   = 8
 FATAL   = 16
 
-SCREEN_LEVEL = 0
-LOG_LEVEL    = 0
+SCREEN_LEVEL = FATAL | ERROR | WARNING | NOTICE
+LOG_LEVEL    = FATAL | ERROR | WARNING | NOTICE | DEBUG
 
 VERBOSE_TEXT = ""
 VERBOSE_LOG_FILE = None
@@ -46,22 +46,22 @@ def get_verbosity(v = None):
     return (v_int[v], v_str[v])
 
 def debug(msg, show=True):
-    verbose(DEBUG, msg, 'magenta', show)
+    verbose(DEBUG, msg, 'yellow', show)
 
 def notice(msg, show=True):
-    verbose(NOTICE, msg, 'blue', show)
+    verbose(NOTICE, msg, 'white', show)
 
 def warning(msg, show=True):
-    verbose(WARNING, msg, 'yellow', show)
+    verbose(WARNING, msg, 'red', show)
 
 def error(msg, show=True):
     verbose(ERROR, msg, 'red', show)
 
 def fatal(msg = 'exit'):
-    verbose(FATAL, msg, 'red', True)
+    verbose(FATAL, msg, 'red', True, True)
     exit()
 
-def verbose(type, msg, color, show = True):
+def verbose(type, msg, color, show=True, bright=False):
     global VERBOSE_TEXT
 
     types = {
@@ -71,22 +71,22 @@ def verbose(type, msg, color, show = True):
         ERROR: 'Error',
         FATAL: 'FATAL ERROR'}
     
-    VERBOSE_TEXT += colorize(msg, color)
+    VERBOSE_TEXT += colorize(msg, color, bright)
     if show:
         if SCREEN_LEVEL & type:
-            print colorize(types[type]+':', color), VERBOSE_TEXT
+            print colorize(types[type]+':', color, bright), VERBOSE_TEXT
         VERBOSE_TEXT = ""
     else:
         VERBOSE_TEXT += " ... "
     
-    if LOG_LEVEL & type:
+    if VERBOSE_LOG_FILE != None and LOG_LEVEL & type:
         duration = datetime.now() - VERBOSE_TIME 
         log = "%0.3f %s | %s: %s" % (duration.total_seconds(), datetime.now().strftime("%Y-%m-%d %H:%M:%S"), types[type], msg) 
         if not show:
             log += " ..."
         VERBOSE_LOG_FILE.write(log + "\n")
 
-def colorize(text, color = 'white', bright=True):
+def colorize(text, color = 'white', bright=False):
     c = {
         'black'     : 30,
         'red'       : 31,
