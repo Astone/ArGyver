@@ -1,11 +1,6 @@
 from verbose import *
-from ssh import SshClient
-from index import *
 from argparse import ArgumentParser
 from ConfigParser import SafeConfigParser
-from stat import *
-import pickle
-import os
 
 class Config(object):
     
@@ -14,16 +9,11 @@ class Config(object):
     confparser = None
 
     defaults = {
-        'hasher'            : 'client',
         'archive_snapshot'  : False,
+        'rsync_options'     : '-rlpEtgoHDy',
         'root'              : '.',
         'snapshot'          : 'snapshot/',
         'archive'           : 'archive/',
-        'index'             : 'index.pkl',
-        'hostname'          : 'localhost',
-        'port'              : '22',
-        'username'          : None,
-        'password'          : None,
     }
 
     args = {}    
@@ -44,7 +34,7 @@ class Config(object):
 
         self.argparser.add_argument(
             '-l', dest='log_file',
-            help='The verbosity level. 0=quiet, 1=fatal errors, 2=errors, 3=warnings, 4=notices, 5=debug')
+            help='Log all actions to a log file')
 
         self.argparser.add_argument(
             '-ll', dest='log_level', type=int, choices=range(0, 6), default=5,
@@ -78,29 +68,16 @@ class Config(object):
         
     def config_check(self):
         notice('Configuration check')
-        self.get_hasher()
         self.get_archive_snapshot()
         self.get_server_root()
         self.get_server_snapshot()
         self.get_server_archive()
-        self.get_server_index_file()
-        self.get_client_ssh()
-        self.get_client_root()
         self.get_client_src_list()
         notice('Configuration check completed!')
             
-
-    def get_hasher(self):
-        if not 'hasher' in self.vars:
-            hasher = self.get('options', 'hasher')
-            if not hasher in ['client', 'server']:
-                fatal('options.hasher should be "client" or "server".')
-            self.vars['hasher'] = hasher
-        return self.vars['hasher']
-
     def get_archive_snapshot(self):
         if not 'archive_snapshot' in self.vars:
-            archive_snapshot = self.get('options', 'archive_snapshot')
+            archive_snapshot = self.get_option('options', 'archive_snapshot')
             if not archive_snapshot in ['true', 'false']:
                 fatal('options.archive_snapshot should be "true" or "false".')
             self.vars['archive_snapshot'] = {'true': True, 'false': False}[archive_snapshot]
@@ -108,7 +85,7 @@ class Config(object):
 
     def get_server_root(self, auto_fix = True):
         if not 'server_root' in self.vars:
-            root = os.path.abspath(self.get('server', 'root'))
+            root = os.path.abspath(self.get_option('server', 'root'))
             if not os.path.exists(root):
                 debug("The server's root dir \"%s\" does not exist." % root)
                 if auto_fix:
@@ -126,7 +103,7 @@ class Config(object):
     def get_server_snapshot(self, auto_fix = True):
         if not 'server_snapshot' in self.vars:
             root = self.get_server_root(auto_fix)
-            snapshot = os.path.join(root, self.get('server', 'snapshot'))
+            snapshot = os.path.join(root, self.get_option('server', 'snapshot'))
             if not os.path.exists(snapshot):
                 debug("The snapshot dir \"%s\" does not exist." % snapshot)
                 if auto_fix:
@@ -144,7 +121,7 @@ class Config(object):
     def get_server_archive(self, auto_fix = True):
         if not 'server_archive' in self.vars:
             root = self.get_server_root(auto_fix)
-            archive = os.path.join(root, self.get('server', 'archive'))
+            archive = os.path.join(root, self.get_option('server', 'archive'))
             if not os.path.exists(archive):
                 debug("The archive dir \"%s\" does not exist." % archive)
                 if auto_fix:
@@ -159,60 +136,6 @@ class Config(object):
             self.vars['server_archive'] = archive
         return self.vars['server_archive']
 
-    def get_server_index(self, auto_fix = True):
-        if not 'server_index' in self.vars:
-            index = self.get_server_index_file(auto_fix)
-            notice("Loading index file \"%s\"" % index, False)
-            try:
-                index = pickle.load(open(index, 'r'))
-            except Exception as e:
-                e = str(e)
-                if e == "":
-                    e = 'Invalid index file! File cannot be read.'
-                fatal(e)
-            for idx in INITIAL_INDEX.keys():
-                if not idx in index:
-                    fatal("Invalid index file! Index \"%s\" not found." % idx)
-            notice("OK")
-            self.vars['server_index'] = index
-        return self.vars['server_index']
-
-    def get_server_index_file(self, auto_fix = True):
-        if not 'server_index_file' in self.vars:
-            root = self.get_server_root(auto_fix)
-            index = os.path.join(root, self.get('server', 'index'))
-            if not os.path.exists(index):
-                debug("The index file \"%s\" does not exist." % index)
-                if auto_fix:
-                    try:
-                        pickle.dump(INITIAL_INDEX, open(index, 'w'), 2)
-                    except Exception as e:
-                        fatal(str(e))
-                    else:
-                        notice("Index file created on server: %s" % index)
-                else:
-                    fatal()
-            self.vars['server_index_file'] = index
-        return self.vars['server_index_file']
-    
-    def get_client_ssh(self, auto_fix=True):
-        if not 'client_ssh' in self.vars:
-            hostname = self.get('client', 'hostname')
-            username = self.get('client', 'username')
-            password = self.get('client', 'password')
-            port = self.getint('client', 'port')
-            self.vars['client_ssh'] = SshClient(hostname, username, password, port, auto_fix)
-        return self.vars['client_ssh']
-
-    def get_client_root(self):
-        if not 'client_root' in self.vars:
-            root = self.get('client', 'root')
-            ssh = self.get_client_ssh()
-            if not ssh.is_folder(root):
-                fatal("The client root \"%s\" does not exist or is not readable." % root)
-            self.vars['client_root'] = root
-        return self.vars['client_root']
-
     def get_client_src_list(self):
         ssh = self.get_client_ssh()
         root = self.get_client_root()
@@ -220,7 +143,7 @@ class Config(object):
             src = {}
             for s in self.confparser.options('client'):
                 if s[:4] == 'src-':
-                    path = os.path.join(root, self.get('client', s))
+                    path = os.path.join(root, self.get_option('client', s))
                     if not ssh.is_folder(path):
                         error("The client source folder \"%s\" does not exist or is not readable." % path)
                     else:
@@ -230,10 +153,17 @@ class Config(object):
             self.vars['client_src_list'] = src
         return self.vars['client_src_list']
         
-    def get(self, section, option):
-        debug("Get config option %s.%s" % (section, option), False)
+    def get_option(self, section, option, type=None):
+        debug("Get config option %s.%s as %s" % (section, option, str(type)), False)
         try:
-            value = self.confparser.get(section, option)
+            if type == None or type == string:
+                value = self.confparser.get(section, option)
+            if type == int:
+                value = self.confparser.getint(section, option)
+            if type == float:
+                value = self.confparser.getfloat(section, option)
+            if type == bool:
+                value = self.confparser.getboolean(section, option)
         except Exception as e:
             error("FAILED")
             fatal(str(e))
@@ -244,17 +174,6 @@ class Config(object):
                 debug('***')
             else:
                 debug(value)
-            return value
-
-    def getint(self, section, option):
-        debug("Get config option %s.%s as integer" % (section, option), False)
-        try:
-            value = self.confparser.getint(section, option)
-        except Exception as e:
-            error("FAILED")
-            fatal(str(e))
-        else:
-            debug(value)
             return value
 
     def __str__(self):
