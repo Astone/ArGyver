@@ -33,5 +33,6 @@ class Sync(object):
         archive_root = os.path.join(self.config.get_server_archive(), folder)
         tmp_root = os.path.join(self.config.get_server_tmp(), folder)
         for (path, _folders, files) in os.walk(tmp_root):
-            print path, files
+            tmp_path = os.path.join(tmp_root, path)
+            print tmp_path, files
         
