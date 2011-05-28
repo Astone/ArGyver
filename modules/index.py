@@ -2,6 +2,7 @@ from verbose import *
 import os
 import pickle
 import hashlib
+from copy import copy
 
 INITIAL_INDEX = {'inode_to_files':{}, 'hash_to_inode': {}}
 
@@ -10,8 +11,7 @@ BLOCK_SIZE = 2**20
 class Index(object): 
     
     config = None
-    inode_idx = None
-    hash_idx = None
+    index = None
         
     def __init__(self, config):
         self.config = config
@@ -29,9 +29,8 @@ class Index(object):
     def update(self):
         notice("Updating index file")
 
-        inodes_to_remove = []
         for (hash, inode) in self.index['hash_to_inode'].items():
-            for path in self.index['inode_to_files'][inode]:
+            for path in copy(self.index['inode_to_files'][inode]):
                 if not os.path.exists(self.get_abs_path(path)):
                     debug("File \"%s\" no longer exists." % path)
                     self.remove_file(path, hash)
@@ -52,11 +51,15 @@ class Index(object):
             hash = self.hash(path)
             if hash in self.index['hash_to_inode']:
                 inode = self.index['hash_to_inode'][hash]
-                unique_path = self.index['inode_to_files'][inode][0]
-                debug("File \"%s\" with the same contents as \"%s\" is in the index." % (unique_path, relpath))
+                rel_unique_path = self.index['inode_to_files'][inode][0]
+                unique_path = self.get_abs_path(rel_unique_path)
+                debug("File \"%s\" with the same contents as \"%s\" is in the index." % (rel_unique_path, relpath))
+                atime = max(os.stat(path).st_atime, os.stat(unique_path).st_atime)
+                mtime = max(os.stat(path).st_mtime, os.stat(unique_path).st_mtime)
                 os.remove(path)
-                os.link(self.get_abs_path(unique_path), path)
-                notice("\"%s\" linked to \"%s\"." % (relpath, unique_path))
+                os.link(unique_path, path)
+                os.utime(path, (atime, mtime))
+                notice("\"%s\" linked to \"%s\"." % (relpath, rel_unique_path))
             else:
                 self.index['hash_to_inode'][hash] = inode
                 self.index['inode_to_files'][inode] = []
@@ -81,6 +84,21 @@ class Index(object):
             del self.index['hash_to_inode'][hash]
             notice("Inode \"%d\" removed from index." % inode)
 
+    def move_file(self, src, dst, inode = None):
+        if inode == None:
+            if os.path.isfile(src):
+                inode = os.stat(src).st_ino
+            elif os.path.isfile(dst):
+                inode = os.stat(dst).st_ino
+            else:
+                fatal("Both \"%s\" and \"%s\" do not exist." % (src, dst)) 
+        src = self.get_rel_path(src)
+        dst = self.get_rel_path(dst)
+        notice("Move file \"%s\" (with inode %d) to \"%s\" in the index." % (src, inode, dst))
+        self.index['inode_to_files'][inode].remove(src)
+        if not dst in self.index['inode_to_files'][inode]:
+            self.index['inode_to_files'][inode].append(dst)
+            
     def get_rel_path(self, abspath):
         relpath = os.path.relpath(abspath, self.config.get_server_root())
         return relpath
@@ -100,5 +118,27 @@ class Index(object):
         fp.close
         return hash.digest()
 
+    def get_inode(self, hash):
+        if hash in self.index['hash_to_inode']:
+            return self.index['hash_to_inode'][hash]
+        else:
+            return None
+
+    def get_files(self, inode):
+        if inode in self.index['inode_to_files']:
+            return self.index['inode_to_files'][inode]
+        else:
+            return []
+
+    def file_has_hash(self, path, hash):
+        relpath = self.get_rel_path(path)
+        inode = self.get_inode(hash)
+        if inode:
+            return relpath in self.get_files(inode)
+        else:
+            return False
+
     def save(self):
-        pickle.dump(self.index, open(self.config.get_server_index_file(), 'w'), 2)
+        idx = self.config.get_server_index_file()
+        notice("Index saved to %s" % self.get_rel_path(idx))
+        pickle.dump(self.index, open(idx, 'w'), 2)

@@ -17,25 +17,20 @@ To do list
 
 1.  Basics
 	1 X	Read a config file.
-	2	Parse arguments on the command line.
+	2 X	Parse arguments on the command line.
 	3 X	Display notices, warnings, errors etc.
 	4 X Maintain a log file with notices, warnings, errors etc.
 
 2.	Communication
-	1.	Assuming the script exists on both the server and the client, we need
-		the server to execute commands on the client. i.e. To create a hash
-		of the locally stored files.
-	2.	I'll have to decide if this will be a separate call for each action, or
-		a remote service. This client side service should terminate when the
-		connection is lost. 
+	1 X	We need the server ask a hash key from the client for a single file.
 
 3. Indexing
-	1.	There should be an index file on the server and all files in the
-		snapshot and the archive should be stored in this index file. The index
-		be: hash --> file_paths
-	2.  It must be possible to (re)build the entire index and to update it per
+	1 X	There should be an index file on the server and all files in the
+		snapshot and the archive should be stored in this index file. The
+		indexes will be: hash --> inode and inode --> file_paths
+	2 X It must be possible to (re)build the entire index and to update it per
 		item. i.e. when a file is removed or updated.
-	3.	Given a file hash, all files with the exact same content can be recalled
+	3 X	Given a file hash, all files with the exact same content can be recalled
 		And instead of sending the file over ssh, the program will just create a
 		hard link to one of the existing file and update the index.   
 
