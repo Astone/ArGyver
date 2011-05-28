@@ -19,7 +19,7 @@ class Sync(object):
             self.archive(dst)
 
     def rsync(self, src, dst):
-        notice("Synchronisation started for \"%s\" (%s)." % (src, dst))
+        notice("Starting synchronisation of \"%s\" (%s)." % (src, dst))
         cmd = 'rsync'
         opt = self.config.get_rsync_options().split()
         bu = ['--delete', '-b', '--backup-dir=%s' % os.path.join(self.config.get_server_tmp(), dst)]
@@ -28,9 +28,10 @@ class Sync(object):
             notice(check_output([cmd] + opt + bu + [src] + [snapshot]))
         except CalledProcessError as e:
             error(str(e))
+        notice("Synchronisation of \"%s\" (%s) completed." % (src, dst))
 
     def archive(self, folder):
-        notice("Archivation started for \"%s\"." % (folder))
+        notice("Starting archivation of \"%s\"." % (folder))
         arch_root = os.path.join(self.config.get_server_archive(), folder)
         tmp_root = os.path.join(self.config.get_server_tmp(), folder)
         for (path, _folders, files) in os.walk(tmp_root):
@@ -46,9 +47,13 @@ class Sync(object):
 
             for tmp_name in files:
                 tmp_path = os.path.join(tmp_root, path, tmp_name)
-                tmp_time = datetime.fromtimestamp(os.stat(tmp_path).st_mtime)
+                try:
+                    tmp_time = datetime.fromtimestamp(os.stat(tmp_path).st_mtime).strftime('%Y%m%d.%H%I%M')
+                except Exception as e:
+                    error(str(e))
+                    rmp_time = '00000000.000000'
                 arch_parts = tmp_name.split('.')
-                arch_parts.insert(max(len(arch_parts) - 1, 1), tmp_time.strftime('%Y%m%d.%H%I%M'))
+                arch_parts.insert(max(len(arch_parts) - 1, 1), tmp_time)
                 arch_name = '.'.join(arch_parts)
                 arch_path = os.path.join(arch_root, path, arch_name)
                 notice("Move \"%s\" to \"%s\"" % (os.path.join(path, tmp_name), os.path.join(path, arch_name)))
@@ -57,3 +62,4 @@ class Sync(object):
                 except Exception as e:
                     error("Tried to move \"%s\" to \"%s\" ... FAILED" % (tmp_path, arch_path))
                     error(str(e))
+        notice("Archivation of \"%s\" completed." % (folder))

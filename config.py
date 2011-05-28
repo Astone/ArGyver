@@ -69,7 +69,7 @@ class Config(object):
         self.config_check()
         
     def config_check(self):
-        notice('Configuration check')
+        notice('Starting configuration check.')
         self.get_archive_snapshot()
         self.get_rsync_options()
         self.get_server_root()
@@ -77,7 +77,7 @@ class Config(object):
         self.get_server_archive()
         self.get_server_tmp()
         self.get_sources()
-        notice('Configuration check completed!')
+        notice('Configuration check completed.')
 
     def get_archive_snapshot(self):
         if not 'archive_snapshot' in self.vars:
