@@ -30,14 +30,14 @@ Installation
 3.  Make sure you have ssh access to all remote source locations.
     You might need to do some public/private key magic:
 
-        http://lmgtfy.com/?q=ssh+keys
+    http://lmgtfy.com/?q=ssh+keys
 
 4.  Find out if Argyver likes your config skills.
     Select the max verbosity level to see what you did wrong :)
 
         $ ./argyver.py -c argyver.conf -v5
 
-5.  ArGyver should be scheduled using a cron job.
+5.  ArGyver needs to be scheduled using a cron job.
     To edit your systems cron jobs use: crontab -e
 
 6.  Let's assume ArGyver is in Angus' home folder and you want to
@@ -66,7 +66,7 @@ special files. The `y` is for the 'fuzzy' mode, which means that
 rsync finds a similar file for basis if no destination file
 exists. The last one is `v`erbosity.
 
-## server.root 
+### server.root 
 The root folder on the server, where the backups are created.
 Default: `[the current working directory]`
 
