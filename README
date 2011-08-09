@@ -3,7 +3,7 @@ ArGyver 1.1b
 
 ArGyver is backup utility based on rsync, it stores each version
 of your files individually in a file based archive. It can
-maintain archives for local and remote filesystems for any
+maintain archives for local and remote file systems for any
 number of machines.
 
     usage: backup.py [-h] -c CONFIG_FILE [-l LOG_FILE]
@@ -23,7 +23,7 @@ number of machines.
 Installation
 ------------
 
-1. Place ArGyver somwhere on the server side.
+1. Place ArGyver somewhere on the server side.
 
 2. Edit the config file argyver.conf. See 'Configuration' below.
 
@@ -37,17 +37,17 @@ Installation
 
        $ ./argyver.py -c argyver.conf -v5
 
-5. ArGyver should be scheduled using a cronjob.
+5. ArGyver should be scheduled using a cron job.
    To edit your systems cron jobs use: crontab -e
 
-6. Let's asume ArGyver is in Angus' home folder and you want to
+6. Let's assume ArGyver is in Angus' home folder and you want to
    run ArGyver every hour on the hour.
    Then add something like this to your crontab:
 
        0 * * * * /home/angus/ArGyver/argyver.py -c /home/angus/ArGyver/argyver.conf -l /home/angus/ArGyver/argyver.log
 
    I'd advise you to use absolute paths because it's not
-   allways clear from which root folder the crontab executes
+   allays clear from which root folder the crontab executes
    its commands.
 
 
@@ -98,7 +98,7 @@ The files in the client folder "Pictures/MyPhotos" (relative to
 the clients home dir, start with a slash to use absolute paths)
 will be stored in the snapshot and archive folder "photos".
 
-Ofcourse you can also use the script locally without ssh, e.g.:
+Of course you can also use the script locally without ssh, e.g.:
 
     src-www: /var/www
 
@@ -120,9 +120,9 @@ Todo's
 
 * Implement archive_snapshot. This would be the option that all
   files in the snapshot also exist in the archive with a
-  timestamp. These files should be hard linked to the snapshot,
+  time stamp. These files should be hard linked to the snapshot,
   if possible. The configuration variable archive_snapshot is
-  allready available and so is the function
+  already available and so is the function
   get_archive_snapshot(), but it is not noted in the default
   argyver.conf file.
 
