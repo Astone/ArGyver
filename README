@@ -27,15 +27,20 @@ Installation
 
 2. Edit the config file argyver.conf. See 'Configuration' below.
 
-3. Find out if Argyver likes your config skills.
+3. Make sure you have ssh access to all remote source locations.
+   You might need to do some public/private key magic:
+
+       http://lmgtfy.com/?q=ssh+keys
+
+4. Find out if Argyver likes your config skills.
    Select the max verbosity level to see what you did wrong :)
 
        $ ./argyver.py -c argyver.conf -v5
 
-3. ArGyver should be scheduled using a cronjob.
+5. ArGyver should be scheduled using a cronjob.
    To edit your systems cron jobs use: crontab -e
 
-4. Let's asume ArGyver is in Angus' home folder and you want to
+6. Let's asume ArGyver is in Angus' home folder and you want to
    run ArGyver every hour on the hour.
    Then add something like this to your crontab:
 
