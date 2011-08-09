@@ -35,7 +35,7 @@ Installation
 4.  Find out if Argyver likes your config skills.
     Select the max verbosity level to see what you did wrong :)
 
-    `$ ./argyver.py -c argyver.conf -v5`
+        $ ./argyver.py -c argyver.conf -v5
 
 5.  ArGyver should be scheduled using a cron job.
     To edit your systems cron jobs use: crontab -e
@@ -44,7 +44,7 @@ Installation
     run ArGyver every hour on the hour.
     Then add something like this to your crontab:
 
-    `0 * * * * /home/angus/ArGyver/argyver.py -c /home/angus/ArGyver/argyver.conf -l /home/angus/ArGyver/argyver.log`
+        0 * * * * /home/angus/ArGyver/argyver.py -c /home/angus/ArGyver/argyver.conf -l /home/angus/ArGyver/argyver.log
 
     I'd advise you to use absolute paths because it's not
     allays clear from which root folder the crontab executes
