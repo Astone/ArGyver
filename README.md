@@ -7,12 +7,12 @@ maintain archives for local and remote file systems for any
 number of machines.
 
     usage: backup.py [-h] -c CONFIG_FILE [-l LOG_FILE]
-                 [-ll {0,1,2,3,4,5}] [-v {0,1,2,3,4,5}]
+           [-ll {0,1,2,3,4,5}] [-v {0,1,2,3,4,5}]
 
     arguments:
     -h, --help         show help message
-    -c CONFIG_FILE`    Specify a valid config file
-    -l LOG_FILE`       Log all actions to a log file
+    -c CONFIG_FILE     Specify a valid config file
+    -l LOG_FILE        Log all actions to a log file
     -ll {0,1,2,3,4,5}  The verbosity level for the log file.
                        0=quiet, 1=fatal errors, 2=errors,
                        3=warnings, 4=notices, 5=debug
@@ -35,7 +35,7 @@ Installation
 4.  Find out if Argyver likes your config skills.
     Select the max verbosity level to see what you did wrong :)
 
-        $ ./argyver.py -c argyver.conf -v5
+    `$ ./argyver.py -c argyver.conf -v5`
 
 5.  ArGyver should be scheduled using a cron job.
     To edit your systems cron jobs use: crontab -e
@@ -44,11 +44,11 @@ Installation
     run ArGyver every hour on the hour.
     Then add something like this to your crontab:
 
-        0 * * * * /home/angus/ArGyver/argyver.py -c /home/angus/ArGyver/argyver.conf -l /home/angus/ArGyver/argyver.log
+    `0 * * * * /home/angus/ArGyver/argyver.py -c /home/angus/ArGyver/argyver.conf -l /home/angus/ArGyver/argyver.log`
 
-     I'd advise you to use absolute paths because it's not
-     allays clear from which root folder the crontab executes
-     its commands.
+    I'd advise you to use absolute paths because it's not
+    allays clear from which root folder the crontab executes
+    its commands.
 
 
 Configuration
