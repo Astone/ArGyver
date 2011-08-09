@@ -23,32 +23,32 @@ number of machines.
 Installation
 ------------
 
-1. Place ArGyver somewhere on the server side.
+1.  Place ArGyver somewhere on the server side.
 
-2. Edit the config file argyver.conf. See 'Configuration' below.
+2.  Edit the config file argyver.conf. See 'Configuration' below.
 
-3. Make sure you have ssh access to all remote source locations.
-   You might need to do some public/private key magic:
+3.  Make sure you have ssh access to all remote source locations.
+    You might need to do some public/private key magic:
 
-    http://lmgtfy.com/?q=ssh+keys
+        http://lmgtfy.com/?q=ssh+keys
 
-4. Find out if Argyver likes your config skills.
-   Select the max verbosity level to see what you did wrong :)
+4.  Find out if Argyver likes your config skills.
+    Select the max verbosity level to see what you did wrong :)
 
-    $ ./argyver.py -c argyver.conf -v5
+        $ ./argyver.py -c argyver.conf -v5
 
-5. ArGyver should be scheduled using a cron job.
-   To edit your systems cron jobs use: crontab -e
+5.  ArGyver should be scheduled using a cron job.
+    To edit your systems cron jobs use: crontab -e
 
-6. Let's assume ArGyver is in Angus' home folder and you want to
-   run ArGyver every hour on the hour.
-   Then add something like this to your crontab:
+6.  Let's assume ArGyver is in Angus' home folder and you want to
+    run ArGyver every hour on the hour.
+    Then add something like this to your crontab:
 
-    0 * * * * /home/angus/ArGyver/argyver.py -c /home/angus/ArGyver/argyver.conf -l /home/angus/ArGyver/argyver.log
+        0 * * * * /home/angus/ArGyver/argyver.py -c /home/angus/ArGyver/argyver.conf -l /home/angus/ArGyver/argyver.log
 
-   I'd advise you to use absolute paths because it's not
-   allays clear from which root folder the crontab executes
-   its commands.
+     I'd advise you to use absolute paths because it's not
+     allays clear from which root folder the crontab executes
+     its commands.
 
 
 Configuration
