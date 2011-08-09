@@ -92,7 +92,7 @@ A list of source locations.
 
 For example:
 
-    src-photos: username@hostname:Pictures/MyPhotos
+    src-photos: username@hostname:Pictures/MyPhotos/
 
 The files in the client folder "Pictures/MyPhotos" (relative to
 the clients home dir, start with a slash to use absolute paths)
@@ -100,7 +100,7 @@ will be stored in the snapshot and archive folder "photos".
 
 Of course you can also use the script locally without ssh, e.g.:
 
-    src-www: /var/www
+    src-www: /var/www/
 
 A trailing slash on the source avoids creating an additional
 directory level at the destination. You can think of a trailing
@@ -113,6 +113,7 @@ Some more examples:
     src-www: username@mydomain.com:/var/www/
     src-pics/private: username@ip-address:Pictures/
     src-pics/download: username@ip-address:Downloads/Images/
+    src-pics: /home/angus/Pictures/helicopters
 
 
 Todo's
