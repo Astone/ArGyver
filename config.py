@@ -3,6 +3,7 @@ from argparse import ArgumentParser
 from ConfigParser import SafeConfigParser
 from subprocess import check_output, CalledProcessError
 
+# A class to read the config file and the command line arguments and check all the settings for integrity.
 class Config(object):
     
     argparser = None
@@ -48,9 +49,12 @@ class Config(object):
 
         self.args = self.argparser.parse_args()
         
+    # Load the config file and check for integrity.
     def load_config_file(self, config_file):
         config_file = str(config_file)
         notice("Loading config file \"%s\"" % config_file, False)
+
+        # Throw a fatal error if the config file doesn't exist.
         if os.path.exists(config_file):
             self.config_file = config_file
             notice("OK")
@@ -58,6 +62,7 @@ class Config(object):
             fatal("FAILED")
 
         notice("Parsing config file \"%s\"" % self.config_file, False)
+        # Throw a fatal error if the config file can not be parsed.
         try:
             self.confparser = SafeConfigParser(defaults=self.defaults, allow_no_value=True)
             self.confparser.read(self.config_file)
@@ -66,8 +71,13 @@ class Config(object):
             fatal(str(e))
         else:
             notice("OK")
+
         self.config_check()
         
+    # Check all configurations.
+    # Checking the configuration automatically results in caching all data in the config file.
+    # In every 'get_some_value()' function the system will check if the argument was retreived before.
+    # If it was, the value is returned. If it was not, the value is looked up and its validity is tested.
     def config_check(self):
         notice('Starting configuration check.')
         self.get_archive_snapshot()
@@ -79,6 +89,7 @@ class Config(object):
         self.get_sources()
         notice('Configuration check completed.')
 
+    # Check if the archive_snapshot option is a boolean and return it.
     def get_archive_snapshot(self):
         if not 'archive_snapshot' in self.vars:
             archive_snapshot = self.get_option('options', 'archive_snapshot')
@@ -87,12 +98,14 @@ class Config(object):
             self.vars['archive_snapshot'] = {'true': True, 'false': False}[archive_snapshot]
         return self.vars['archive_snapshot']
 
+    # Return the rsync options.
     def get_rsync_options(self):
         if not 'rsync_options' in self.vars:
             rsync_options = self.get_option('options', 'rsync_options')
             self.vars['rsync_options'] = rsync_options
         return self.vars['rsync_options']
 
+    # Check if the server_root folder exists, create it if not, and return its absolute path.
     def get_server_root(self, auto_fix = True):
         if not 'server_root' in self.vars:
             root = os.path.abspath(self.get_option('server', 'root'))
@@ -110,21 +123,26 @@ class Config(object):
             self.vars['server_root'] = root
         return self.vars['server_root']
 
+    # Check if the server_snapshot folder exists, create it if not, and return its absolute path.
     def get_server_snapshot(self, auto_fix = True):
         if not 'server_snapshot' in self.vars:
             self.vars['server_snapshot'] = self.get_server_folder(self.get_option('server', 'snapshot'))
         return self.vars['server_snapshot']
 
+    # Check if the server_archive folder exists, create it if not, and return its absolute path.
     def get_server_archive(self, auto_fix = True):
         if not 'server_archive' in self.vars:
             self.vars['server_archive'] = self.get_server_folder(self.get_option('server', 'archive'))
         return self.vars['server_archive']
 
+    # Check if the server_tmp folder exists, create it if not, and return its absolute path.
     def get_server_tmp(self, auto_fix = True):
         if not 'server_tmp' in self.vars:
             self.vars['server_tmp'] = self.get_server_folder(self.get_option('server', 'tmp'))
         return self.vars['server_tmp']
     
+    # For each source location, check if it is accessible, and return a dictionary of source locations.
+    # The destination folder is used as the key for the dictionary.
     def get_sources(self):
         if not 'sources' in self.vars:
             self.vars['sources'] = {}
@@ -141,6 +159,7 @@ class Config(object):
                 fatal("There are no client source folders defined. Use src-data, src-pictures etc.")
         return self.vars['sources']
         
+    # Retrieve an option from the config file and make sure it is the right type.
     def get_option(self, section, option, type=str):
         debug("Get config option %s.%s as %s" % (section, option, str(type)), False)
         try:
@@ -156,14 +175,17 @@ class Config(object):
             error("FAILED")
             fatal(str(e))
         else:
+            # Cast empty strings to None values
             if value == '':
                 value = None
+            # Don't show passwords in log files or screen output
             if option == 'password' and not value == None:
                 debug('***')
             else:
                 debug(value)
             return value
 
+    # Check if the required folder exists on the server, create it if not, and return its path.
     def get_server_folder(self, folder, root = None, auto_fix = True):
         if root == None:
             root = self.get_server_root(auto_fix)
@@ -182,6 +204,7 @@ class Config(object):
         return path
 
 
+    # Check if the required folder exists on the client and if it is accessible through rsync, and return its path.
     def is_client_folder(self, path):
         try:
             check_output(['rsync', path])

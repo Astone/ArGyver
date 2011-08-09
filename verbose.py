@@ -18,6 +18,7 @@ def set_log_file(log_file, v):
     global VERBOSE_LOG_FILE, LOG_LEVEL
     if log_file == None:
         return
+
     VERBOSE_LOG_FILE = open(log_file, 'w')
     (LOG_LEVEL, v) = get_verbosity(v)
     notice("Log level set to: %s" % v)
