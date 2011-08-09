@@ -13,31 +13,54 @@ class ArGyver(object):
 
     def __init__(self):
 
-	# Load configuration file and parse arguments.
+    # Load configuration file and parse arguments.
         self.config = Config()
 
-	# Retreive a list of all the source locations.
-	# This function will also check if all these locations are accessible.
+    # Retreive a list of all the source locations.
+    # This function will also check if all these locations are accessible.
         self.sources = self.config.get_sources()
 
     def run(self):
-        for [dst, src] in iter(sorted(self.sources.iteritems())):
-            self.rsync(src, dst)
-            self.archive(dst)
+        lockfilename = str("%s/.lockfile" % self.config.get_server_root())
+        pid = -1
+        if (os.path.exists(lockfilename)):
+            lockfile = open(lockfilename, 'r')
+            pid = int(lockfile.read())
+            lockfile.close()
+
+        if (pid != -1 and self.isrunning(pid)):
+            warning("ArGyver already running with pid %d, stopping" % pid)
+        else:
+            lockfile = open(lockfilename, 'w')
+            lockfile.write(str(os.getpid()))
+            lockfile.close()
+            
+            for [dst, src] in iter(sorted(self.sources.iteritems())):
+                self.rsync(src, dst)
+                self.archive(dst)
+
+            os.remove(lockfilename)
+
+    def isrunning(self, pid):
+        try:
+            os.kill(pid, 0)
+            return True
+        except OSError:
+            return False
 
     def rsync(self, src, dst):
 
         notice("Starting synchronisation of \"%s\" (%s)." % (src, dst))
 
-	# Construct the rsync command.
-	# Files that have changed or are deleted are backuped in a temporary folder,
+        # Construct the rsync command.
+        # Files that have changed or are deleted are backuped in a temporary folder,
         # archive() will handle these files later on.
         cmd = 'rsync'
         opt = self.config.get_rsync_options().split()
         bu = ['--delete', '-b', '--backup-dir=%s' % os.path.join(self.config.get_server_tmp(), dst)]
 
-	# Construct the absolute snapshot path.
-	snapshot = os.path.join(self.config.get_server_snapshot(), dst)
+        # Construct the absolute snapshot path.
+        snapshot = os.path.join(self.config.get_server_snapshot(), dst)
         try:
             # Execute the rsync command and capture the output.
             output = check_output([cmd] + opt + bu + [src] + [snapshot])
@@ -57,7 +80,7 @@ class ArGyver(object):
         arch_root = os.path.join(self.config.get_server_archive(), folder)
         tmp_root = os.path.join(self.config.get_server_tmp(), folder)
 
-	# Walk through all temporary folders recursively.
+        # Walk through all temporary folders recursively.
         for (path, _folders, files) in os.walk(tmp_root):
 
             # Extract the path of the temporary folder relative to the tmp_root.
