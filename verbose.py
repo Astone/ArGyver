@@ -82,6 +82,7 @@ def verbose(type, msg, color, show=True, bright=False):
         if not show:
             log += " ..."
         VERBOSE_LOG_FILE.write(log + "\n")
+        VERBOSE_LOG_FILE.flush()
 
 def colorize(text, color = 'white', bright=False):
     c = {
