@@ -44,7 +44,7 @@ Installation
     run ArGyver every hour on the hour.
     Then add something like this to your crontab:
 
-        0 * * * * /home/angus/ArGyver/argyver.py -c /home/angus/ArGyver/argyver.conf -l /home/angus/ArGyver/argyver.log
+        0 * * * * /home/angus/ArGyver/argyver.py -c /home/angus/ArGyver/argyver.conf -l /home/angus/ArGyver/argyver.log -v 2
 
     I'd advise you to use absolute paths because it's not
     always clear from which root folder the crontab executes
