@@ -16,7 +16,7 @@ class ArGyver(object):
     # Load configuration file and parse arguments.
         self.config = Config()
 
-    # Retreive a list of all the source locations.
+    # Retrieve a list of all the source locations.
     # This function will also check if all these locations are accessible.
         self.sources = self.config.get_sources()
 
@@ -38,6 +38,15 @@ class ArGyver(object):
             for [dst, src] in iter(sorted(self.sources.iteritems())):
                 self.rsync(src, dst)
                 self.archive(dst)
+
+            # Remove the temporary folder
+            tmp_root = self.config.get_server_tmp()
+            debug("Removing temporary folder \"%s\" recursively" % tmp_root)
+            try:
+                shutil.rmtree(tmp_root)
+            except Exception as e:
+                error("Tried to remove temporary folder \"%s\"... FAILED" % tmp_root)
+                error(str(e))
 
             os.remove(lockfilename)
 
@@ -127,15 +136,6 @@ class ArGyver(object):
                 except Exception as e:
                     error("Tried to move \"%s\" to \"%s\" ... FAILED" % (tmp_path, arch_path))
                     error(str(e))
-
-        # Remove the entire temporary folder tree for the current source location
-        if os.path.isdir(tmp_root):
-            notice("Remove temporary folder \"%s\" recursively" % tmp_root)
-            try:
-                shutil.rmtree(tmp_root)
-            except Exception as e:
-                error("Tried to remove temporary folder \"%s\"... FAILED" % tmp_root)
-                error(str(e))
 
         notice("Archivation of \"%s\" finished." % (folder))
 

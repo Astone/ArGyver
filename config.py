@@ -16,7 +16,7 @@ class Config(object):
         'root'              : '.',
         'snapshot'          : 'snapshot/',
         'archive'           : 'archive/',
-        'tmp'               : '.tmp/'
+        'tmp'               : '/tmp/argyver/'
     }
 
     args = {}    
