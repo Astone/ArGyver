@@ -47,7 +47,7 @@ Installation
         0 * * * * /home/angus/ArGyver/argyver.py -c /home/angus/ArGyver/argyver.conf -l /home/angus/ArGyver/argyver.log
 
     I'd advise you to use absolute paths because it's not
-    allays clear from which root folder the crontab executes
+    always clear from which root folder the crontab executes
     its commands.
 
 
@@ -119,13 +119,4 @@ Some more examples:
 Todo's
 ------
 
-* Implement archive_snapshot. This would be the option that all
-  files in the snapshot also exist in the archive with a
-  time stamp. These files should be hard linked to the snapshot,
-  if possible. The configuration variable archive_snapshot is
-  already available and so is the function
-  get_archive_snapshot(), but it is not noted in the default
-  argyver.conf file.
-
-* Find a way to make sure that only one instance of ArGyver may
-  run at the same time. (One instance per config file that is.)
+* Add exclude options to [options] in config system

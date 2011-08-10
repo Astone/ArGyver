@@ -43,13 +43,13 @@ def get_verbosity(v = None):
     return (v_int[v], v_str[v])
 
 def debug(msg, show=True):
-    verbose(DEBUG, msg, 'yellow', show)
+    verbose(DEBUG, msg, 'cyan', show)
 
 def notice(msg, show=True):
     verbose(NOTICE, msg, 'white', show)
 
 def warning(msg, show=True):
-    verbose(WARNING, msg, 'red', show)
+    verbose(WARNING, msg, 'yellow', show)
 
 def error(msg, show=True):
     verbose(ERROR, msg, 'red', show)
@@ -82,6 +82,7 @@ def verbose(type, msg, color, show=True, bright=False):
         if not show:
             log += " ..."
         VERBOSE_LOG_FILE.write(log + "\n")
+        VERBOSE_LOG_FILE.flush()
 
 def colorize(text, color = 'white', bright=False):
     c = {

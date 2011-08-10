@@ -1,3 +1,4 @@
+import os
 from verbose import *
 from argparse import ArgumentParser
 from ConfigParser import SafeConfigParser
@@ -11,12 +12,11 @@ class Config(object):
     confparser = None
 
     defaults = {
-        'archive_snapshot'  : False,
         'rsync_options'     : '-rlpEtgoHDyv',
         'root'              : '.',
         'snapshot'          : 'snapshot/',
         'archive'           : 'archive/',
-        'tmp'               : '.tmp/',
+        'tmp'               : '.tmp/'
     }
 
     args = {}    
@@ -80,7 +80,6 @@ class Config(object):
     # If it was, the value is returned. If it was not, the value is looked up and its validity is tested.
     def config_check(self):
         notice('Starting configuration check.')
-        self.get_archive_snapshot()
         self.get_rsync_options()
         self.get_server_root()
         self.get_server_snapshot()
@@ -88,15 +87,6 @@ class Config(object):
         self.get_server_tmp()
         self.get_sources()
         notice('Configuration check completed.')
-
-    # Check if the archive_snapshot option is a boolean and return it.
-    def get_archive_snapshot(self):
-        if not 'archive_snapshot' in self.vars:
-            archive_snapshot = self.get_option('options', 'archive_snapshot')
-            if not archive_snapshot in ['true', 'false']:
-                fatal('options.archive_snapshot should be "true" or "false".')
-            self.vars['archive_snapshot'] = {'true': True, 'false': False}[archive_snapshot]
-        return self.vars['archive_snapshot']
 
     # Return the rsync options.
     def get_rsync_options(self):
