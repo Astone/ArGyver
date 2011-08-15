@@ -21,12 +21,12 @@ def set_log_file(log_file, v):
 
     VERBOSE_LOG_FILE = open(log_file, 'w')
     (LOG_LEVEL, v) = get_verbosity(v)
-    notice("Log level set to: %s" % v)
+    debug("Log level set to: %s" % v)
 
 def set_verbosity(v):
     global SCREEN_LEVEL
     (SCREEN_LEVEL, v) = get_verbosity(v)
-    notice("Verbosity level set to: %s" % v)
+    debug("Verbosity level set to: %s" % v)
 
 def get_verbosity(v = None):
 
