@@ -140,7 +140,7 @@ class Config(object):
                 if s[:4] == 'src-':
                     path = self.get_option('sources', s)
                     if not self.is_client_folder(path):
-                        error("The client source folder \"%s\" does not exist or is not readable." % path)
+                        error("The client source folder \"%s\" is not reachable, does not exist or is not readable." % path)
                     else:
                         folder = s[4:]
                         self.get_server_folder(folder, self.get_server_snapshot())
@@ -199,7 +199,7 @@ class Config(object):
         try:
             check_output(['rsync', path])
         except CalledProcessError as e:
-            if e.returncode == 23:
+            if e.returncode in [12, 23, 255]:
                 return False
             else:
                 fatal(str(e))
