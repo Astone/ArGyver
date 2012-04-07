@@ -17,19 +17,20 @@ class Database(object):
         else:
             self.connect()
         self.itteration = self._get_itteration() + 1
+        debug("DB: Iteration #%d" % self.itteration)
         self.close()
 
     def connect(self):
-        debug("Connecting to database %s" % self.path)
+        debug("DB: Connecting to database %s" % self.path)
         self.db = sql.connect(self.path)
 
     def close(self):
-        debug("Closing connection to database %s" % self.path)
+        debug("DB: Closing connection to database %s" % self.path)
         self.commit()
         self.db.close()
 
     def create(self, commit=True):
-        debug("Creating empty database %s" % os.path.basename(self.path))
+        debug("DB: Creating empty database %s" % os.path.basename(self.path))
         self.db = sql.connect(self.path)
         self.execute(' \
             CREATE TABLE paths ( \
@@ -110,7 +111,7 @@ class Database(object):
             self._set_inode(path_id, inode)
 
     def update_history(self):
-        warning("update_history() is not implemented. This could be used to show if a file is moved, copied, deleted, etc in the GUI.")
+        warning("DB: update_history() is not implemented. This could be used to show if a file is moved, copied, deleted, etc in the GUI.")
 
     def _get_itteration(self):
         query = ' \
