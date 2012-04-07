@@ -58,7 +58,7 @@ class ArGyver(object):
 
         opt = self.config.get_rsync_options().split()
 
-        if self.config.get_server_archive():
+        if self.config.get_server_tmp():
             bu = ['-b', '--backup-dir=%s' % os.path.join(self.config.get_server_tmp(), dst)]
         else:
             bu = []
@@ -85,24 +85,24 @@ class ArGyver(object):
         if db == None:
             notice("Database is disabled.")
             return
-        notice("Updating database (stage 1) for %s.", folder)
+        notice("Updating database (stage 1) for %s." % folder)
         db.connect()
-        db.add_new_files(os.path.join(self.config.get_server_snapshot(), folder))
-        db.delete_old_files(os.path.join(self.config.get_server_tmp(), folder))
+        db.add_new_files(self.config.get_server_snapshot(), folder)
+        db.delete_old_files(self.config.get_server_snapshot(), self.config.get_server_tmp(), folder)
         db.close()
-        notice("Updating database (stage 1) for %s finished.", folder)
+        notice("Updating database (stage 1) for %s finished." % folder)
     
     def update_db_repository(self, folder):
         db = self.config.get_server_database()
         if db == None:
             notice("Database is disabled.")
             return
-        notice("Updating database (stage 2) for %s.", folder)
+        notice("Updating database (stage 2) for %s." % folder)
         db.connect()
         db.add_new_repository_entries(self.config.get_server_repository())
-        db.link_files_to_repository(os.path.join(self.config.get_server_snapshot(), folder))
+        db.link_files_to_repository(self.config.get_server_snapshot(), folder)
         db.close()
-        notice("Updating database (stage 2) for %s finished.", folder)
+        notice("Updating database (stage 2) for %s finished." % folder)
 
     def archive(self, folder):
     

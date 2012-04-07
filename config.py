@@ -144,7 +144,7 @@ class Config(object):
             if db_path == None:
                 self.vars['server_database'] = None
             else:
-                self.vars['server_database'] = Database(db_path)
+                self.vars['server_database'] = Database(os.path.join(self.get_server_root(), db_path))
         return self.vars['server_database']
 
     # Check if the server_tmp folder exists, create it if not, and return its absolute path.
@@ -155,7 +155,7 @@ class Config(object):
             else:
                 self.vars['server_tmp'] = self.get_server_folder(self.get_option('server', 'tmp'), auto_fix=auto_fix)
                 if self.vars['server_tmp'] == None:
-                    fatal('You should specify a temporary folder in the config file if you want to use data linking or a database!')
+                    fatal('You should specify a temporary folder in the config file if you want to use the archive or a database!')
         return self.vars['server_tmp']
     
     # For each source location, check if it is accessible, and return a dictionary of source locations.
