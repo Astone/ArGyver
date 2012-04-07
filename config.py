@@ -3,6 +3,7 @@ from verbose import *
 from argparse import ArgumentParser
 from ConfigParser import SafeConfigParser
 from subprocess import check_output, CalledProcessError
+from database import Database
 
 # A class to read the config file and the command line arguments and check all the settings for integrity.
 class Config(object):
@@ -86,6 +87,7 @@ class Config(object):
         self.get_server_snapshot()
         self.get_server_archive()
         self.get_server_repository()
+        self.get_server_database()
         self.get_server_tmp()
         self.get_sources()
         notice('Configuration check completed.')
@@ -131,14 +133,29 @@ class Config(object):
     def get_server_repository(self, auto_fix = True):
         if not 'server_repository' in self.vars:
             self.vars['server_repository'] = self.get_server_folder(self.get_option('server', 'repository'), auto_fix=auto_fix)
+            if self.get_server_database() and self.vars['server_repository'] == None:
+                fatal('You should specify a repository folder in the config file if you want to use a database!')
         return self.vars['server_repository']
+
+    # Check if the server_database exists, create it if not, and return its absolute path.
+    def get_server_database(self, auto_fix = True):
+        if not 'server_database' in self.vars:
+            db_path = self.get_option('server', 'database')
+            if db_path == None:
+                self.vars['server_database'] = None
+            else:
+                self.vars['server_database'] = Database(db_path)
+        return self.vars['server_database']
 
     # Check if the server_tmp folder exists, create it if not, and return its absolute path.
     def get_server_tmp(self, auto_fix = True):
-        if self.get_server_archive() == None:
-            return None
         if not 'server_tmp' in self.vars:
-            self.vars['server_tmp'] = self.get_server_folder(self.get_option('server', 'tmp'), auto_fix=auto_fix)
+            if self.get_server_archive() == None and self.get_server_database() == None:
+                self.vars['server_tmp'] = None
+            else:
+                self.vars['server_tmp'] = self.get_server_folder(self.get_option('server', 'tmp'), auto_fix=auto_fix)
+                if self.vars['server_tmp'] == None:
+                    fatal('You should specify a temporary folder in the config file if you want to use data linking or a database!')
         return self.vars['server_tmp']
     
     # For each source location, check if it is accessible, and return a dictionary of source locations.

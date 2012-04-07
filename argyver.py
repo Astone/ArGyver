@@ -11,8 +11,7 @@ from subprocess import check_output, CalledProcessError
 class ArGyver(object):
     
     config = None
-    index = None
-
+    
     def __init__(self):
 
         # Load configuration file and parse arguments.
@@ -35,8 +34,10 @@ class ArGyver(object):
             # For each source folder: synchronize, archive, free disk space
             for [dst, src] in iter(sorted(self.sources.iteritems())):
                 self.rsync(src, dst)
+                self.update_db_snapshot(dst)
                 self.archive(dst)
                 self.link_files(dst)
+                self.update_db_repository(dst)
 
             # Remove some garbage
             self.remove_tmp_folder()
@@ -78,6 +79,30 @@ class ArGyver(object):
             notice(output)
 
         notice("Synchronisation of \"%s\" (%s) finished." % (src, dst))
+
+    def update_db_snapshot(self, folder):
+        db = self.config.get_server_database()
+        if db == None:
+            notice("Database is disabled.")
+            return
+        notice("Updating database (stage 1) for %s.", folder)
+        db.connect()
+        db.add_new_files(os.path.join(self.config.get_server_snapshot(), folder))
+        db.delete_old_files(os.path.join(self.config.get_server_tmp(), folder))
+        db.close()
+        notice("Updating database (stage 1) for %s finished.", folder)
+    
+    def update_db_repository(self, folder):
+        db = self.config.get_server_database()
+        if db == None:
+            notice("Database is disabled.")
+            return
+        notice("Updating database (stage 2) for %s.", folder)
+        db.connect()
+        db.add_new_repository_entries(self.config.get_server_repository())
+        db.link_files_to_repository(os.path.join(self.config.get_server_snapshot(), folder))
+        db.close()
+        notice("Updating database (stage 2) for %s finished.", folder)
 
     def archive(self, folder):
     
