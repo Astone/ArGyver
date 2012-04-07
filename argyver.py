@@ -3,7 +3,7 @@
 from verbose import *
 from config import Config
 from pidlock import PidLock
-from datalinker import DataLinker
+from filelinker import FileLinker
 from datetime import datetime
 import os, shutil
 from subprocess import check_output, CalledProcessError

@@ -82,7 +82,7 @@ Default: `archive/`
 
 ### server.repository
 The folder where all data is stored, relative to the server root.
-Or an absolute path if you wish. This is used by the data linker
+Or an absolute path if you wish. This is used by the file linker
 to save disk space. 
 Default: `.data/`
 
