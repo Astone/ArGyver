@@ -1,5 +1,5 @@
-ArGyver 1.2
-===========
+ArGyver 2.0 alpha
+=================
 
 ArGyver is backup utility based on rsync, it stores each version
 of your files individually in a file based archive. It can
@@ -80,6 +80,13 @@ The folder where the archive is created, relative to the server
 root. Or an absolute path if you wish.
 Default: `archive/`
 
+### server.repository
+The folder where all data is stored, relative to the server root.
+Or an absolute path if you wish. This is used by the data linker
+to save disk space. 
+Default: `.data/`
+
+
 ### server.tmp
 A temporary folder used by rsync to store all files that are
 changed. These files will be placed in the archive folder
@@ -114,9 +121,3 @@ Some more examples:
     src-pics/private: username@ip-address:Pictures/
     src-pics/download: username@ip-address:Downloads/Images/
     src-pics: /home/angus/Pictures/helicopters
-
-
-Todo's
-------
-
-* Add exclude options to [options] in config system

@@ -16,6 +16,7 @@ class Config(object):
         'root'              : '.',
         'snapshot'          : 'snapshot/',
         'archive'           : 'archive/',
+        'repository'        : None,
         'tmp'               : '.tmp/'
     }
 
@@ -84,6 +85,7 @@ class Config(object):
         self.get_server_root()
         self.get_server_snapshot()
         self.get_server_archive()
+        self.get_server_repository()
         self.get_server_tmp()
         self.get_sources()
         notice('Configuration check completed.')
@@ -116,19 +118,27 @@ class Config(object):
     # Check if the server_snapshot folder exists, create it if not, and return its absolute path.
     def get_server_snapshot(self, auto_fix = True):
         if not 'server_snapshot' in self.vars:
-            self.vars['server_snapshot'] = self.get_server_folder(self.get_option('server', 'snapshot'))
+            self.vars['server_snapshot'] = self.get_server_folder(self.get_option('server', 'snapshot'), auto_fix=auto_fix)
         return self.vars['server_snapshot']
 
     # Check if the server_archive folder exists, create it if not, and return its absolute path.
     def get_server_archive(self, auto_fix = True):
         if not 'server_archive' in self.vars:
-            self.vars['server_archive'] = self.get_server_folder(self.get_option('server', 'archive'))
+            self.vars['server_archive'] = self.get_server_folder(self.get_option('server', 'archive'), auto_fix=auto_fix)
         return self.vars['server_archive']
+
+    # Check if the server_repository folder exists, create it if not, and return its absolute path.
+    def get_server_repository(self, auto_fix = True):
+        if not 'server_repository' in self.vars:
+            self.vars['server_repository'] = self.get_server_folder(self.get_option('server', 'repository'), auto_fix=auto_fix)
+        return self.vars['server_repository']
 
     # Check if the server_tmp folder exists, create it if not, and return its absolute path.
     def get_server_tmp(self, auto_fix = True):
+        if self.get_server_archive() == None:
+            return None
         if not 'server_tmp' in self.vars:
-            self.vars['server_tmp'] = self.get_server_folder(self.get_option('server', 'tmp'))
+            self.vars['server_tmp'] = self.get_server_folder(self.get_option('server', 'tmp'), auto_fix=auto_fix)
         return self.vars['server_tmp']
     
     # For each source location, check if it is accessible, and return a dictionary of source locations.
@@ -177,6 +187,8 @@ class Config(object):
 
     # Check if the required folder exists on the server, create it if not, and return its path.
     def get_server_folder(self, folder, root = None, auto_fix = True):
+        if folder == None:
+            return None
         if root == None:
             root = self.get_server_root(auto_fix)
         path = os.path.join(root, folder)
@@ -190,7 +202,8 @@ class Config(object):
                 else:
                     notice("Folder \"%s\" created on server." % folder)
             else:
-                fatal()
+                notice("Folder \"%s\" could not be found on server." % folder)
+                return None
         return path
 
 

@@ -7,7 +7,7 @@ This can be usefull when you want to restore a (part of) the directory tree from
 1. Copy the part of the archive tree you want to restore to its destination
 2. Run rename.py: ./rename.py -f /path/to/the/destination -v
 
-NOTE: Be carefull not to specify the original ArGyver archive folder!
+NOTE: Be carefull not to use the original ArGyver archive folder!
 
 """
 

@@ -2,6 +2,8 @@
 
 from verbose import *
 from config import Config
+from pidlock import PidLock
+from datalinker import DataLinker
 from datetime import datetime
 import os, shutil
 from subprocess import check_output, CalledProcessError
@@ -13,76 +15,77 @@ class ArGyver(object):
 
     def __init__(self):
 
-    # Load configuration file and parse arguments.
+        # Load configuration file and parse arguments.
         self.config = Config()
 
-    # Retrieve a list of all the source locations.
-    # This function will also check if all these locations are accessible.
+        # Retrieve a list of all the source locations.
+        # This function will also check if all these locations are accessible.
         self.sources = self.config.get_sources()
 
     def run(self):
-        lockfilename = str("%s/.lockfile" % self.config.get_server_root())
-        pid = -1
-        if (os.path.exists(lockfilename)):
-            lockfile = open(lockfilename, 'r')
-            pid = int(lockfile.read())
-            lockfile.close()
-
-        if (pid != -1 and self.isrunning(pid)):
-            warning("ArGyver already running with pid %d, stopping" % pid)
+        # Assure that only one instance of ArGyver is running.
+        lock = PidLock(server_root=self.config.get_server_root())
+        if lock.locked():
+            warning("ArGyver already running with pid %d, stopping" % lock.pid())
         else:
-            lockfile = open(lockfilename, 'w')
-            lockfile.write(str(os.getpid()))
-            lockfile.close()
-            
+        
+            # Create a lock file in the /tmp folder
+            lock.lock()
+
+            # For each source folder: synchronize, archive, free disk space
             for [dst, src] in iter(sorted(self.sources.iteritems())):
                 self.rsync(src, dst)
                 self.archive(dst)
+                self.link_files(dst)
 
-            # Remove the temporary folder
-            tmp_root = self.config.get_server_tmp()
-            debug("Removing temporary folder \"%s\" recursively" % tmp_root)
-            try:
-                shutil.rmtree(tmp_root)
-            except Exception as e:
-                error("Tried to remove temporary folder \"%s\"... FAILED" % tmp_root)
-                error(str(e))
-
-            os.remove(lockfilename)
-
-    def isrunning(self, pid):
-        try:
-            os.kill(pid, 0)
-            return True
-        except OSError:
-            return False
+            # Remove some garbage
+            self.remove_tmp_folder()
+            
+            # Remove the lock file
+            lock.unlock()
 
     def rsync(self, src, dst):
 
         notice("Starting synchronisation of \"%s\" (%s)." % (src, dst))
 
         # Construct the rsync command.
-        # Files that have changed or are deleted are backuped in a temporary folder,
-        # archive() will handle these files later on.
+        # Files that have changed or are deleted are backuped in a temporary
+        # folder, archive() will handle these files later on (if this function
+        # is enbled in the config file
+
         cmd = 'rsync'
+
         opt = self.config.get_rsync_options().split()
-        bu = ['--delete', '-b', '--backup-dir=%s' % os.path.join(self.config.get_server_tmp(), dst)]
+
+        if self.config.get_server_archive():
+            bu = ['-b', '--backup-dir=%s' % os.path.join(self.config.get_server_tmp(), dst)]
+        else:
+            bu = []
 
         # Construct the absolute snapshot path.
         snapshot = os.path.join(self.config.get_server_snapshot(), dst)
+
         try:
             # Execute the rsync command and capture the output.
-            output = check_output([cmd] + opt + bu + [src] + [snapshot])
+            output = check_output([cmd] + opt + ['--delete'] + bu + [src] + [snapshot])
+
         except CalledProcessError as e:
             # Display an error if the rsync command fails.
             error(str(e))
+
         else:
             # Or display a notice if the rsync command was succesfull.
-            notice(check_output([cmd] + opt + bu + [src] + [snapshot]))
+            notice(output)
 
         notice("Synchronisation of \"%s\" (%s) finished." % (src, dst))
 
     def archive(self, folder):
+    
+        # If the archivation is disabled, do nothing
+        if self.config.get_server_archive() == None:
+            notice("Archivation is disabled.")
+            return
+
         notice("Starting archivation of \"%s\"." % (folder))
 
         # Construct the absolute archive path and the absolute temparory path.
@@ -139,8 +142,42 @@ class ArGyver(object):
 
         notice("Archivation of \"%s\" finished." % (folder))
 
+    def link_files(self, folder):
 
-# These three lines are used to let the ArGyver actually do something
+        # If data linking is disabled, do nothing
+        if self.config.get_server_repository() == None:
+            notice("File linking is disabled.")
+            return
+
+        notice("Starting file linking in \"%s\"." % (folder))
+
+        # Construct the absolute folder and repository
+        folder = os.path.join(self.config.get_server_snapshot(), folder)
+        repository = self.config.get_server_repository() 
+
+        # Create a data linker instance and let it do the work
+        linker = FileLinker(folder, repository)
+        linker.run()
+
+        notice("File linking in \"%s\" finished." % (folder))
+
+    def remove_tmp_folder(self):
+
+        # Remove the temporary folder (if it is defined)
+        tmp_root = self.config.get_server_tmp()
+
+        if tmp_root == None:
+            return
+
+        debug("Removing temporary folder \"%s\" recursively" % tmp_root)
+
+        try:
+            shutil.rmtree(tmp_root)
+        except Exception as e:
+            error("Tried to remove temporary folder \"%s\"... FAILED" % tmp_root)
+            error(str(e))
+
+# These three lines let the ArGyver actually do something
 if __name__ == '__main__':
     A = ArGyver()
     A.run()
