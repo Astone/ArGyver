@@ -38,6 +38,7 @@ class ArGyver(object):
                 self.archive(dst)
                 self.link_files(dst)
                 self.update_db_repository(dst)
+            self.update_db_history()
 
             # Remove some garbage
             self.remove_tmp_folder()
@@ -85,7 +86,7 @@ class ArGyver(object):
         if db == None:
             debug("Database is disabled.")
             return
-        notice("Updating database (stage 1) for %s." % folder)
+        notice("Updating database (stage 1) for %s. (#%d)" % (folder, db.itteration))
         db.connect()
         db.add_new_files(self.config.get_server_snapshot(), folder)
         db.delete_old_files(self.config.get_server_snapshot(), self.config.get_server_tmp(), folder)
@@ -97,13 +98,23 @@ class ArGyver(object):
         if db == None:
             debug("Database is disabled.")
             return
-        notice("Updating database (stage 2) for %s." % folder)
+        notice("Updating database (stage 2) for %s. (#%d)" % (folder, db.itteration))
         db.connect()
         db.add_new_repository_entries(self.config.get_server_repository())
         db.link_files_to_repository(self.config.get_server_snapshot(), folder)
-        db.set_previous_version()
         db.close()
         notice("Updating database (stage 2) for %s finished." % folder)
+
+    def update_db_history(self):
+        db = self.config.get_server_database()
+        if db == None:
+            debug("Database is disabled.")
+            return
+        notice("Updating database (stage 3) (#%d)" % (db.itteration))
+        db.connect()
+        db.update_history()
+        db.close()
+        notice("Updating database (stage 3) finished.")
 
     def archive(self, folder):
     

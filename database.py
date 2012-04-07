@@ -6,18 +6,22 @@ import sqlite3 as sql
 
 class Database(object):
 
+    itteration = None
     path = None
     db = None
 
-    def __init__(self, db_path):
+    def __init__(self, db_path, auto_create=True):
         self.path = os.path.abspath(db_path)
-
-    def connect(self, auto_create=True):
-        debug("Connecting to database %s" % self.path)
         if not os.path.isfile(self.path) and auto_create:
-            self.create()
+            self.create(True)
         else:
-            self.db = sql.connect(self.path)
+            self.connect()
+        self.itteration = self._get_itteration() + 1
+        self.close()
+
+    def connect(self):
+        debug("Connecting to database %s" % self.path)
+        self.db = sql.connect(self.path)
 
     def close(self):
         debug("Closing connection to database %s" % self.path)
@@ -39,7 +43,9 @@ class Database(object):
                 inode INTEGER NULL, \
                 previous_version INTEGER NULL, \
                 created REAL NOT NULL, \
-                deleted REAL NULL \
+                deleted REAL NULL, \
+                created_i INTEGER NOT NULL, \
+                deleted_i INTEGER NULL \
             );')
         self.execute(' \
             CREATE TABLE repository ( \
@@ -103,8 +109,15 @@ class Database(object):
             inode = os.stat(abs_path).st_ino
             self._set_inode(path_id, inode)
 
-    def set_previous_version(self):
-        warning("set_previous_version() is not implemented. This could be used to show if a file is moved, copied, deleted, etc in the GUI.")
+    def update_history(self):
+        warning("update_history() is not implemented. This could be used to show if a file is moved, copied, deleted, etc in the GUI.")
+
+    def _get_itteration(self):
+        query = ' \
+            SELECT 0, MAX(created_i), MAX(deleted_i) \
+            FROM versions;'
+        row = self.execute(query).fetchone()
+        return max(row)
 
     def _get_path_id(self, file_path):
         query = ' \
@@ -128,19 +141,19 @@ class Database(object):
         debug("DB: Adding version (path=%d, created=%d)" % (path_id, mtime))
         query = ' \
             INSERT INTO versions \
-            (path, created) VALUES (?, ?);'
-        result = self.execute(query, path_id, mtime)
+            (path, created, created_i) VALUES (?, ?, ?);'
+        result = self.execute(query, path_id, mtime, self.itteration)
         return result.lastrowid
 
     def _close_version(self, path_id, inode, mtime):
         debug("DB: Closing version (path=%d, inode=%d, deleted=%d)" % (path_id, inode, mtime))
         query = ' \
             UPDATE versions \
-            SET deleted = ? \
+            SET deleted = ?, deleted_i = ? \
             WHERE path = ? \
             AND inode = ? \
             AND deleted IS NULL;'
-        self.execute(query, mtime, path_id, inode)
+        self.execute(query, mtime, self.itteration, path_id, inode)
 
     def _get_hashes(self, pattern):
         query = ' \
