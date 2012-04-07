@@ -2,6 +2,8 @@
 
 import os
 from verbose import *
+from datetime import datetime
+from time import mktime
 import sqlite3 as sql
 
 class Database(object):
@@ -33,8 +35,15 @@ class Database(object):
         debug("DB: Creating empty database %s" % os.path.basename(self.path))
         self.db = sql.connect(self.path)
         self.execute(' \
+            CREATE TABLE folders ( \
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, \
+                parent INTEGER NOT NULL, \
+                name TEXT NOT NULL \
+            );')
+        self.execute(' \
             CREATE TABLE paths ( \
                 id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, \
+                folder INTEGER, \
                 path TEXT NOT NULL \
             );')
         self.execute(' \
@@ -89,7 +98,7 @@ class Database(object):
                 if os.path.isfile(snap_path):
                     mtime = os.stat(snap_path).st_mtime
                 else:
-                    mtime = 0 # TODO: NOW()
+                    mtime = mktime(datetime.now().timetuple())
                 pid = self._get_path_id(os.path.relpath(snap_path, snapshot))
                 self._close_version(pid, inode, mtime)
     
@@ -130,16 +139,46 @@ class Database(object):
             return row[0]
         return None
 
+    def _get_or_add_folder(self, path):
+        parent = 0
+        path = path.split(os.path.sep)
+        for folder in path:
+            fid = self._get_folder(parent, folder)
+            if fid == None:
+                fid = self._add_folder(parent, folder)
+            parent = fid
+        return parent
+
+    def _get_folder(self, parent, name):
+        query = ' \
+            SELECT id \
+            FROM folders \
+            WHERE parent = ? \
+            AND name = ?;'
+        row = self.execute(query, parent, name).fetchone()
+        if row != None:
+            return row[0]
+        return None
+
+    def _add_folder(self, parent, name):
+        debug("DB: Adding folder %s under %d" % (name, parent))
+        query = ' \
+            INSERT INTO folders \
+            (parent, name) VALUES (?, ?);'
+        result = self.execute(query, parent, name)
+        return result.lastrowid
+
     def _add_path(self, file_path):
         debug("DB: Adding path %s" % file_path)
+        folder_id = self._get_or_add_folder(os.path.dirname(file_path))
         query = ' \
             INSERT INTO paths \
-            (path) VALUES (?);'
-        result = self.execute(query, file_path)
+            (folder, path) VALUES (?, ?);'
+        result = self.execute(query, folder_id, file_path)
         return result.lastrowid
 
     def _add_version(self, path_id, mtime):
-        debug("DB: Adding version (path=%d, created=%d)" % (path_id, mtime))
+        debug("DB: Adding version (path=%d, created=%f)" % (path_id, mtime))
         query = ' \
             INSERT INTO versions \
             (path, created, created_i) VALUES (?, ?, ?);'
@@ -147,7 +186,7 @@ class Database(object):
         return result.lastrowid
 
     def _close_version(self, path_id, inode, mtime):
-        debug("DB: Closing version (path=%d, inode=%d, deleted=%d)" % (path_id, inode, mtime))
+        debug("DB: Closing version (path=%d, inode=%d, deleted=%f)" % (path_id, inode, mtime))
         query = ' \
             UPDATE versions \
             SET deleted = ?, deleted_i = ? \
