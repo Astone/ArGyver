@@ -7,7 +7,7 @@ from argparse import ArgumentParser
 
 BUFF_SIZE = 4 * (2**16) # 4MB
 
-class DataLinker(object):
+class FileLinker(object):
 
     folder = None
     repository = None
@@ -133,7 +133,7 @@ class DataLinker(object):
         return md5.hexdigest()
 
 if __name__ == "__main__":
-    linker = DataLinker()
+    linker = FileLinker()
     linker.parse_arguments()
     linker.run()
 
