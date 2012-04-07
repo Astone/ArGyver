@@ -75,15 +75,15 @@ class ArGyver(object):
             error(str(e))
 
         else:
-            # Or display a notice if the rsync command was succesfull.
-            notice(output)
+            # Or display a debug if the rsync command was succesfull.
+            debug(output)
 
         notice("Synchronisation of \"%s\" (%s) finished." % (src, dst))
 
     def update_db_snapshot(self, folder):
         db = self.config.get_server_database()
         if db == None:
-            notice("Database is disabled.")
+            debug("Database is disabled.")
             return
         notice("Updating database (stage 1) for %s." % folder)
         db.connect()
@@ -95,12 +95,13 @@ class ArGyver(object):
     def update_db_repository(self, folder):
         db = self.config.get_server_database()
         if db == None:
-            notice("Database is disabled.")
+            debug("Database is disabled.")
             return
         notice("Updating database (stage 2) for %s." % folder)
         db.connect()
         db.add_new_repository_entries(self.config.get_server_repository())
         db.link_files_to_repository(self.config.get_server_snapshot(), folder)
+        db.set_previous_version()
         db.close()
         notice("Updating database (stage 2) for %s finished." % folder)
 
@@ -108,7 +109,7 @@ class ArGyver(object):
     
         # If the archivation is disabled, do nothing
         if self.config.get_server_archive() == None:
-            notice("Archivation is disabled.")
+            debug("Archivation is disabled.")
             return
 
         notice("Starting archivation of \"%s\"." % (folder))
@@ -128,7 +129,7 @@ class ArGyver(object):
             # Make sure this folter exists in the archive folder or create it if it doesn't.
             if not os.path.isdir(os.path.join(arch_root, path)):
                 try:
-                    notice("Make dir \"%s\"" % path)
+                    debug("Make dir \"%s\"" % path)
                     os.makedirs(os.path.join(arch_root, path), os.stat(os.path.join(tmp_root, path)).st_mode)
                 except Exception as e:
                     error(str())
@@ -158,7 +159,7 @@ class ArGyver(object):
 
                 # Move the temporary file to the archive folder
                 arch_path = os.path.join(arch_root, path, arch_name)
-                notice("Move \"%s\" to \"%s\"" % (os.path.join(path, tmp_name), os.path.join(path, arch_name)))
+                debug("Move \"%s\" to \"%s\"" % (os.path.join(path, tmp_name), os.path.join(path, arch_name)))
                 try:
                     os.rename(tmp_path, arch_path)
                 except Exception as e:
@@ -171,7 +172,7 @@ class ArGyver(object):
 
         # If data linking is disabled, do nothing
         if self.config.get_server_repository() == None:
-            notice("File linking is disabled.")
+            debug("File linking is disabled.")
             return
 
         notice("Starting file linking in \"%s\"." % (folder))

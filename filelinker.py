@@ -78,7 +78,7 @@ class FileLinker(object):
                         self.link_file(file_path, idx_path)               
 
     def store_file(self, file_path, idx_path):
-        notice("Storing %s at %s" % (os.path.relpath(file_path, self.folder), os.path.relpath(idx_path, self.repository)))
+        debug("Storing %s at %s" % (os.path.relpath(file_path, self.folder), os.path.relpath(idx_path, self.repository)))
         idx_dir = os.path.dirname(idx_path)
         if not os.path.isdir(idx_dir):
             debug("Make dir %s" % os.path.relpath(idx_dir, self.repository))
@@ -88,7 +88,7 @@ class FileLinker(object):
             os.link(file_path, idx_path)
 
     def link_file(self, file_path, idx_path):
-        notice("Linking %s to %s" % (os.path.relpath(file_path, self.folder), os.path.relpath(idx_path, self.repository)))
+        debug("Linking %s to %s" % (os.path.relpath(file_path, self.folder), os.path.relpath(idx_path, self.repository)))
         file_stats = os.stat(file_path)
         idx_stats = os.stat(idx_path)
         atime = max(file_stats.st_atime, idx_stats.st_atime)
@@ -114,7 +114,7 @@ class FileLinker(object):
         file_hash = self.get_file_hash(file_path)
         if file_hash == None:
             return 
-        return os.path.join(self.repository, file_hash[0:2], file_hash[2:4], file_hash[4:])
+        return os.path.join(self.repository, file_hash[0:2], file_hash)
         
     @staticmethod
     def get_file_hash(file_path):
