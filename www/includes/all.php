@@ -1,7 +1,7 @@
-<?php defined('security_check') ? : die('Access denied');
+<?php defined('ROOT') ? : die('Access denied');
 
-include('config.php');
-include('get.php');
-
-?>
+require_once(ROOT.'/includes/get.php');
+require_once(ROOT.'/includes/database.php');
+require_once(ROOT.'/includes/filesystem.php');
+require_once(ROOT.'/includes/config.php');
 

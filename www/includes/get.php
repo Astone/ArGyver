@@ -1,16 +1,14 @@
-<?php defined('security_check') ? : die('Access denied');
+<?php defined('ROOT') ? : die('Access denied');
 
-function get($var)
+function get($var, $default=null, $prefix='')
 {
-    if (key_exists($var, $_GET))
+    if (key_exists($var, $_GET) && ! empty($_GET[$var]))
     {
-        return $_GET[$var];
+        return $prefix.$_GET[$var];
     }
     else
     {
-        return null;
+        return $default;
     }
 }
-
-?>
 

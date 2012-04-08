@@ -1,12 +1,18 @@
-<?php define('security_check', True);
+<?php define('ROOT', dirname(__FILE__));
 
-include('includes/all.php');
+require_once('includes/all.php');
 
 function get_tree($cid, $fid)
 {
-    return '<ul><li><a>Test</a></li></ul>';
+    $cfgs = get_configs();
+    $html = "";
+    foreach($cfgs as $cfg)
+    {
+        $name = "X";
+        $html .= "<li>$name<ul></ul></li>";
+    }
+    return "<ul>$html</ul>";
 }
  
 include('templates/folders.php');
 
-?>
