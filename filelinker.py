@@ -11,6 +11,7 @@ class FileLinker(object):
 
     folder = None
     repository = None
+    force = False
     for_real = True
     
     def __init__(self, folder=".", repository=".data"):
@@ -21,12 +22,16 @@ class FileLinker(object):
         parser = ArgumentParser(description='Save space by hardlinking identical files')
 
         parser.add_argument(
-            '-f', dest='folder', required=True,
+            '-s', dest='source', required=True,
             help='The folder containing the original files.')
 
         parser.add_argument(
-            '-r', dest='repository', required=True,
+            '-d', dest='dest', required=True,
             help='A (hidden) folder containing all original files in an indexed structure')
+
+        parser.add_argument(
+            '-f', dest='force', action="store_true"
+            help='Force adding files even if they are allready hadlinked to another file')
 
         parser.add_argument(
             '-l', dest='log_file',
@@ -41,8 +46,9 @@ class FileLinker(object):
             help='The verbosity level. 0=quiet, 1=fatal errors, 2=errors, 3=warnings, 4=notices, 5=debug')
 
         args = parser.parse_args()
-        self.folder = os.path.abspath(args.folder)
-        self.repository = os.path.abspath(args.repository)
+        self.folder = os.path.abspath(args.source)
+        self.repository = os.path.abspath(args.dest)
+        self.force = args.force
         set_log_file(args.log_file, args.log_level)
         set_verbosity(args.verbosity)
 
@@ -61,8 +67,8 @@ class FileLinker(object):
                     continue
 
                 stats = os.stat(file_path)
-                # If the file is not linked to any other file, it has to be indexed
-                if stats.st_nlink == 1:
+                # If the file is not linked to any other file, it should to be indexed
+                if self.force or stats.st_nlink == 1:
 
                     # Retrieve a unique index path based on the file's contents
                     idx_path = self.get_index_path(file_path)
