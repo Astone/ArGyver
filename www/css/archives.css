@@ -1,0 +1,39 @@
+ul.archives
+{
+    padding         : 0;
+}
+
+ul.archives li
+{
+    display         : block;
+    float           : left;
+    padding         : 4px 8px;
+    margin          : 0px 4px;
+    background      : #CCF;
+}
+
+ul.archives li.enabled a
+{
+    color           : #000;
+    text-decoration : none;
+}
+
+ul.archives li.enabled:hover,
+ul.archives li.current
+{
+    background       : #F60;
+}
+
+ul.archives li.enabled:hover a,
+ul.archives li.current a
+{
+    color           : #fff;
+}
+
+ul.archives li.disabled
+{
+    background      : #CCC;
+    color           : #999999;
+}
+
+
