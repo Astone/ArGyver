@@ -77,8 +77,9 @@ def verbose(type, msg, color, show=True, bright=False):
         VERBOSE_TEXT += " ... "
     
     if VERBOSE_LOG_FILE != None and LOG_LEVEL & type:
-        duration = datetime.now() - VERBOSE_TIME 
-        log = "%0.3f %s | %s: %s" % (duration.total_seconds(), datetime.now().strftime("%Y-%m-%d %H:%M:%S"), types[type], msg) 
+        duration = datetime.now() - VERBOSE_TIME
+        seconds = duration.days * 24 * 3600 + duration.secconds + duration.microseconds / 10**6 
+        log = "%0.3f %s | %s: %s" % (seconds, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), types[type], msg) 
         if not show:
             log += " ..."
         VERBOSE_LOG_FILE.write(log + "\n")

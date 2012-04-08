@@ -30,7 +30,7 @@ class FileLinker(object):
             help='A (hidden) folder containing all original files in an indexed structure')
 
         parser.add_argument(
-            '-f', dest='force', action="store_true"
+            '-f', dest='force', action="store_true",
             help='Force adding files even if they are allready hadlinked to another file')
 
         parser.add_argument(
