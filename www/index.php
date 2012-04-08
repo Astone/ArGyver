@@ -2,7 +2,7 @@
 
 require_once('includes/all.php');
 
-$cid = get('cid', '', '?cid='); # Config ID
+$aid = get('aid', '', '?aid='); # Archive ID
 $fid = get('fid', '', '?fid='); # Folder ID
 $pid = get('pid', '', '?pid='); # Path ID
 $vid = get('vid', '', '?vid='); # Version ID

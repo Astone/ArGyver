@@ -24,6 +24,11 @@ class Database
         }
     }
     
+    public function exists()
+    {
+        return ! empty($this->db);
+    }
+    
     public function get_tree($fid)
     {
     }
