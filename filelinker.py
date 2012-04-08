@@ -12,7 +12,6 @@ class FileLinker(object):
     folder = None
     repository = None
     force = False
-    for_real = True
     
     def __init__(self, folder=".", repository=".data"):
         self.folder = os.path.abspath(folder)
@@ -88,9 +87,7 @@ class FileLinker(object):
         idx_dir = os.path.dirname(idx_path)
         if not os.path.isdir(idx_dir):
             debug("Make dir %s" % os.path.relpath(idx_dir, self.repository))
-            if self.for_real:
-                os.makedirs(idx_dir)
-        if self.for_real:
+            os.makedirs(idx_dir)
             os.link(file_path, idx_path)
 
     def link_file(self, file_path, idx_path):
@@ -99,22 +96,21 @@ class FileLinker(object):
         idx_stats = os.stat(idx_path)
         atime = max(file_stats.st_atime, idx_stats.st_atime)
         mtime = max(file_stats.st_mtime, idx_stats.st_mtime)
-        if self.for_real:
-            tmp_path = file_path + '.tmp'
-            os.rename(file_path, tmp_path)
-            try:
-                os.link(idx_path, file_path)
-            except Exception as e:
-                os.rename(tmp_path, file_path)
-                error("Tried to link %s to %s." % (file_path, idx_path))
-                error(str(e))
-            else:
-                os.unlink(tmp_path)
-            try:
-                os.utime(idx_path, (atime, mtime))
-            except Exception as e:
-                error("Tried to change the timestamp of %s to atime=%d, mtime=%d." % (file_path, atime, mtime))
-                error(str(e))
+        tmp_path = file_path + '.tmp'
+        os.rename(file_path, tmp_path)
+        try:
+            os.link(idx_path, file_path)
+        except Exception as e:
+            os.rename(tmp_path, file_path)
+            error("Tried to link %s to %s." % (file_path, idx_path))
+            error(str(e))
+        else:
+            os.unlink(tmp_path)
+        try:
+            os.utime(idx_path, (atime, mtime))
+        except Exception as e:
+            error("Tried to change the timestamp of %s to atime=%d, mtime=%d." % (file_path, atime, mtime))
+            error(str(e))
 
     def get_index_path(self, file_path):
         file_hash = self.get_file_hash(file_path)
