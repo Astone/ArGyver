@@ -1,6 +1,7 @@
 <?php defined('ROOT') ? : die('Access denied to '. __FILE__);
 
 require_once(ROOT.'/config.php');
+require_once(ROOT.'/includes/folder.php');
 
 class Archive
 {
@@ -28,13 +29,25 @@ class Archive
         $this->path = $cfg_path;
     }
     
-    public function has_db()
+    public function db_exists()
     {
         $db = $this->get_db();
         return $db->exists();
     }
     
-    public function get_db()
+    public function db_error()
+    {
+        $db = $this->get_db();
+        return $db->error();
+    }
+    
+    public function get_folder($fid)
+    {
+        $db = $this->get_db();
+        return $db->get_folder($fid);       
+    }
+
+    private function get_db()
     {
         if ($this->db == null)
         {
@@ -53,8 +66,8 @@ class Archive
         $root = empty($root_matches) ? $this->default_root : trim(array_pop(explode(':', array_pop($root_matches))));
         $repo = empty($repo_matches) ? $this->default_repo : trim(array_pop(explode(':', array_pop($repo_matches))));
         $db   = empty($db_matches)   ? $this->default_db   : trim(array_pop(explode(':', array_pop($db_matches  ))));
-        $this->repository = $root . '/' . $repo;
-        $this->database   = $root . '/' . $db;
+        $this->repository = rtrim($root, '/') . '/' . $repo;
+        $this->database   = rtrim($root, '/') . '/' . $db;
         $this->db = new Database($this->database, $this->repository);
     }
 }
@@ -71,5 +84,18 @@ function get_archives()
         $archives[] = new Archive($i, $cfg_name, $cfg_path);
     }
     return $archives;
+}
+
+function get_archive($aid)
+{
+    if (empty($aid))
+    {
+        return null;
+    }
+    else
+    {
+        $archives = get_archives();
+        return $archives[$aid-1];
+    }
 }
 
