@@ -67,6 +67,10 @@ class ArGyver(object):
         # Construct the absolute snapshot path.
         snapshot = os.path.join(self.config.get_server_snapshot(), dst)
 
+        rsync = [cmd] + opt + ['--delete'] + bu + [src] + [snapshot]
+        
+        debug(' '.join(rsync))
+
         try:
             # Execute the rsync command and capture the output.
             output = check_output([cmd] + opt + ['--delete'] + bu + [src] + [snapshot])
@@ -77,7 +81,7 @@ class ArGyver(object):
 
         else:
             # Or display a debug if the rsync command was succesfull.
-            debug(output)
+            notice(output)
 
         notice("Synchronisation of \"%s\" (%s) finished." % (src, dst))
 
