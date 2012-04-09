@@ -3,9 +3,9 @@
 require_once('includes/all.php');
 
 $aid = get('aid', '', '?aid='); # Archive ID
-$fid = get('fid', '', '?fid='); # Folder ID
-$pid = get('pid', '', '?pid='); # Path ID
-$vid = get('vid', '', '?vid='); # Version ID
+$fid = get('fid', '', '&fid='); # Folder ID
+$pid = get('pid', '', '&pid='); # Path ID
+$vid = get('vid', '', '&vid='); # Version ID
 
 $flink = get('fid', '', '#f'); # Folder ID
 $plink = get('pid', '', '#p'); # Path ID

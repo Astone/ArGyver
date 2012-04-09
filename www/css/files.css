@@ -1,0 +1,13 @@
+table
+{
+    border-top          : 1px solid #9CF;
+    border-right        : 1px solid #9CF;
+}
+
+th, td
+{
+    font-size           : 10pt;
+    border-bottom       : 1px solid #9CF;
+    border-left         : 1px solid #9CF;
+}
+

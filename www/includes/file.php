@@ -1,0 +1,56 @@
+<?php defined('ROOT') ? : die('Access denied to '. __FILE__);
+
+class File
+{
+    private $db;
+    public $id;
+    public $name;
+    public $size;
+    public $versions;
+    
+    public function __construct($db, $id, $name)
+    {
+        $this->db = $db;
+        $this->id = $id;
+        $this->name = $name;
+    }
+    
+    public function get_size()
+    {
+        if (empty($this->size))
+        {
+            $this->size = "1.23 KB";
+        }
+        return $this->size;
+    }
+
+    public function get_versions()
+    {
+        if (empty($this->versions))
+        {
+            $this->versions = Array();
+        }
+        return $this->versions;
+    }
+    
+    public function get_first_version()
+    {
+        $versions = $this->get_versions();
+        if (empty($versions))
+        {
+            return null;
+        }
+        return $versions[0];
+    }
+    
+    public function get_last_version()
+    {
+        $versions = $this->get_versions();
+        if (empty($versions))
+        {
+            return null;
+        }
+        return $versions[sizeof($versions)-1];
+    }
+
+}
