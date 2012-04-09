@@ -11,10 +11,10 @@ $archive  = get_archive($aid);
 if ( ! empty($archive))
 {
     $folder   = $archive->get_folder($fid);
-    $children = $folder->get_children();
-    $files    = $folder->get_files();
     if ( ! empty($folder))
     {
+        $children = $folder->get_children();
+        $files    = $folder->get_files();
         include('templates/files.php');
     }
 }

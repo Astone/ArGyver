@@ -11,3 +11,16 @@ th, td
     border-left         : 1px solid #9CF;
 }
 
+tbody tr:hover,
+tr.current,
+tr.current td a
+{
+    background          : #DEF;
+    color               : #F60;
+}
+
+tr.current
+{
+    font-weight         : bold;
+}
+

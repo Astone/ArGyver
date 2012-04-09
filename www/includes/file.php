@@ -7,14 +7,14 @@ class File
     public $name;
     public $size;
     public $versions;
-    
-    public function __construct($db, $id, $name)
+
+    public function __construct($db, $id, $path)
     {
         $this->db = $db;
         $this->id = $id;
-        $this->name = $name;
+        $this->name = basename($path);
     }
-    
+
     public function get_size()
     {
         if (empty($this->size))
@@ -32,7 +32,7 @@ class File
         }
         return $this->versions;
     }
-    
+
     public function get_first_version()
     {
         $versions = $this->get_versions();

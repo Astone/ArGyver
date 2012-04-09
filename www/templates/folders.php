@@ -14,14 +14,14 @@
 <?php endforeach ?>
 <?php foreach ($siblings as $s) : ?>
 <?php if ($fid == $s->id) :?>
-                    <li><a name="f<?=$s->id?>" /><b><?= $s->name ?></b>
+                    <li class="current"><a name="f<?=$s->id?>" /><a href="./?aid=<?= $aid ?>&fid=<?= $s->id ?>" target="_top"><?= $s->name ?></a>
                         <ul>
 <?php foreach ($children as $c) : ?>
                             <li><a href="./?aid=<?= $aid ?>&fid=<?= $c->id ?>" target="_top"><?= $c->name ?></a></li>
 <?php endforeach ?>
                         </ul>
 <?php else : ?>
-                    <li><a href="./?aid=<?= $aid ?>&fid=<?= $s->id ?>" target="_top"><?= $s->name ?></a>
+                    <li><a href="./?aid=<?= $aid ?>&fid=<?= $s->id ?>" target="_top"><?= $s->name ?></a></li>
 <?php endif ?>
 <?php endforeach ?>
 <?php for($i = 0; $i < sizeof($parents); $i++) : ?>

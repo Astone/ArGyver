@@ -198,6 +198,12 @@ class ArGyver(object):
 
         # Create a data linker instance and let it do the work
         linker = FileLinker(folder, repository)
+
+        # If this is the first time this argyver is executed, force linking all files.
+        db = self.config.get_server_database()
+        if db != None and db.itteration == 1:
+            linker.force = True
+
         linker.run()
 
         notice("File linking in \"%s\" finished." % (folder))

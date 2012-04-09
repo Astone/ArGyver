@@ -65,11 +65,15 @@ class Database(object):
 
     def execute(self, query, *args):
         cursor = self.db.cursor()
-        cursor.execute(query, args)
+        try:
+            cursor.execute(query, args)
+        except Exception as e:
+            error(str(e))
         return cursor
 
     def commit(self, commit=True):
         if commit:
+            debug("DB: Commit #%d." % self.itteration)
             self.db.commit()
 
     def add_new_files(self, root, folder):
@@ -79,13 +83,14 @@ class Database(object):
                 if not os.path.isfile(file_path):
                     continue
                 file_stat = os.stat(file_path)
-                if file_stat.st_nlink > 1:
+                if file_stat.st_nlink > 1 and self.itteration > 1:
                     continue
                 file_path = os.path.relpath(file_path, root)
                 pid = self._get_path_id(file_path)
                 if pid == None:
                     pid = self._add_path(file_path)
                 self._add_version(pid, file_stat.st_mtime)
+            self.commit()
  
     def delete_old_files(self, snapshot, temp, folder):
         for (path, folders, files) in os.walk(os.path.join(temp, folder)):
@@ -101,6 +106,7 @@ class Database(object):
                     mtime = mktime(datetime.now().timetuple())
                 pid = self._get_path_id(os.path.relpath(snap_path, snapshot))
                 self._close_version(pid, inode, mtime)
+            self.commit()
     
     def add_new_repository_entries(self, repository):
         for (path, folders, fs_hashes) in os.walk(repository):
@@ -110,14 +116,16 @@ class Database(object):
                 hashes = set(fs_hashes) - set(db_hashes)
                 for h in hashes:
                     self._add_hash(h, os.stat(os.path.join(path, h)).st_ino)
+                self.commit()
 
     def link_files_to_repository(self, root, folder):
         for (path_id, rel_path) in self._get_orphan_paths(folder+'/%'):
-            abs_path = os.path.join(root, rel_path)
+            abs_path = os.path.join(root, rel_path.encode('utf-8'))
             if not os.path.isfile(abs_path):
                 continue
             inode = os.stat(abs_path).st_ino
             self._set_inode(path_id, inode)
+        self.commit()
 
     def update_history(self):
         warning("DB: update_history() is not implemented. This could be used to show if a file is moved, copied, deleted, etc in the GUI.")
@@ -134,7 +142,7 @@ class Database(object):
             SELECT id \
             FROM paths \
             WHERE path = ?;'
-        row = self.execute(query, file_path).fetchone()
+        row = self.execute(query, file_path.decode('utf-8')).fetchone()
         if row != None:
             return row[0]
         return None
@@ -155,7 +163,7 @@ class Database(object):
             FROM folders \
             WHERE parent = ? \
             AND name = ?;'
-        row = self.execute(query, parent, name).fetchone()
+        row = self.execute(query, parent, name.decode('utf-8')).fetchone()
         if row != None:
             return row[0]
         return None
@@ -165,7 +173,7 @@ class Database(object):
         query = ' \
             INSERT INTO folders \
             (parent, name) VALUES (?, ?);'
-        result = self.execute(query, parent, name)
+        result = self.execute(query, parent, name.decode('utf-8'))
         return result.lastrowid
 
     def _add_path(self, file_path):
@@ -174,7 +182,7 @@ class Database(object):
         query = ' \
             INSERT INTO paths \
             (folder, path) VALUES (?, ?);'
-        result = self.execute(query, folder_id, file_path)
+        result = self.execute(query, folder_id, file_path.decode('utf-8'))
         return result.lastrowid
 
     def _add_version(self, path_id, mtime):

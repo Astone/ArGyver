@@ -7,20 +7,20 @@ class Archive
 {
     public $id;
     public $name;
-    
+
     private $path;
     private $repository;
     private $database;
 
     private $db;
-    
+
     private $root_pattern = "/^root\s*:\s*(\.*)/";
     private $repo_pattern = "/^repository\s*:\s*(\.*)/";
     private $db_pattern   = "/^database\s*:\s*(\.*)/";
 
     private $default_root = ROOT;
     private $default_repo = ".data/";
-    private $default_db   = ".data.sqlite";    
+    private $default_db   = ".data.sqlite";
 
     public function __construct($id, $cfg_name, $cfg_path)
     {
@@ -28,23 +28,23 @@ class Archive
         $this->name = $cfg_name;
         $this->path = $cfg_path;
     }
-    
+
     public function db_exists()
     {
         $db = $this->get_db();
         return $db->exists();
     }
-    
+
     public function db_error()
     {
         $db = $this->get_db();
         return $db->error();
     }
-    
+
     public function get_folder($fid)
     {
         $db = $this->get_db();
-        return $db->get_folder($fid);       
+        return $db->get_folder($fid);
     }
 
     private function get_db()
@@ -55,7 +55,7 @@ class Archive
         }
         return $this->db;
     }
-    
+
     private function read_config()
     {
         $file = file_get_contents($this->path);

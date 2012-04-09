@@ -3,3 +3,22 @@ ul
     margin          : 0 0 0 1em;
     padding         : 0;
 }
+
+li.current,
+li.current a
+{
+    font-weight     : bold;
+    color           : #F60;
+}
+
+li.current li,
+li.current li a
+{
+    font-weight     : normal;
+    color           : #333;
+}
+
+li.current li a:hover
+{
+    color           : #F60;
+}

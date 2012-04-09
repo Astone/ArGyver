@@ -6,7 +6,7 @@
         <link rel="stylesheet" type="text/css" href="./css/files.css" />
     <head>
     <body>
-        <h1><?= $folder->name ?></h1>
+        <h1><?= $folder->name ?><?=$pid?></h1>
 <?php if (! empty($children) || ! empty($files)) : ?>
         <table width="100%" cellspacing="0" border="0">
             <thead>
@@ -20,7 +20,7 @@
             </thead>
             <tbody>
 <?php foreach($children as $c) : ?>
-                <tr>
+                <tr class="folder">
                     <td>[<a href="./?aid=<?=$aid?>&fid=<?=$c->id?>" target="_top"><?=$c->name?></a>]</td>
                     <td></td>
                     <td></td>
@@ -28,13 +28,16 @@
                     <td></td>
                 </tr>
 <?php endforeach ?>
-<?php foreach($files as $f) : ?>
-                <tr>
-                    <td><a href="./?aid=<?=$aid?>&fid=<?=$fid?>&pid=<?=$f->id?>" target="_top"><?=$f->name?></a></td>
-                    <td><?=$f->get_size()?></td>
-                    <td><?=$f->get_first_version()?></td>
-                    <td><?=$f->get_last_version()?></td>
-                    <td><?=sizeof($f->get_versions())?></td>
+<?php foreach($files as $p) : ?>
+                <tr class="file<?php echo $p->id == $pid ? " current" : "" ?>">
+                    <td>
+                        <?php echo $p->id == $pid ? "<a name=\"p$pid\" />" : "" ?>
+                        <a href="./?aid=<?=$aid?>&fid=<?=$fid?>&pid=<?=$p->id?>" target="_top"><?=$p->name?></a>
+                    </td>
+                    <td><?=$p->get_size()?></td>
+                    <td><?=$p->get_first_version()?></td>
+                    <td><?=$p->get_last_version()?></td>
+                    <td><?=sizeof($p->get_versions())?></td>
                 </tr>
 <?php endforeach ?>
             </tbody>

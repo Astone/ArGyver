@@ -30,17 +30,17 @@ class Database
             $this->db->close();
         }
     }
-    
+
     public function exists()
     {
         return is_a($this->db, 'SQLite3');
     }
-    
+
     public function error()
     {
         return is_a($this->db, 'Exception') ? $this->db->getMessage() : null;
     }
-    
+
     public function get_folder($id)
     {
         if ($id===null)
@@ -54,7 +54,7 @@ class Database
 
     public function get_children($id)
     {
-        $qry = sprintf("SELECT * FROM folders WHERE parent = %d", $id);
+        $qry = sprintf("SELECT * FROM folders WHERE parent = %d ORDER BY name", $id);
 
         return $this->get_folders_from_qry($qry);
     }
@@ -75,13 +75,16 @@ class Database
 
     private function get_folders_from_qry($qry)
     {
-        $results = $this->db->query($qry);
+        $result = $this->query($qry);
 
         $folders = Array();
-        
-        while($folder = $results->fetchArray())
+
+        if ($result !== false)
         {
-            $folders[] = new Folder($this, $folder['id'], $folder['name'], $folder['parent']);
+            while($folder = $result->fetchArray())
+            {
+                $folders[] = new Folder($this, $folder['id'], $folder['name'], $folder['parent']);
+            }
         }
         return $folders;
     }
@@ -92,7 +95,7 @@ class Database
         {
             return null;
         }
-        $qry = sprintf("SELECT * FROM paths WHERE folder = %d", $id);
+        $qry = sprintf("SELECT * FROM paths WHERE folder = %d ORDER BY path", $id);
 
         return $this->get_files_from_qry($qry);
     }
@@ -113,14 +116,24 @@ class Database
 
     private function get_files_from_qry($qry)
     {
-        $results = $this->db->query($qry);
+        $results = $this->query($qry);
 
         $files = Array();
-        
+
         while($file = $results->fetchArray())
         {
             $files[] = new File($this, $file['id'], $file['path']);
         }
         return $files;
+    }
+
+    private function query($qry)
+    {
+        @$result = $this->db->query($qry);
+        if ($result === false)
+        {
+            die("DB Error: " . $this->db->lastErrorMsg());
+        }
+        return $result;
     }
 }

@@ -30,7 +30,7 @@ class FileLinker(object):
 
         parser.add_argument(
             '-f', dest='force', action="store_true",
-            help='Force adding files even if they are allready hadlinked to another file')
+            help='Force adding files even if they are allready hardlinked to another file')
 
         parser.add_argument(
             '-l', dest='log_file',
