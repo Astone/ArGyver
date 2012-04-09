@@ -12,7 +12,6 @@
             <thead>
                 <tr>
                     <th>File</th>
-                    <th>Size</th>
                     <th>First version</th>
                     <th>Last version</th>
                     <th>Versions</th>
@@ -25,7 +24,6 @@
                     <td></td>
                     <td></td>
                     <td></td>
-                    <td></td>
                 </tr>
 <?php endforeach ?>
 <?php foreach($files as $p) : ?>
@@ -34,9 +32,8 @@
                         <?php echo $p->id == $pid ? "<a name=\"p$pid\" />" : "" ?>
                         <a href="./?aid=<?=$aid?>&fid=<?=$fid?>&pid=<?=$p->id?>" target="_top"><?=$p->name?></a>
                     </td>
-                    <td><?=$p->get_size()?></td>
-                    <td><?=$p->get_first_version()?></td>
-                    <td><?=$p->get_last_version()?></td>
+                    <td><?=date("d-m-Y H:i:s", $p->get_first_version()->created)?></td>
+                    <td><?=date("d-m-Y H:i:s", $p->get_last_version()->created)?></td>
                     <td><?=sizeof($p->get_versions())?></td>
                 </tr>
 <?php endforeach ?>

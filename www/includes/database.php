@@ -2,6 +2,7 @@
 
 require_once('includes/folder.php');
 require_once('includes/file.php');
+require_once('includes/version.php');
 
 class Database
 {
@@ -100,20 +101,6 @@ class Database
         return $this->get_files_from_qry($qry);
     }
 
-    private function get_file_from_qry($qry)
-    {
-        $files = $this->get_files_from_qry($qry);
-
-        if ($files)
-        {
-            return $files[0];
-        }
-        else
-        {
-            return new File($this, 0, '');
-        }
-    }
-
     private function get_files_from_qry($qry)
     {
         $results = $this->query($qry);
@@ -125,6 +112,30 @@ class Database
             $files[] = new File($this, $file['id'], $file['path']);
         }
         return $files;
+    }
+
+    public function get_versions($id)
+    {
+        if ($id===null)
+        {
+            return null;
+        }
+        $qry = sprintf("SELECT * FROM versions WHERE path = %d ORDER BY created", $id);
+
+        return $this->get_versions_from_qry($qry);
+    }
+
+    private function get_versions_from_qry($qry)
+    {
+        $results = $this->query($qry);
+
+        $versions = Array();
+
+        while($version = $results->fetchArray())
+        {
+            $versions[] = new Version($this, $version['id'], $version['created'], $version['deleted']);
+        }
+        return $versions;
     }
 
     private function query($qry)
