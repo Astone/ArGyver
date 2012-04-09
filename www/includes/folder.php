@@ -41,4 +41,10 @@ class Folder
     {
         return $this->db->get_children($this->id);
     }
+    
+    public function get_files()
+    {
+        return $this->db->get_files($this->id);
+    }
+    
 }
