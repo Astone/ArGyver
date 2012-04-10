@@ -76,36 +76,46 @@ class Database(object):
             debug("DB: Commit #%d." % self.itteration)
             self.db.commit()
 
-    def add_new_files(self, root, folder):
+    def add_new_paths(self, root, folder):
         for (path, folders, files) in os.walk(os.path.join(root, folder)):
-            for file_name in files:
-                file_path = os.path.join(path, file_name)
-                if not os.path.isfile(file_path):
+            for name in folders+files:
+                abs_path = os.path.join(path, name)
+                if not os.path.exists(abs_path):
                     continue
-                file_stat = os.stat(file_path)
-                if file_stat.st_nlink > 1 and self.itteration > 1:
+                stat = os.stat(abs_path)
+                if stat.st_nlink > 1 and self.itteration > 1:
                     continue
-                file_path = os.path.relpath(file_path, root)
-                pid = self._get_path_id(file_path)
+                rel_path = os.path.relpath(abs_path, root)
+                pid = self._get_path_id(rel_path)
                 if pid == None:
-                    pid = self._add_path(file_path)
-                self._add_version(pid, file_stat.st_mtime)
+                    pid = self._add_path(rel_path)
+                    if os.path.isdir(abs_path):
+                        self._get_or_add_folder(rel_path)
+                if os.path.isdir(abs_path) and not self._path_is_open(pid):
+                    self._add_version(pid, stat.st_mtime)
+                if os.path.isfile(abs_path):
+                    self._add_version(pid, stat.st_mtime)
             self.commit()
  
-    def delete_old_files(self, snapshot, temp, folder):
+    def delete_old_paths(self, snapshot, temp, folder):
         for (path, folders, files) in os.walk(os.path.join(temp, folder)):
-            for file_name in files:
+            for file_name in folders+files:
                 temp_path = os.path.join(path, file_name)
                 snap_path = os.path.join(snapshot, os.path.relpath(temp_path, temp))
-                if not os.path.isfile(temp_path):
+                if not os.path.exists(temp_path):
                     continue
-                inode = os.stat(temp_path).st_ino
-                if os.path.isfile(snap_path):
+                if not os.path.isdir(snap_path):
+                    continue
+                inode = os.stat(temp_path).st_i
+                if os.path.exists(snap_path):
                     mtime = os.stat(snap_path).st_mtime
                 else:
                     mtime = mktime(datetime.now().timetuple())
                 pid = self._get_path_id(os.path.relpath(snap_path, snapshot))
-                self._close_version(pid, inode, mtime)
+                if not pid == None:
+                    self._close_version(pid, inode, mtime)
+                else:
+                    warning("Path id of %s could not be found in the database" % os.path.relpath(snap_path, snapshot))
             self.commit()
     
     def add_new_repository_entries(self, repository):
@@ -121,7 +131,8 @@ class Database(object):
     def link_files_to_repository(self, root, folder):
         for (path_id, rel_path) in self._get_orphan_paths(folder+'/%'):
             abs_path = os.path.join(root, rel_path.encode('utf-8'))
-            if not os.path.isfile(abs_path):
+            if not os.path.exists(abs_path):
+                warning("Path %s could not be found" % abs_path)
                 continue
             inode = os.stat(abs_path).st_ino
             self._set_inode(path_id, inode)
@@ -146,6 +157,26 @@ class Database(object):
         if row != None:
             return row[0]
         return None
+
+    def _path_is_open(self, id):
+        query = ' \
+            SELECT * \
+            FROM versions \
+            WHERE path = ? \
+            AND deleted IS NULL;'
+        row = self.execute(query, id).fetchone()
+        if row != None:
+            return True
+        return False
+
+    def _add_path(self, file_path):
+        debug("DB: Adding path %s" % file_path)
+        folder_id = self._get_or_add_folder(os.path.dirname(file_path))
+        query = ' \
+            INSERT INTO paths \
+            (folder, path) VALUES (?, ?);'
+        result = self.execute(query, folder_id, file_path.decode('utf-8'))
+        return result.lastrowid
 
     def _get_or_add_folder(self, path):
         parent = 0
@@ -176,15 +207,6 @@ class Database(object):
         result = self.execute(query, parent, name.decode('utf-8'))
         return result.lastrowid
 
-    def _add_path(self, file_path):
-        debug("DB: Adding path %s" % file_path)
-        folder_id = self._get_or_add_folder(os.path.dirname(file_path))
-        query = ' \
-            INSERT INTO paths \
-            (folder, path) VALUES (?, ?);'
-        result = self.execute(query, folder_id, file_path.decode('utf-8'))
-        return result.lastrowid
-
     def _add_version(self, path_id, mtime):
         debug("DB: Adding version (path=%d, created=%f)" % (path_id, mtime))
         query = ' \
@@ -194,6 +216,7 @@ class Database(object):
         return result.lastrowid
 
     def _close_version(self, path_id, inode, mtime):
+        debug([path_id, inode, mtime])
         debug("DB: Closing version (path=%d, inode=%d, deleted=%f)" % (path_id, inode, mtime))
         query = ' \
             UPDATE versions \

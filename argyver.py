@@ -11,6 +11,7 @@ from subprocess import check_output, CalledProcessError
 class ArGyver(object):
     
     config = None
+    sources = []
     
     def __init__(self):
 
@@ -92,8 +93,8 @@ class ArGyver(object):
             return
         notice("Updating database (stage 1) for %s. (#%d)" % (folder, db.itteration))
         db.connect()
-        db.add_new_files(self.config.get_server_snapshot(), folder)
-        db.delete_old_files(self.config.get_server_snapshot(), self.config.get_server_tmp(), folder)
+        db.add_new_paths(self.config.get_server_snapshot(), folder)
+        db.delete_old_paths(self.config.get_server_snapshot(), self.config.get_server_tmp(), folder)
         db.close()
         notice("Updating database (stage 1) for %s finished." % folder)
     

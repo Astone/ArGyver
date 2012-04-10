@@ -18,6 +18,7 @@ class Config(object):
         'snapshot'          : 'snapshot/',
         'archive'           : 'archive/',
         'repository'        : None,
+        'database'          : None,
         'tmp'               : '.tmp/'
     }
 
