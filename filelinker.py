@@ -88,7 +88,7 @@ class FileLinker(object):
         if not os.path.isdir(idx_dir):
             debug("Make dir %s" % os.path.relpath(idx_dir, self.repository))
             os.makedirs(idx_dir)
-            os.link(file_path, idx_path)
+        os.link(file_path, idx_path)
 
     def link_file(self, file_path, idx_path):
         debug("Linking %s to %s" % (os.path.relpath(file_path, self.folder), os.path.relpath(idx_path, self.repository)))

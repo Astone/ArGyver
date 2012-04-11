@@ -33,7 +33,7 @@ class ArGyver(object):
             lock.lock()
 
             # For each source folder: synchronize, archive, free disk space
-            for [dst, src] in iter(sorted(self.sources.iteritems())):
+            for [dst, src] in self.sources.iteritems():
                 self.rsync(src, dst)
                 self.update_db_snapshot(dst)
                 self.archive(dst)
