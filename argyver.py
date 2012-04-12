@@ -94,8 +94,8 @@ class ArGyver(object):
             return
         db.connect()
         notice("Updating database (stage 1) for %s. (#%d)" % (folder, db.iteration))
-        db.add_new_paths(self.config.get_server_snapshot(), folder)
         db.delete_old_paths(self.config.get_server_snapshot(), self.config.get_server_tmp(), folder)
+        db.add_new_paths(self.config.get_server_snapshot(), folder)
         db.close()
         notice("Updating database (stage 1) for %s finished." % folder)
     
