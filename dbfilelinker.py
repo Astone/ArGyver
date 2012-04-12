@@ -69,7 +69,7 @@ class DbFileLinker(FileLinker):
             FROM paths \
             INNER JOIN versions ON (versions.path = paths.id) \
             LEFT JOIN repository ON (repository.id = versions.inode) \
-    		WHERE hash IS NULL \
+    		WHERE checksum IS NULL \
     		AND NOT SUBSTR(paths.path, -1, 1) = ?', os.path.sep)
         if result == None:
             return []
