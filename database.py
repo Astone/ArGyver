@@ -8,23 +8,22 @@ import sqlite3 as sql
 
 class Database(object):
 
-    itteration = None
+    iteration = None
     path = None
     db = None
 
-    def __init__(self, db_path, auto_create=True):
+    def __init__(self, db_path):
         self.path = os.path.abspath(db_path)
-        if not os.path.isfile(self.path) and auto_create:
+        if not os.path.isfile(self.path):
             self.create()
             self.create_indexes()
         else:
             self.connect()
-        self.itteration = self._get_itteration() + 1
-        debug("DB: Iteration #%d" % self.itteration)
+        self.iteration = self._add_iteration()
+        debug("DB: Iteration #%d" % self.iteration)
         self.close()
 
     def connect(self):
-        debug("DB: Connecting to database %s" % self.path)
         self.db = sql.connect(self.path)
 
     def close(self):
@@ -35,6 +34,11 @@ class Database(object):
     def create(self):
         debug("DB: Creating empty database %s" % os.path.basename(self.path))
         self.db = sql.connect(self.path)
+        self.execute(' \
+            CREATE TABLE iterations ( \
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, \
+                start INTEGER NOT NULL \
+            );')
         self.execute(' \
             CREATE TABLE folders ( \
                 id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, \
@@ -53,8 +57,8 @@ class Database(object):
                 path INTEGER NOT NULL, \
                 inode INTEGER NULL, \
                 previous_version INTEGER NULL, \
-                created REAL NOT NULL, \
-                deleted REAL NULL, \
+                created INTEGER NOT NULL, \
+                deleted INTEGER NULL, \
                 created_i INTEGER NOT NULL, \
                 deleted_i INTEGER NULL \
             );')
@@ -65,6 +69,8 @@ class Database(object):
             );')
 
     def create_indexes(self):
+        self.execute('CREATE UNIQUE INDEX idx_iterations_id ON iterations (id);')
+
         self.execute('CREATE UNIQUE INDEX idx_folders_id ON folders (id);')
         self.execute('CREATE INDEX idx_folders_parent ON folders (parent);')
 
@@ -90,7 +96,7 @@ class Database(object):
 
     def commit(self, commit=True):
         if commit:
-            debug("DB: Commit #%d." % self.itteration)
+            debug("DB: Commit #%d." % self.iteration)
             self.db.commit()
 
     def add_new_paths(self, root, folder):
@@ -100,7 +106,7 @@ class Database(object):
                 if not os.path.exists(abs_path):
                     continue
                 stat = os.stat(abs_path)
-                if stat.st_nlink > 1 and not os.path.isdir(abs_path) and self.itteration > 1:
+                if stat.st_nlink > 1 and not os.path.isdir(abs_path) and self.iteration > 1:
                     continue
                 rel_path = os.path.relpath(abs_path, root)
                 if os.path.isdir(abs_path):
@@ -129,7 +135,7 @@ class Database(object):
                 if os.path.exists(snap_path):
                     mtime = os.stat(snap_path).st_mtime
                 else:
-                    mtime = mktime(datetime.now().timetuple())
+                    mtime = 0
                 rel_path = os.path.relpath(snap_path, snapshot)
                 if os.path.isdir(temp_path):
                     rel_path += os.path.sep
@@ -163,12 +169,12 @@ class Database(object):
     def update_history(self):
         warning("DB: update_history() is not implemented. This could be used to show if a file is moved, copied, deleted, etc in the GUI.")
 
-    def _get_itteration(self):
+    def _add_iteration(self):
         query = ' \
-            SELECT 0, MAX(created_i), MAX(deleted_i) \
-            FROM versions;'
-        row = self.execute(query).fetchone()
-        return max(row)
+            INSERT INTO iterations \
+            (start) VALUES (?);'
+        result = self.execute(query, mktime(datetime.now().timetuple()))
+        return result.lastrowid
 
     def _get_path_id(self, file_path):
         query = ' \
@@ -230,22 +236,22 @@ class Database(object):
         return result.lastrowid
 
     def _add_version(self, path_id, mtime):
-        debug("DB: Adding version (path=%d, created=%f)" % (path_id, mtime))
+        debug("DB: Adding version (path=%d, created=%d)" % (path_id, mtime))
         query = ' \
             INSERT INTO versions \
             (path, created, created_i) VALUES (?, ?, ?);'
-        result = self.execute(query, path_id, mtime, self.itteration)
+        result = self.execute(query, path_id, mtime, self.iteration)
         return result.lastrowid
 
     def _close_version(self, path_id, inode, mtime):
-        debug("DB: Closing version (path=%d, inode=%d, deleted=%f)" % (path_id, inode, mtime))
+        debug("DB: Closing version (path=%d, inode=%d, deleted=%d)" % (path_id, inode, mtime))
         query = ' \
             UPDATE versions \
             SET deleted = ?, deleted_i = ? \
             WHERE path = ? \
             AND inode = ? \
             AND deleted IS NULL;'
-        self.execute(query, mtime, self.itteration, path_id, inode)
+        self.execute(query, mtime, self.iteration, path_id, inode)
 
     def _get_hashes(self, pattern):
         query = ' \

@@ -91,8 +91,8 @@ class ArGyver(object):
         if db == None:
             debug("Database is disabled.")
             return
-        notice("Updating database (stage 1) for %s. (#%d)" % (folder, db.itteration))
         db.connect()
+        notice("Updating database (stage 1) for %s. (#%d)" % (folder, db.iteration))
         db.add_new_paths(self.config.get_server_snapshot(), folder)
         db.delete_old_paths(self.config.get_server_snapshot(), self.config.get_server_tmp(), folder)
         db.close()
@@ -103,8 +103,8 @@ class ArGyver(object):
         if db == None:
             debug("Database is disabled.")
             return
-        notice("Updating database (stage 2) for %s. (#%d)" % (folder, db.itteration))
         db.connect()
+        notice("Updating database (stage 2) for %s. (#%d)" % (folder, db.iteration))
         db.add_new_repository_entries(self.config.get_server_repository())
         db.link_files_to_repository(self.config.get_server_snapshot(), folder)
         db.close()
@@ -115,8 +115,8 @@ class ArGyver(object):
         if db == None:
             debug("Database is disabled.")
             return
-        notice("Updating database (stage 3) (#%d)" % (db.itteration))
         db.connect()
+        notice("Updating database (stage 3) (#%d)" % (db.iteration))
         db.update_history()
         db.close()
         notice("Updating database (stage 3) finished.")
@@ -202,7 +202,7 @@ class ArGyver(object):
 
         # If this is the first time this argyver is executed, force linking all files.
         db = self.config.get_server_database()
-        if db != None and db.itteration == 1:
+        if db != None and db.iteration == 1:
             linker.force = True
 
         linker.run()
