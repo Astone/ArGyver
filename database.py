@@ -8,22 +8,22 @@ import sqlite3 as sql
 
 class Database(object):
 
-    itteration = None
+    iteration = None
     path = None
     db = None
 
-    def __init__(self, db_path, auto_create=True):
+    def __init__(self, db_path):
         self.path = os.path.abspath(db_path)
-        if not os.path.isfile(self.path) and auto_create:
-            self.create(True)
+        if not os.path.isfile(self.path):
+            self.create()
+            self.create_indexes()
         else:
             self.connect()
-        self.itteration = self._get_itteration() + 1
-        debug("DB: Iteration #%d" % self.itteration)
+        self.iteration = self._add_iteration()
+        debug("DB: Iteration #%d" % self.iteration)
         self.close()
 
     def connect(self):
-        debug("DB: Connecting to database %s" % self.path)
         self.db = sql.connect(self.path)
 
     def close(self):
@@ -31,9 +31,14 @@ class Database(object):
         self.commit()
         self.db.close()
 
-    def create(self, commit=True):
+    def create(self):
         debug("DB: Creating empty database %s" % os.path.basename(self.path))
         self.db = sql.connect(self.path)
+        self.execute(' \
+            CREATE TABLE iterations ( \
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, \
+                start INTEGER NOT NULL \
+            );')
         self.execute(' \
             CREATE TABLE folders ( \
                 id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, \
@@ -52,8 +57,8 @@ class Database(object):
                 path INTEGER NOT NULL, \
                 inode INTEGER NULL, \
                 previous_version INTEGER NULL, \
-                created REAL NOT NULL, \
-                deleted REAL NULL, \
+                created INTEGER NOT NULL, \
+                deleted INTEGER NULL, \
                 created_i INTEGER NOT NULL, \
                 deleted_i INTEGER NULL \
             );')
@@ -62,6 +67,24 @@ class Database(object):
                 id INTEGER PRIMARY KEY NOT NULL, \
                 hash TEXT NOT NULL \
             );')
+
+    def create_indexes(self):
+        self.execute('CREATE UNIQUE INDEX idx_iterations_id ON iterations (id);')
+
+        self.execute('CREATE UNIQUE INDEX idx_folders_id ON folders (id);')
+        self.execute('CREATE INDEX idx_folders_parent ON folders (parent);')
+
+        self.execute('CREATE UNIQUE INDEX idx_paths_id ON paths (id);')
+        self.execute('CREATE INDEX idx_paths_folder ON paths (folder);')
+        self.execute('CREATE INDEX idx_paths_path ON paths (path);')
+
+        self.execute('CREATE UNIQUE INDEX idx_versions_id ON versions (id);')
+        self.execute('CREATE INDEX idx_versions_path ON versions (path);')
+        self.execute('CREATE INDEX idx_versions_inode ON versions (inode);')
+        self.execute('CREATE INDEX idx_versions_previous ON versions (previous_version);')
+
+        self.execute('CREATE UNIQUE INDEX idx_repository_id ON repository (id);')
+        self.execute('CREATE UNIQUE INDEX idx_repository_hash ON repository (hash);')
 
     def execute(self, query, *args):
         cursor = self.db.cursor()
@@ -73,50 +96,55 @@ class Database(object):
 
     def commit(self, commit=True):
         if commit:
-            debug("DB: Commit #%d." % self.itteration)
+            debug("DB: Commit #%d." % self.iteration)
             self.db.commit()
 
     def add_new_paths(self, root, folder):
         for (path, folders, files) in os.walk(os.path.join(root, folder)):
-            for name in folders+files:
+            for name in folders + files:
                 abs_path = os.path.join(path, name)
                 if not os.path.exists(abs_path):
                     continue
                 stat = os.stat(abs_path)
-                if stat.st_nlink > 1 and self.itteration > 1:
+                if stat.st_nlink > 1 and not os.path.isdir(abs_path) and self.iteration > 1:
                     continue
                 rel_path = os.path.relpath(abs_path, root)
+                if os.path.isdir(abs_path):
+                    rel_path += os.path.sep
                 pid = self._get_path_id(rel_path)
                 if pid == None:
                     pid = self._add_path(rel_path)
                     if os.path.isdir(abs_path):
-                        self._get_or_add_folder(rel_path)
+                        self._get_or_add_folder(rel_path.rstrip(os.path.sep))
                 if os.path.isdir(abs_path) and not self._path_is_open(pid):
                     self._add_version(pid, stat.st_mtime)
                 if os.path.isfile(abs_path):
                     self._add_version(pid, stat.st_mtime)
-            self.commit()
+        self.commit()
  
     def delete_old_paths(self, snapshot, temp, folder):
         for (path, folders, files) in os.walk(os.path.join(temp, folder)):
-            for file_name in folders+files:
+            for file_name in folders + files:
                 temp_path = os.path.join(path, file_name)
                 snap_path = os.path.join(snapshot, os.path.relpath(temp_path, temp))
                 if not os.path.exists(temp_path):
                     continue
-                if not os.path.isdir(snap_path):
+                if os.path.isdir(snap_path):
                     continue
                 inode = os.stat(temp_path).st_ino
                 if os.path.exists(snap_path):
                     mtime = os.stat(snap_path).st_mtime
                 else:
-                    mtime = mktime(datetime.now().timetuple())
-                pid = self._get_path_id(os.path.relpath(snap_path, snapshot))
+                    mtime = 0
+                rel_path = os.path.relpath(snap_path, snapshot)
+                if os.path.isdir(temp_path):
+                    rel_path += os.path.sep
+                pid = self._get_path_id(rel_path)
                 if not pid == None:
                     self._close_version(pid, inode, mtime)
                 else:
                     warning("Path id of %s could not be found in the database" % os.path.relpath(snap_path, snapshot))
-            self.commit()
+        self.commit()
     
     def add_new_repository_entries(self, repository):
         for (path, folders, fs_hashes) in os.walk(repository):
@@ -126,7 +154,7 @@ class Database(object):
                 hashes = set(fs_hashes) - set(db_hashes)
                 for h in hashes:
                     self._add_hash(h, os.stat(os.path.join(path, h)).st_ino)
-                self.commit()
+        self.commit()
 
     def link_files_to_repository(self, root, folder):
         for (path_id, rel_path) in self._get_orphan_paths(folder+'/%'):
@@ -141,12 +169,12 @@ class Database(object):
     def update_history(self):
         warning("DB: update_history() is not implemented. This could be used to show if a file is moved, copied, deleted, etc in the GUI.")
 
-    def _get_itteration(self):
+    def _add_iteration(self):
         query = ' \
-            SELECT 0, MAX(created_i), MAX(deleted_i) \
-            FROM versions;'
-        row = self.execute(query).fetchone()
-        return max(row)
+            INSERT INTO iterations \
+            (start) VALUES (?);'
+        result = self.execute(query, mktime(datetime.now().timetuple()))
+        return result.lastrowid
 
     def _get_path_id(self, file_path):
         query = ' \
@@ -171,7 +199,7 @@ class Database(object):
 
     def _add_path(self, file_path):
         debug("DB: Adding path %s" % file_path)
-        folder_id = self._get_or_add_folder(os.path.dirname(file_path))
+        folder_id = self._get_or_add_folder(os.path.dirname(file_path.rstrip(os.path.sep)))
         query = ' \
             INSERT INTO paths \
             (folder, path) VALUES (?, ?);'
@@ -208,29 +236,28 @@ class Database(object):
         return result.lastrowid
 
     def _add_version(self, path_id, mtime):
-        debug("DB: Adding version (path=%d, created=%f)" % (path_id, mtime))
+        debug("DB: Adding version (path=%d, created=%d)" % (path_id, mtime))
         query = ' \
             INSERT INTO versions \
             (path, created, created_i) VALUES (?, ?, ?);'
-        result = self.execute(query, path_id, mtime, self.itteration)
+        result = self.execute(query, path_id, mtime, self.iteration)
         return result.lastrowid
 
     def _close_version(self, path_id, inode, mtime):
-        debug([path_id, inode, mtime])
-        debug("DB: Closing version (path=%d, inode=%d, deleted=%f)" % (path_id, inode, mtime))
+        debug("DB: Closing version (path=%d, inode=%d, deleted=%d)" % (path_id, inode, mtime))
         query = ' \
             UPDATE versions \
             SET deleted = ?, deleted_i = ? \
             WHERE path = ? \
             AND inode = ? \
             AND deleted IS NULL;'
-        self.execute(query, mtime, self.itteration, path_id, inode)
+        self.execute(query, mtime, self.iteration, path_id, inode)
 
     def _get_hashes(self, pattern):
         query = ' \
             SELECT hash \
             FROM repository \
-            WHERE hash LIKE ?;'
+            WHERE hash LIKE ? ;'
         return [row[0] for row in self.execute(query, pattern).fetchall()]
 
     def _add_hash(self, file_hash, inode):
