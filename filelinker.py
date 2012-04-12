@@ -11,11 +11,12 @@ class FileLinker(object):
 
     folder = None
     repository = None
-    force = False
-    
-    def __init__(self, folder=".", repository=".data"):
+    inodes = None
+
+    def __init__(self, folder=".", repository=".data", inodes=None):
         self.folder = os.path.abspath(folder)
         self.repository = os.path.abspath(repository)
+        self.inodes = inodes
 
     def parse_arguments(self):
         parser = ArgumentParser(description='Save space by hardlinking identical files')
@@ -27,10 +28,6 @@ class FileLinker(object):
         parser.add_argument(
             '-d', dest='dest', required=True,
             help='A (hidden) folder containing all original files in an indexed structure')
-
-        parser.add_argument(
-            '-f', dest='force', action="store_true",
-            help='Force adding files even if they are allready hardlinked to another file')
 
         parser.add_argument(
             '-l', dest='log_file',
@@ -47,11 +44,11 @@ class FileLinker(object):
         args = parser.parse_args()
         self.folder = os.path.abspath(args.source)
         self.repository = os.path.abspath(args.dest)
-        self.force = args.force
         set_log_file(args.log_file, args.log_level)
         set_verbosity(args.verbosity)
 
     def run(self):
+        inodes = self.get_inodes()
         for (path, folders, files) in os.walk(self.folder):
 
             # Walk trough the file system
@@ -66,8 +63,8 @@ class FileLinker(object):
                     continue
 
                 stats = os.stat(file_path)
-                # If the file is not linked to any other file, it should to be indexed
-                if self.force or stats.st_nlink == 1:
+                # If the file is not linked to the repository, it should to be indexed and linked
+                if not stats.st_ino in inodes:
 
                     # Retrieve a unique index path based on the file's contents
                     idx_path = self.get_index_path(file_path)
@@ -79,8 +76,19 @@ class FileLinker(object):
                     if not os.path.isfile(idx_path):
                         if not os.path.islink(file_path):
                             self.store_file(file_path, idx_path)
+                            inodes[stats.st_ino] = None
                     else:
                         self.link_file(file_path, idx_path)               
+
+    def get_inodes(self):
+        if empty(self.inodes):
+            debug("Loading repository")
+            self.inodes = {}
+            for (path, folders, files) in os.walk(self.repository):
+                for file in files:
+                    self.inodes[os.stat(os.path.join(path, file)).st_ino] = None
+            debug("%d inodes loaded" % len(self.inodes))
+        return self.inodes
 
     def store_file(self, file_path, idx_path):
         debug("Storing %s at %s" % (os.path.relpath(file_path, self.folder), os.path.relpath(idx_path, self.repository)))
