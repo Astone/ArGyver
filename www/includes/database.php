@@ -44,34 +44,25 @@ class Database
 
     public function get_folder($id)
     {
-        if ($id===null)
-        {
-            return null;
-        }
         $qry = sprintf("SELECT * FROM folders WHERE id = %d", $id);
-
         return $this->get_folder_from_qry($qry);
     }
 
     public function get_children($id)
     {
         $qry = sprintf("SELECT * FROM folders WHERE parent = %d ORDER BY name", $id);
-
         return $this->get_folders_from_qry($qry);
     }
 
     private function get_folder_from_qry($qry)
     {
         $folders = $this->get_folders_from_qry($qry);
-
-        if ($folders)
+        
+        if (empty($folders))
         {
-            return $folders[0];
+            return null;
         }
-        else
-        {
-            return new Folder($this, 0, '', 0);
-        }
+        return $folders[0];
     }
 
     private function get_folders_from_qry($qry)

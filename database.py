@@ -106,7 +106,7 @@ class Database(object):
                     continue
                 if not os.path.isdir(snap_path):
                     continue
-                inode = os.stat(temp_path).st_i
+                inode = os.stat(temp_path).st_ino
                 if os.path.exists(snap_path):
                     mtime = os.stat(snap_path).st_mtime
                 else:
