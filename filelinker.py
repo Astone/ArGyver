@@ -81,7 +81,7 @@ class FileLinker(object):
                         self.link_file(file_path, idx_path)               
 
     def get_inodes(self):
-        if empty(self.inodes):
+        if self.inodes == None:
             debug("Loading repository")
             self.inodes = {}
             for (path, folders, files) in os.walk(self.repository):
