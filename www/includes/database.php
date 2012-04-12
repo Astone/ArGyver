@@ -57,10 +57,10 @@ class Database
     private function get_folder_from_qry($qry)
     {
         $folders = $this->get_folders_from_qry($qry);
-        
+
         if (empty($folders))
         {
-            return null;
+            return new Folder($this, 0, '', 0);
         }
         return $folders[0];
     }
@@ -71,14 +71,14 @@ class Database
 
         $folders = Array();
 
-        if ($result !== false)
+        if ($result)
         {
             while($folder = $result->fetchArray())
             {
                 $folders[] = new Folder($this, $folder['id'], $folder['name'], $folder['parent']);
             }
+            return $folders;
         }
-        return $folders;
     }
 
     public function get_files($id)

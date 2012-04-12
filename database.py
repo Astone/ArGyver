@@ -115,7 +115,7 @@ class Database(object):
 
                 # If the source path does not exist, 'throw' an error
                 if not os.path.exists(temp_path):
-                    error("Tried to close %s in the DB, but it doesn't exist on the disk." % aps_path)
+                    error("Tried to close %s in the DB, but it doesn't exist on the disk." % temp_path)
                     continue
 
                 if os.path.isdir(snap_path):
@@ -123,7 +123,7 @@ class Database(object):
                     continue
 
                 # Get some folder/file statistics
-                stat = os.stat(abs_path)
+                stat = os.stat(temp_path)
 
                 # Try to determine the delition file (= the modification time of the new version)
                 if os.path.exists(snap_path):
@@ -147,7 +147,7 @@ class Database(object):
                 if pid == None:
                     warning("Path id of %s could not be found in the database" % os.path.relpath(snap_path, snapshot))
                 else:
-                    self._close_version(pid, inode, mtime)
+                    self._close_version(pid, stat.st_ino, mtime)
 
         # Save all changes to the database
         self.commit()
@@ -215,7 +215,7 @@ class Database(object):
                 
                 # Add all new checksums acompanied with their inode
                 for checksum in new_checksums:                
-                    self._add_checksum(checksum, os.stat(os.path.join(path, h)).st_ino)
+                    self._add_checksum(checksum, os.stat(os.path.join(path, checksum)).st_ino)
 
         # Save all changes to the database
         self.commit()

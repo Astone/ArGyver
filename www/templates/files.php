@@ -6,7 +6,7 @@
         <link rel="stylesheet" type="text/css" href="./css/files.css" />
     <head>
     <body>
-        <h1><?= $folder->name ?><?=$pid?></h1>
+        <h1><?= $folder->name ?></h1>
 <?php if (! empty($children) || ! empty($files)) : ?>
         <table width="100%" cellspacing="0" border="0">
             <thead>
