@@ -19,7 +19,7 @@ class DbFileLinker(FileLinker):
         for (rel_path,) in self.get_unlinked_files():
 
             # Contruct a proper path
-            abs_path = os.path.join(self.root, rel_path)
+            abs_path = os.path.join(self.root, rel_path.encode('utf-8'))
 
             # This might seem strange, but if the file is a symbolic link to
             # non existing location (or a folder) this would cause us trouble.
