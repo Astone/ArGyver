@@ -117,9 +117,9 @@ class Database(object):
                     if os.path.isdir(abs_path):
                         self._get_or_add_folder(rel_path.rstrip(os.path.sep))
                 if os.path.isdir(abs_path) and not self._path_is_open(pid):
-                    self._add_version(pid, stat.st_mtime)
+                    self._add_version(pid, stat.st_ino, stat.st_mtime)
                 if os.path.isfile(abs_path):
-                    self._add_version(pid, stat.st_mtime)
+                    self._add_version(pid, stat.st_ino, stat.st_mtime)
         self.commit()
  
     def delete_old_paths(self, snapshot, temp, folder):
@@ -156,14 +156,14 @@ class Database(object):
                     self._add_hash(h, os.stat(os.path.join(path, h)).st_ino)
         self.commit()
 
-    def link_files_to_repository(self, root, folder):
-        for (path_id, rel_path) in self._get_orphan_paths(folder+'/%'):
+    def update_inodes(self, root, folder):
+        for (version_id, rel_path) in self._get_unlinked_files(folder+'/%'):
             abs_path = os.path.join(root, rel_path.encode('utf-8'))
             if not os.path.exists(abs_path):
                 warning("Path %s could not be found" % abs_path)
                 continue
             inode = os.stat(abs_path).st_ino
-            self._set_inode(path_id, inode)
+            self._set_inode(version_id, inode)
         self.commit()
 
     def update_history(self):
@@ -235,23 +235,23 @@ class Database(object):
         result = self.execute(query, parent, name.decode('utf-8'))
         return result.lastrowid
 
-    def _add_version(self, path_id, mtime):
-        debug("DB: Adding version (path=%d, created=%d)" % (path_id, mtime))
+    def _add_version(self, path_id, inode, time):
+        debug("DB: Adding version (path=%d, inode=%d, created=%d)" % (path_id, inode, time))
         query = ' \
             INSERT INTO versions \
-            (path, created, created_i) VALUES (?, ?, ?);'
-        result = self.execute(query, path_id, mtime, self.iteration)
+            (path, inode, created, created_i) VALUES (?, ?, ?, ?);'
+        result = self.execute(query, path_id, inode, time, self.iteration)
         return result.lastrowid
 
-    def _close_version(self, path_id, inode, mtime):
-        debug("DB: Closing version (path=%d, inode=%d, deleted=%d)" % (path_id, inode, mtime))
+    def _close_version(self, path_id, inode, time):
+        debug("DB: Closing version (path=%d, inode=%d, deleted=%d)" % (path_id, inode, time))
         query = ' \
             UPDATE versions \
             SET deleted = ?, deleted_i = ? \
             WHERE path = ? \
             AND inode = ? \
             AND deleted IS NULL;'
-        self.execute(query, mtime, self.iteration, path_id, inode)
+        self.execute(query, time, self.iteration, path_id, inode)
 
     def _get_hashes(self, pattern):
         query = ' \
@@ -267,22 +267,23 @@ class Database(object):
             (id, hash) VALUES (?, ?);'
         self.execute(query, inode, file_hash)
 
-    def _get_orphan_paths(self, pattern):
+    def _get_unlinked_files(self, pattern):
         query = ' \
-            SELECT versions.path, paths.path \
+            SELECT versions.id, paths.path \
             FROM paths \
-            JOIN versions ON (versions.path = paths.id) \
-            WHERE paths.path LIKE ? \
-            AND inode IS NULL;'
-        return self.execute(query, pattern).fetchall()
+            INNER JOIN versions ON (versions.path = paths.id) \
+            LEFT JOIN repository ON (repository.id = versions.inode) \
+    		WHERE hash IS NULL \
+    		AND paths.path LIKE ? \
+    		AND NOT SUBSTR(paths.path, -1, 1) = ? ;'
+        return self.execute(query, pattern, os.path.sep)
 
-    def _set_inode(self, path_id, inode):
-        debug("DB: Set inode (path=%d, inode=%d)" % (path_id, inode))
+    def _set_inode(self, version_id, inode):
+        debug("DB: Set inode (version=%d, inode=%d)" % (version_id, inode))
         query = ' \
             UPDATE versions \
             SET inode = ? \
-            WHERE path = ? \
-            AND inode IS NULL;'
-        self.execute(query, inode, path_id)
+            WHERE id = ?;'
+        self.execute(query, inode, version_id)
 
 

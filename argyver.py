@@ -4,6 +4,7 @@ from verbose import *
 from config import Config
 from pidlock import PidLock
 from filelinker import FileLinker
+from dbfilelinker import DbFileLinker
 from datetime import datetime
 import os, shutil
 from subprocess import check_output, CalledProcessError
@@ -103,10 +104,13 @@ class ArGyver(object):
         if db == None:
             debug("Database is disabled.")
             return
+        if self.config.get_server_repository() == None:
+            debug("Skipping db stage 2: file linker is disabled.")
+            return
         db.connect()
         notice("Updating database (stage 2) for %s. (#%d)" % (folder, db.iteration))
         db.add_new_repository_entries(self.config.get_server_repository())
-        db.link_files_to_repository(self.config.get_server_snapshot(), folder)
+        db.update_inodes(self.config.get_server_snapshot(), folder)
         db.close()
         notice("Updating database (stage 2) for %s finished." % folder)
 
@@ -191,21 +195,23 @@ class ArGyver(object):
             debug("File linking is disabled.")
             return
 
-        notice("Starting file linking in \"%s\"." % (folder))
-
         # Construct the absolute folder and repository
-        folder = os.path.join(self.config.get_server_snapshot(), folder)
+        root = self.config.get_server_snapshot()
+        folder = os.path.join(root, folder)
         repository = self.config.get_server_repository() 
 
         # Create a data linker instance and let it do the work
-        linker = FileLinker(folder, repository)
-
-        # If this is the first time this argyver is executed, force linking all files.
         db = self.config.get_server_database()
-        if db != None and db.iteration == 1:
-            linker.force = True
-
-        linker.run()
+        if db == None:
+            notice("Starting fs based file linking in \"%s\"." % (folder))
+            linker = FileLinker(folder, repository)
+            linker.run()
+        else:
+            notice("Starting db based file linking in \"%s\"." % (folder))
+            db.connect()
+            linker = DbFileLinker(folder, repository, root, db)
+            linker.run()
+            db.close()
 
         notice("File linking in \"%s\" finished." % (folder))
 
@@ -224,6 +230,10 @@ class ArGyver(object):
         except Exception as e:
             error("Tried to remove temporary folder \"%s\"... FAILED" % tmp_root)
             error(str(e))
+
+    def rebuild_repository(self):
+        warning("rebuild_repository() should update all inode references in a database.")
+        fatal("rebuild_repository() not implemented!")
 
 # These three lines let the ArGyver actually do something
 if __name__ == '__main__':
