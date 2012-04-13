@@ -19,7 +19,7 @@
             </thead>
             <tbody>
 <?php foreach($children as $c) : ?>
-                <tr class="folder">
+                <tr class="folder <?php #echo $c->is_open() ? "open" : "closed" ?>">
                     <td>[<a href="./?aid=<?=$aid?>&fid=<?=$c->id?>" target="_top"><?=$c->name?></a>]</td>
                     <td></td>
                     <td></td>
@@ -27,7 +27,7 @@
                 </tr>
 <?php endforeach ?>
 <?php foreach($files as $p) : ?>
-                <tr class="file<?php echo $p->id == $pid ? " current" : "" ?>">
+                <tr class="file<?php echo $p->id == $pid ? " current" : "" ?> <?php echo $p->is_open() ? "open" : "closed" ?>">
                     <td>
                         <?php echo $p->id == $pid ? "<a name=\"p$pid\" />" : "" ?>
                         <a href="./?aid=<?=$aid?>&fid=<?=$fid?>&pid=<?=$p->id?>" target="_top"><?=$p->name?></a>

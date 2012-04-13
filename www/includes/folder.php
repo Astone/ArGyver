@@ -6,6 +6,9 @@ class Folder
     public $id;
     public $parent;
     public $name;
+    private $path;
+    private $versions;
+    private $open;
 
     public function __construct($db, $id, $name, $parent=0)
     {
@@ -45,5 +48,46 @@ class Folder
     public function get_files()
     {
         return $this->db->get_files($this->id);
+    }
+
+    public function get_path()
+    {
+        if (empty($this->path))
+        {
+            $path = '';
+            foreach($this->get_parents() as $p)
+            {
+                $path .= $p->name . '/';
+            }
+            $path .= $this->name . '/';
+            $this->path = $this->db->get_path($path);
+        }
+        return $this->path;
+    }
+
+    public function get_versions()
+    {
+        if (empty($this->versions))
+        {
+            $this->versions = $this->get_path()->get_versions();
+        }
+        return $this->versions;
+    }
+
+    public function is_open()
+    {
+        if ($this->open === null)
+        {
+            $this->open = false;
+            $versions = $this->get_versions();
+            foreach ($versions as $v)
+            {
+                if ($v->deleted === null)
+                {
+                    $this->open = true;
+                }
+            }
+        }
+        return $this->open;
     }
 }

@@ -5,7 +5,8 @@ class File
     private $db;
     public $id;
     public $name;
-    public $versions;
+    private $versions;
+    private $open;
 
     public function __construct($db, $id, $path)
     {
@@ -43,4 +44,20 @@ class File
         return $versions[sizeof($versions)-1];
     }
 
+    public function is_open()
+    {
+        if ($this->open === null)
+        {
+            $this->open = false;
+            $versions = $this->get_versions();
+            foreach ($versions as $v)
+            {
+                if ($v->deleted === null)
+                {
+                    $this->open = true;
+                }
+            }
+        }
+        return $this->open;
+    }
 }

@@ -81,6 +81,13 @@ class Database
         }
     }
 
+    public function get_path($path)
+    {
+        $qry = sprintf("SELECT * FROM paths WHERE path = %s;", $path);
+
+        return $this->get_file_from_qry($qry);
+    }
+
     public function get_files($id)
     {
         if ($id===null)
@@ -90,6 +97,17 @@ class Database
         $qry = sprintf("SELECT * FROM paths WHERE folder = %d ORDER BY path", $id);
 
         return $this->get_files_from_qry($qry);
+    }
+
+    private function get_file_from_qry($qry)
+    {
+        $files = $this->get_files_from_qry($qry);
+
+        if (empty($files))
+        {
+            return null;
+        }
+        return $files[0];
     }
 
     private function get_files_from_qry($qry)

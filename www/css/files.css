@@ -24,3 +24,12 @@ tr.current
     font-weight         : bold;
 }
 
+tr.open td a
+{
+}
+
+tr.closed td a
+{
+    color               : #F00;
+    text-decoration     : line-through;
+}
