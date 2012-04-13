@@ -122,9 +122,6 @@ class Database(object):
                     debug("Tried to close %s in the DB, but it is folder that stil exists in the snapshot." % temp_path)
                     continue
 
-                # Get some folder/file statistics
-                stat = os.stat(temp_path)
-
                 # Try to determine the delition file (= the modification time of the new version)
                 if os.path.exists(snap_path):
                     mtime = os.stat(snap_path).st_mtime
@@ -138,7 +135,6 @@ class Database(object):
                 # If it is a folder, add a slash
                 if os.path.isdir(temp_path):
                     rel_path += os.path.sep
-
             
                 # Check if the path is allready in the database
                 pid = self._get_path_id(rel_path)
@@ -147,7 +143,7 @@ class Database(object):
                 if pid == None:
                     warning("Path id of %s could not be found in the database" % os.path.relpath(snap_path, snapshot))
                 else:
-                    self._close_version(pid, stat.st_ino, mtime)
+                    self._close_version(pid, mtime)
 
         # Save all changes to the database
         self.commit()
@@ -328,13 +324,12 @@ class Database(object):
         result = self.execute(query, path_id, inode, time, self.iteration)
         return result.lastrowid
 
-    def _close_version(self, path_id, inode, time):
-        debug("DB: Closing version (path=%d, inode=%d, deleted=%d)" % (path_id, inode, time))
+    def _close_version(self, path_id, time):
+        debug("DB: Closing version (path=%d, deleted=%d)" % (path_id, time))
         query = ' \
             UPDATE versions \
             SET deleted = ?, deleted_i = ? \
             WHERE path = ? \
-            AND inode = ? \
             AND deleted IS NULL;'
         self.execute(query, time, self.iteration, path_id, inode)
 
