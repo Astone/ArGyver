@@ -3,18 +3,14 @@
 require_once('includes/all.php');
 
 $aid      = get('aid');
-$fid      = get('fid');
+$fid      = get('fid', 0);
 $pid      = get('pid');
 
-$archive  = get_archive($aid);
-
-if ( ! empty($archive))
+if ( ! empty($aid))
 {
+    $archive  = get_archive($aid);
     $folder   = $archive->get_folder($fid);
-    if ( ! empty($folder))
-    {
-        $children = $folder->get_children();
-        $files    = $folder->get_files();
-        include('templates/files.php');
-    }
+    $folders = $folder->get_folders();
+    $files   = $folder->get_files();
+    include('templates/files.php');
 }

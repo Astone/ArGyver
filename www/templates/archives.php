@@ -11,7 +11,7 @@
         <ul class="archives">
 <?php foreach ($archives as $archive) : ?>
 <?php if ($archive->db_exists()) : ?>
-            <li class="enabled<?= $archive->id == get('aid') ? current : '' ?>">
+            <li class="enabled<?= $archive->id == get('aid') ? ' current' : '' ?>">
                 <a href="./?aid=<?= $archive->id ?>" target="_top"><?= $archive->name ?></a>
             </li>
 <?php else: ?>

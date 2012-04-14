@@ -3,6 +3,7 @@
 class DbObject
 {
     public $id = null;
+    public $name = null;
     private $db = null;
     private $data = Array();
     private $objects = Array();
@@ -12,6 +13,7 @@ class DbObject
         $this->db = $db;
         $this->data = $data;
         $this->id = $this->get('id');
+        $this->name = get_class($this);
     }
     
     protected function get($key, $callback=null, $dbkey=null)
@@ -28,6 +30,11 @@ class DbObject
         }
 
         return $this->objects[$key];
+    }
+    
+    public function __tostring()
+    {
+        return get_class($this) + ": " + $this->name;
     }
 }
 

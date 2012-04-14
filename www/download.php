@@ -3,25 +3,26 @@
 require_once('includes/all.php');
 
 $aid      = get('aid');
-$pid      = get('fid');
+$pid      = get('pid');
 $vid      = get('vid');
 
 $archive  = get_archive($aid);
 
-$file =  $archive->get_file($pid, $vid);
+$file = $archive->get_path($pid)
+$file_path = $archive->get_abs_path($pid);
 
-if (file_exists($file)) {
+if (file_exists($file_path)) {
     header('Content-Description: File Transfer');
     header('Content-Type: application/octet-stream');
-    header('Content-Disposition: attachment; filename='.basename($file));
+    header('Content-Disposition: attachment; filename='.$file->name);
     header('Content-Transfer-Encoding: binary');
     header('Expires: 0');
     header('Cache-Control: must-revalidate');
     header('Pragma: public');
-    header('Content-Length: ' . filesize($file));
+    header('Content-Length: ' . $file->get_size(false));
     ob_clean();
     flush();
-    readfile($file);
+    readfile($file_path);
     exit;
 }
 ?>

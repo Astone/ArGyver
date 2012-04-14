@@ -13,16 +13,19 @@
                 <ul>
 <?php endforeach ?>
 <?php foreach ($siblings as $s) : ?>
+                    <li class="<?php echo ($fid == $s->id) ? 'current ' : '' ?><?php echo $s->is_open() ? 'open' : 'closed' ?>">
+                        <a name="f<?=$s->id?>" />
+                        <a href="./?aid=<?= $aid ?>&fid=<?= $s->id ?>" target="_top"><?= $s->name ?></a>
 <?php if ($fid == $s->id) :?>
-                    <li class="current <?php echo $s->is_open() ? "open" : "closed" ?>"><a name="f<?=$s->id?>" /><a href="./?aid=<?= $aid ?>&fid=<?= $s->id ?>" target="_top"><?= $s->name ?></a>
                         <ul>
 <?php foreach ($children as $c) : ?>
-                            <li class="<?php echo $c->is_open() ? "open" : "closed" ?>"><a href="./?aid=<?= $aid ?>&fid=<?= $c->id ?>" target="_top"><?= $c->name ?></a></li>
+                            <li class="<?php echo $c->is_open() ? 'open' : 'closed' ?>">
+                                <a href="./?aid=<?= $aid ?>&fid=<?= $c->id ?>" target="_top"><?= $c->name ?></a>
+                            </li>
 <?php endforeach ?>
                         </ul>
-<?php else : ?>
-                    <li class="<?php echo $c->is_open() ? "open" : "closed" ?>"><a href="./?aid=<?= $aid ?>&fid=<?= $s->id ?>" target="_top"><?= $s->name ?></a></li>
 <?php endif ?>
+                    </li>
 <?php endforeach ?>
 <?php for($i = 0; $i < sizeof($parents); $i++) : ?>
                 </ul>

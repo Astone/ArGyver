@@ -102,5 +102,10 @@ class Archive
         return $db->get_versions($pid);
     }
 
+    public function get_abs_path($pid)
+    {
+        $file = $this->get_path($pid);
+        return $file->get_abs_path($this->repository);
+    }
 }
 

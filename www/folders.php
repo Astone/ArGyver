@@ -5,13 +5,17 @@ require_once('includes/all.php');
 $aid      = get('aid');
 $fid      = get('fid', 0);
 
-$archive  = get_archive($aid);
-
-if ( ! empty($archive))
+if ( ! empty($aid))
 {
+    $archive  = get_archive($aid);
+    
     $folder   = $archive->get_folder($fid);
+
+    $parent   = $folder->get_parent();
     $parents  = $folder->get_parents();
-    $siblings = $folder->get_siblings();
-    $children = $folder->get_children();
+    $siblings = empty($fid) ? $folder->get_folders() : $parent->get_folders();
+
+    $children = $folder->get_folders();
+    
     include('templates/folders.php');
 }

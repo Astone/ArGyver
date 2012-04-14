@@ -15,9 +15,4 @@ class Folder extends Path
         return $this->get('files', 'get_files', 'id');
     }
 
-    public function get_versions()
-    {
-        return $this->get('versions', 'get_versions', 'id');
-    }
-
 }
