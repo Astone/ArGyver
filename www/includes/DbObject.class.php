@@ -22,11 +22,15 @@ class DbObject
 
         if ( ! array_key_exists($dbkey, $this->data)) return null;
 
-        if (empty($callback)) return $this->data[$dbkey];
+        $value = $this->data[$dbkey];
+        
+        $value = is_string($value) ? utf8_decode($value) : $value;
+
+        if (empty($callback)) return $value;
         
         if (array_key_exists($dbkey, $this->data) && ! array_key_exists($key, $this->objects))
         {
-            $this->objects[$key] = $this->db->$callback($this->data[$dbkey]);
+            $this->objects[$key] = $this->db->$callback($value);
         }
 
         return $this->objects[$key];
