@@ -19,7 +19,8 @@ class Database(object):
             self.create_indexes()
         else:
             self.connect()
-        self.iteration = self._add_iteration()
+        self.iteration = 11
+#        self.iteration = self._add_iteration()
         debug("DB: Iteration #%d" % self.iteration)
         self.close()
 
@@ -112,12 +113,12 @@ class Database(object):
                 
                 # If the source path is a symbolic link, ignore it
                 if os.path.islink(temp_path):
-                    debug("Tried to close %s in the DB, but it is a symbolic link." % temp_path)
+                    warning("Tried to close %s in the DB, but it is a symbolic link." % temp_path)
                     continue
 
                 # If the source path does not exist, 'throw' an error
                 if not os.path.exists(temp_path):
-                    error("Tried to close %s in the DB, but it doesn't exist on the disk." % temp_path)
+                    warning("Tried to close %s in the DB, but it doesn't exist on the disk." % temp_path)
                     continue
 
                 if os.path.isdir(snap_path):
