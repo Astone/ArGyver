@@ -92,10 +92,35 @@ class Database
         return $this->get_objects($qry, 'Version');
     }
 
+    public function get_iterations($pid)
+    {
+        $qry = sprintf("
+            SELECT
+                i.id AS created_i,
+                i.id+1 AS deleted_i,
+                i.start AS created
+            FROM versions AS v
+                JOIN paths AS p ON (p.id = v.path AND p.id = %d)
+                JOIN iterations AS i ON (i.id >= v.created_i AND (i.id < v.deleted_i OR v.deleted_i IS NULL))
+            ORDER BY i.id;", $pid);
+        return $this->get_objects($qry, 'Version');
+    }
+
     private function get_value($qry, $key = null)
     {
         $object = $this->get_object($qry);
         return empty($object) ? null : empty($key) ? array_shift($object) : $object[$key];
+    }
+
+    private function get_values($qry, $key = null)
+    {
+        $objects = $this->get_objects($qry);
+        $values = Array();
+        foreach ($objects as $o)
+        {
+            $values[] = empty($key) ? array_shift($o) : $o[$key];
+        }
+        return $values;
     }
 
     private function get_object($qry, $class=null)

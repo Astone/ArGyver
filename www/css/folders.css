@@ -24,14 +24,26 @@ li.current li a:hover
 }
 
 li.open a,
-li.current li.open a
+li.current.open a
 {
 }
 
-li.closed a,
+li.closed,
+li.closed a
+{
+    text-decoration     : line-through;
+    color               : #CCC;
+}
+
+li.current.closed a
+{
+    text-decoration     : line-through;
+    color               : #C96;
+}
+
 li.current li.closed a
 {
-    color               : #F00;
     text-decoration     : line-through;
+    color               : #CCC;
 }
 

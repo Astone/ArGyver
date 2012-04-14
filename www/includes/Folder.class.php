@@ -15,4 +15,8 @@ class Folder extends Path
         return $this->get('files', 'get_files', 'id');
     }
 
+    public function get_iterations()
+    {
+        return $this->get('iterations', 'get_iterations', 'pid');
+    }
 }

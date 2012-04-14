@@ -17,3 +17,19 @@ if ( ! function_exists('glob_recursive'))
     }
 }
 
+function get_icon($file_name)
+{
+    $ext = strtolower(array_pop(explode('.', $file_name)));
+    if (file_exists(sprintf(ICON_PATH, $ext)))
+    {
+       return sprintf(ICON_PATH, $ext);
+    }
+    elseif (file_exists(sprintf(ICON_PATH, 'file')))
+    {
+       return sprintf(ICON_PATH, 'file');
+    }
+    else
+    {
+        return null;
+    }
+}

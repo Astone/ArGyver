@@ -1,7 +1,6 @@
 table
 {
-    border-top          : 1px solid #9CF;
-    border-right        : 1px solid #9CF;
+    border-top       : 1px solid #DEF;
 }
 
 th
@@ -12,8 +11,14 @@ th
 th, td
 {
     font-size           : 10pt;
-    border-bottom       : 1px solid #9CF;
-    border-left         : 1px solid #9CF;
+    border-bottom       : 1px solid #DEF;
+    padding             : 1px 4px 3px 4px;
+    white-space         : nowrap;
+}
+
+td img
+{
+    margin-bottom       : -4px;
 }
 
 tbody tr:hover,
@@ -33,9 +38,45 @@ tr.open td a
 {
 }
 
+tr.closed td,
 tr.closed td a
 {
-    color               : #F00;
+    color               : #CCC;
+}
+
+tr.closed td a
+{
     text-decoration     : line-through;
+}
+
+tr.current.closed td a
+{
+    color               : #C96;
+}
+
+tr.closed td a:hover
+{
+    color               : #F60;
+}
+
+tr.closed td a img
+{
+    opacity             : 0.4;
+}
+
+
+td.name
+{
+    overflow            : hidden;
+}
+
+td.date, td.time, td.versions
+{
+    text-align          : center;
+}
+
+td.size
+{
+    text-align          : right;
 }
 
