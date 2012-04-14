@@ -80,10 +80,22 @@ class Database
         return $this->get_object($qry, 'Version');
     }
 
+    public function get_iteration_timestamp($iid)
+    {
+        $qry = sprintf("SELECT start FROM iterations WHERE id = %d;", $iid);
+        return $this->get_value($qry);
+    }
+
     public function get_versions($pid)
     {
-        $qry = sprintf("SELECT versions.id, path, created, created_i, deleted_i, checksum, size FROM versions LEFT JOIN repository ON(repository.id = versions.inode) WHERE path = %d ORDER BY created;", $pid);
+        $qry = sprintf("SELECT versions.id, path, created, created_i, deleted_i, checksum, size FROM versions LEFT JOIN repository ON(repository.id = versions.inode) WHERE path = %d ORDER BY created_i;", $pid);
         return $this->get_objects($qry, 'Version');
+    }
+
+    private function get_value($qry, $key = null)
+    {
+        $object = $this->get_object($qry);
+        return empty($object) ? null : empty($key) ? array_shift($object) : $object[$key];
     }
 
     private function get_object($qry, $class=null)

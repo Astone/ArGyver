@@ -20,6 +20,11 @@ class Version extends DbObject
         return $this->get('created');
     }
 
+    public function get_time()
+    {
+        return $this->get('created_i', 'get_iteration_timestamp');
+    }
+
     public function is_open()
     {
         return $this->get('deleted_i') === null;
