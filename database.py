@@ -142,10 +142,9 @@ class Database(object):
                     self._close_version(pid)
 
         # Remove deleted empty folders
-        # TODO: return only open paths, which saves a lot of database checks.
         for (pid, rel_path) in self._get_empty_folders(folder):
             snap_path = os.path.join(snapshot, rel_path)
-            if self._path_is_open(rel_path) and not os.path.exists(snap_path):
+            if not os.path.exists(snap_path):
                 debug("Closing empty folder %s" % rel_path)
                 self._close_version(pid)
                 
@@ -389,7 +388,9 @@ class Database(object):
             LEFT JOIN paths ON (paths.folder = folders.id) \
             LEFT JOIN versions ON (versions.path = paths.id) \
             JOIN paths as folder_paths ON (folder_paths.id = folders.path AND folder_paths.path LIKE ?) \
-            WHERE versions.id IS NULL OR NOT deleted_i IS NULL \
+            JOIN versions as folder_versions ON (folder_versions.path = folder_paths.id) \
+            WHERE versions.id IS NULL OR NOT versions.deleted_i IS NULL \
+            AND folder_versions.deleted_i IS NULL \
             GROUP BY folders.id ;'
         return self.execute(query, folder + os.path.sep + '%' + os.path.sep)
 
