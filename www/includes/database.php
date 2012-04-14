@@ -81,20 +81,27 @@ class Database
         }
     }
 
-    public function get_path($path)
+    public function get_file($pid, $vid=None)
     {
-        $qry = sprintf("SELECT * FROM paths WHERE path = %s;", $path);
+        if (empty($version))
+        {
+            $qry = sprintf("SELECT paths.id, paths.path, versions.id as vid FROM paths JOIN versions ON (versions.path = paths.id) JOIN repository ON (repository.id = versions.inode) WHERE paths.id = %d ORDER BY created_i DESC LIMIT 1;", $pid);
+        }
+        else
+        {
+            $qry = sprintf("SELECT paths.id, paths.path, versions.id as vid FROM paths JOIN versions ON (versions.path = paths.id) JOIN repository ON (repository.id = versions.inode) WHERE versions.id = %d;", $vid);
+        }
 
         return $this->get_file_from_qry($qry);
     }
 
-    public function get_files($id)
+    public function get_files($fid)
     {
-        if ($id===null)
+        if ($fid===null)
         {
             return null;
         }
-        $qry = sprintf("SELECT * FROM paths WHERE folder = %d ORDER BY path", $id);
+        $qry = sprintf("SELECT paths.id, path FROM paths WHERE folder = %d;", $fid);
 
         return $this->get_files_from_qry($qry);
     }
@@ -118,7 +125,8 @@ class Database
 
         while($file = $results->fetchArray())
         {
-            $files[] = new File($this, $file['id'], $file['path']);
+            $vid = array_key_exists('vid', $file) ? $file['vid'] : null;
+            $files[] = new File($this, $file['id'], $file['path'], $vid);
         }
         return $files;
     }

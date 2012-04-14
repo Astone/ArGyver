@@ -47,6 +47,12 @@ class Archive
         return $db->get_folder($fid);
     }
 
+    public function get_file($pid, $vid=null)
+    {
+        $db = $this->get_db();
+        return $db->get_path($pid, $vid);
+    }
+
     private function get_db()
     {
         if ($this->db == null)
