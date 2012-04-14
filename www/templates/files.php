@@ -19,7 +19,7 @@
             </thead>
             <tbody>
 <?php foreach($children as $c) : ?>
-                <tr class="folder <?php #echo $c->is_open() ? "open" : "closed" ?>">
+                <tr class="folder <?php echo $c->is_open() ? "open" : "closed" ?>">
                     <td>[<a href="./?aid=<?=$aid?>&fid=<?=$c->id?>" target="_top"><?=$c->name?></a>]</td>
                     <td></td>
                     <td></td>
@@ -33,7 +33,7 @@
                         <a href="./?aid=<?=$aid?>&fid=<?=$fid?>&pid=<?=$p->id?>" target="_top"><?=$p->name?></a>
                         <a href="./download.php?aid=<?=$aid?>&pid=<?=$p->id?>" target="_top">download</a>
                     </td>
-                    <td><?=date("d-m-Y H:i:s", $p->version->created)?></td>
+                    <td><?=date("d-m-Y H:i:s", $p->get_version()->created)?></td>
                     <td><?=$p->get_size()?></td>
                     <td><?=sizeof($p->get_versions())?></td>
                 </tr>

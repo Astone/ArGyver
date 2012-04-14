@@ -81,15 +81,22 @@ class Database
         }
     }
 
+    public function get_path($path)
+    {
+        $qry = sprintf("SELECT paths.id, paths.path, versions.id as vid FROM paths JOIN versions ON (versions.path = paths.id) WHERE paths.path = \"%s\" ORDER BY created_i DESC LIMIT 1;", $path);
+
+        return $this->get_file_from_qry($qry);
+    }
+
     public function get_file($pid, $vid=None)
     {
-        if (empty($version))
+        if (empty($vid))
         {
-            $qry = sprintf("SELECT paths.id, paths.path, versions.id as vid FROM paths JOIN versions ON (versions.path = paths.id) JOIN repository ON (repository.id = versions.inode) WHERE paths.id = %d ORDER BY created_i DESC LIMIT 1;", $pid);
+            $qry = sprintf("SELECT paths.id, paths.path, versions.id as vid FROM paths JOIN versions ON (versions.path = paths.id) JOIN WHERE paths.id = %d ORDER BY created_i DESC LIMIT 1;", $pid);
         }
         else
         {
-            $qry = sprintf("SELECT paths.id, paths.path, versions.id as vid FROM paths JOIN versions ON (versions.path = paths.id) JOIN repository ON (repository.id = versions.inode) WHERE versions.id = %d;", $vid);
+            $qry = sprintf("SELECT paths.id, paths.path, versions.id as vid FROM paths JOIN versions ON (versions.path = paths.id) WHERE versions.id = %d;", $vid);
         }
 
         return $this->get_file_from_qry($qry);
@@ -101,7 +108,7 @@ class Database
         {
             return null;
         }
-        $qry = sprintf("SELECT paths.id, path FROM paths WHERE folder = %d;", $fid);
+        $qry = sprintf("SELECT paths.id, path FROM paths WHERE folder = %d AND NOT path LIKE \"%%/\";", $fid);
 
         return $this->get_files_from_qry($qry);
     }
@@ -137,7 +144,7 @@ class Database
         {
             return null;
         }
-        $qry = sprintf("SELECT * FROM versions WHERE path = %d ORDER BY created", $id);
+        $qry = sprintf("SELECT versions.id, created, checksum, size, created_i, deleted_i FROM versions LEFT JOIN repository ON (repository.id = versions.inode) WHERE path = %d ORDER BY created", $id);
 
         return $this->get_versions_from_qry($qry);
     }
@@ -150,7 +157,7 @@ class Database
 
         while($version = $results->fetchArray())
         {
-            $versions[] = new Version($this, $version['id'], $version['created'], $version['deleted']);
+            $versions[] = new Version($this, $version);
         }
         return $versions;
     }
