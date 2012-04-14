@@ -4,6 +4,11 @@ table
     border-right        : 1px solid #9CF;
 }
 
+th
+{
+    background          : #9CF;
+}
+
 th, td
 {
     font-size           : 10pt;

@@ -23,6 +23,10 @@ if (file_exists($file_path)) {
     ob_clean();
     flush();
     readfile($file_path);
-    exit;
+    exit();
 }
-?>
+else
+{
+    die('File not found.');
+}
+

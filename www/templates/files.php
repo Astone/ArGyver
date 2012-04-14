@@ -31,7 +31,7 @@
                     <td>
                         <?php echo $p->id == $pid ? "<a name=\"p$pid\" />" : "" ?>
                         <a href="./?aid=<?=$aid?>&fid=<?=$fid?>&pid=<?=$p->id?>" target="_top"><?=$p->name?></a>
-                        <a href="./download.php?aid=<?=$aid?>&pid=<?=$p->id?>" target="_top"><b>[&darr;]</b></a>
+                        <a href="./download.php?aid=<?=$aid?>&pid=<?=$p->id?>" target="_blank"><b>[&darr;]</b></a>
                     </td>
                     <td><?=date("d-m-Y H:i:s", $p->get_version()->get_created())?></td>
                     <td><?=$p->get_size()?></td>
