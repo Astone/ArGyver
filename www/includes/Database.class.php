@@ -56,6 +56,12 @@ class Database
         return $this->get_objects($qry, 'Folder');
     }
 
+    public function get_file($pid)
+    {
+        $qry = sprintf("SELECT id, folder as parent, path, id as pid FROM paths WHERE id = %d;", $pid);
+        return $this->get_object($qry, 'File');
+    }
+
     public function get_path($pid)
     {
         $qry = sprintf("SELECT id, folder as parent, path, id as pid FROM paths WHERE id = %d;", $pid);

@@ -84,6 +84,12 @@ class Archive
         return $db->get_path($pid);
     }
 
+    public function get_file($pid)
+    {
+        $db = $this->get_db();
+        return $db->get_file($pid);
+    }
+
     public function get_paths($fid)
     {
         $db = $this->get_db();

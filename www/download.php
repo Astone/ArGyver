@@ -8,7 +8,7 @@ $vid      = get('vid');
 
 $archive  = get_archive($aid);
 
-$file = $archive->get_path($pid)
+$file = $archive->get_file($pid);
 $file_path = $archive->get_abs_path($pid);
 
 if (file_exists($file_path)) {
