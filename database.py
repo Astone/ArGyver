@@ -19,8 +19,7 @@ class Database(object):
             self.create_indexes()
         else:
             self.connect()
-        self.iteration = 11
-#        self.iteration = self._add_iteration()
+        self.iteration = self._add_iteration()
         debug("DB: Iteration #%d" % self.iteration)
         self.close()
 
@@ -143,9 +142,9 @@ class Database(object):
 
         # Remove deleted empty folders
         for (pid, rel_path) in self._get_empty_folders(folder):
-            snap_path = os.path.join(snapshot, rel_path)
+            snap_path = os.path.join(snapshot, rel_path.encode('utf-8'))
             if not os.path.exists(snap_path):
-                debug("Closing empty folder %s" % rel_path)
+                debug("Closing empty folder %s" % rel_path.encode('utf-8'))
                 self._close_version(pid)
                 
 
