@@ -65,6 +65,15 @@ class Archive
         return $db->error();
     }
 
+    public function get_repository()
+    {
+        if ($this->repository == null)
+        {
+            $this->read_config();
+        }
+        return $this->repository;
+    }
+
     public function get_folder($fid)
     {
         $db = $this->get_db();
@@ -87,7 +96,7 @@ class Archive
     public function get_file($pid)
     {
         $db = $this->get_db();
-        return $db->get_file($pid);
+        return $db->get_path($pid, 'File');
     }
 
     public function get_paths($fid)
@@ -106,12 +115,6 @@ class Archive
     {
         $db = $this->get_db();
         return $db->get_versions($pid);
-    }
-
-    public function get_abs_path($pid)
-    {
-        $file = $this->get_path($pid);
-        return $file->get_abs_path($this->repository);
     }
 }
 

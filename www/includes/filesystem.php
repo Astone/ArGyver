@@ -33,3 +33,11 @@ function get_icon($file_name)
         return null;
     }
 }
+
+function pretty_file_size($size)
+{
+    $txt = Array('B&nbsp;&nbsp;', 'KB', 'MB', 'GB', 'TB', 'PB');
+    $log = min(max(floor(log($size, pow(2,10))), 0), 5);
+    return ($log == 0) ? sprintf("%d %s", $size, $txt[0]) : sprintf("%.2f %s", $size / pow(2, 10*$log) , $txt[$log]);
+}
+

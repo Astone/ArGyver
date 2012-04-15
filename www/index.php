@@ -1,6 +1,8 @@
 <?php define('ROOT', dirname(__FILE__));
 
-require_once('includes/all.php');
+require_once(ROOT.'/includes/all.php');
+
+if (isset($_GET['clear_session'])) unset($_SESSION);
 
 $aid = get('aid', '', '?aid='); # Archive ID
 $fid = get('fid', '', '&fid='); # Folder ID

@@ -202,7 +202,7 @@ class Database(object):
 
                     # If the path is a folder itself, add it to the folders table as well
                     if os.path.isdir(abs_path):
-                        self._get_or_add_folder(rel_path.rstrip(os.path.sep))
+                        self._find_or_add_folder(rel_path.rstrip(os.path.sep))
 
                 # If it didn't exist or it was removed earlier, add a new version
                 if not self._path_is_open(pid):
@@ -298,14 +298,14 @@ class Database(object):
 
     def _add_path(self, file_path):
         debug("DB: Adding path %s" % file_path)
-        folder_id = self._get_or_add_folder(os.path.dirname(file_path.rstrip(os.path.sep)))
+        folder_id = self._find_or_add_folder(os.path.dirname(file_path.rstrip(os.path.sep)))
         query = ' \
             INSERT INTO paths \
             (folder, path) VALUES (?, ?);'
         result = self.execute(query, folder_id, file_path.decode('utf-8'))
         return result.lastrowid
 
-    def _get_or_add_folder(self, path):
+    def _find_or_add_folder(self, path):
         if path == '':
             return 0
         parent = 0
@@ -313,19 +313,26 @@ class Database(object):
         path = path.split(os.path.sep)
         for folder in path:
             subpath = os.path.join(subpath, folder)
-            fid = self._get_folder(parent, folder)
+            fid = self._find_folder(parent, folder)
             if fid == None:
                 fid = self._add_folder(parent, folder, subpath + os.path.sep)
             parent = fid
         return parent
 
-    def _get_folder(self, parent, name):
+    def _find_folder(self, parent, name):
         query = ' \
             SELECT id \
             FROM folders \
             WHERE parent = ? \
             AND name = ?;'
         row = self.execute(query, parent, name.decode('utf-8')).fetchone()
+        if row != None:
+            return row[0]
+        return None
+
+    def _get_parent_path(self, path_id):
+        query = 'SELECT folders.path FROM folders JOIN paths ON (paths.folder = folders.id) WHERE paths.id = ?;'
+        row = self.execute(query, path_id).fetchone()
         if row != None:
             return row[0]
         return None
@@ -344,6 +351,7 @@ class Database(object):
             INSERT INTO versions \
             (path, inode, created, created_i) VALUES (?, ?, ?, ?);'
         result = self.execute(query, path_id, inode, time, self.iteration)
+        self._update_version(self._get_parent_path(path_id), time)
         return result.lastrowid
 
     def _close_version(self, path_id):
@@ -354,6 +362,17 @@ class Database(object):
             WHERE path = ? \
             AND deleted_i IS NULL;'
         self.execute(query, self.iteration, path_id)
+
+    def _update_version(self, path_id, time):
+        if path_id == None:
+            debug("DB: Not updating version reached the root.")
+            return
+        debug("DB: Updating version (path=%d, modified=%d)" % (path_id, time))
+        query = 'SELECT created FROM versions WHERE path = ? AND deleted_i IS NULL;'
+        created = self.execute(query, path_id).fetchone()[0]
+        if time > created:
+            query = 'UPDATE versions SET created = MAX(created, ?) WHERE path = ? AND deleted_i IS NULL;'
+            self._update_version(self._get_parent_path(path_id), time)
 
     def _get_checksums(self, pattern):
         query = ' \

@@ -56,10 +56,5 @@ class Path extends DbObject
         if ($this->id == 0) return true;
         return $this->get_version()->is_open();
     }
-    
-    public function get_abs_path($root)
-    {
-        return $this->get_version()->get_abs_path($root);
-    }
 }
 
