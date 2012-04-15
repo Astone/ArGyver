@@ -4,7 +4,7 @@ class DbObject
 {
     public $id = null;
     public $name = null;
-    private $db = null;
+    protected $db = null;
     private $data = Array();
     private $objects = Array();
     
@@ -34,6 +34,12 @@ class DbObject
         }
 
         return $this->objects[$key];
+    }
+
+    public function reset()
+    {
+        unset($this->objects);
+        $this->objects = Array();
     }
     
     public function __tostring()

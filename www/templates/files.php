@@ -4,6 +4,7 @@
         <title>ArGyvers Files</title>
         <link rel="stylesheet" type="text/css" href="./css/main.css" />
         <link rel="stylesheet" type="text/css" href="./css/files.css" />
+        <script src="./js/files.js" language="JavaScript"></script>
     <head>
     <body>
         <h1><?php echo $folder->name ? $folder->name : $archive->name ?></h1>
@@ -22,14 +23,21 @@
 <?php foreach($folders as $f) : ?>
                 <tr class="folder <?php echo $f->is_open() ? "open" : "closed" ?>">
                     <td>
+                    <?php echo $f->get_path_id() == $pid ? "<a name=\"p$pid\" />" : "" ?>
                     <?php $icon=get_icon('dir') ?>
                     <?php echo $icon ? "<img src=\"$icon\" alt=\"$f->name\" width=\"16\" height=\"16\" />" : '' ?>
                     <a href="./?aid=<?=$aid?>&fid=<?=$f->id?>" target="_top" title="open folder"><?=$f ->name?></a>
                     </td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
+                    <td class="date"><?=date("d-m-Y", $f->get_version()->get_mtime())?></td>
+                    <td class="time"><?=date("H:i:s", $f->get_version()->get_mtime())?></td>
+                    <td class="size">
+<?php if($f->get_size(false) === null) : ?>
+                    <a href="./calculate_size.php?aid=<?=$aid?>&fid=<?=$f->id?>" target="_self" title="calculate size" onclick="return calculate_size('<?= str_replace('\'', '\\\'', $f->name) ?>');"><?= $f->get_size(true) ?></a>
+<?php else : ?>
+                    <?= $f->get_size(true) ?>
+<?php endif ?>
+                    </td>
+                    <td class="versions"><?=sizeof($f->get_iterations())?></td>
                 </tr>
 <?php endforeach ?>
 <?php foreach($files as $p) : ?>

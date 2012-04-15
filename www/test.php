@@ -1,9 +1,11 @@
-<?php define('ROOT', dirname(__FILE__));
+<?php $_SERVER['HTTP_HOST'] == 'localhost' ? : die('Access denied');
+
+define('ROOT', dirname(__FILE__));
 
 require_once('includes/all.php');
 
-$aid      = get('aid');
-$fid      = get('fid');
+$aid      = get('aid', 1);
+$fid      = get('fid', 1);
 $pid      = get('pid');
 $vid      = get('pid');
 
@@ -28,5 +30,5 @@ $files = $folder->get_files();
 #print_r($files);
 
 $file = $files[0];
-print_r($file);
+#print_r($file);
 

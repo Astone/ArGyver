@@ -43,59 +43,48 @@ class Database
         return is_a($this->db, 'Exception') ? $this->db->getMessage() : null;
     }
 
-    public function get_folder($fid)
+    public function get_folder($fid, $class='Folder')
     {
         if ($fid === 0) return new Folder($this, Array('id'=>0));
         $qry = sprintf("SELECT folders.id, parent, name, paths.path, folders.id as fid, paths.id as pid FROM folders JOIN paths ON (paths.id = folders.path) WHERE folders.id = %d", $fid);
-        return $this->get_object($qry, 'Folder');
+        return $this->get_object($qry, $class);
     }
 
-    public function get_folders($fid)
+    public function get_folders($fid, $class='Folder')
     {
         $qry = sprintf("SELECT folders.id, parent, name, paths.path, folders.id as fid, paths.id as pid FROM folders JOIN paths ON (paths.id = folders.path) WHERE parent = %d ORDER BY lower(name)", $fid);
-        return $this->get_objects($qry, 'Folder');
+        return $this->get_objects($qry, $class);
     }
 
-    public function get_file($pid)
+    public function get_path($pid, $class='Path')
     {
         $qry = sprintf("SELECT id, folder as parent, path, id as pid FROM paths WHERE id = %d;", $pid);
-        return $this->get_object($qry, 'File');
+        return $this->get_object($qry, $class);
     }
 
-    public function get_path($pid)
-    {
-        $qry = sprintf("SELECT id, folder as parent, path, id as pid FROM paths WHERE id = %d;", $pid);
-        return $this->get_object($qry, 'Path');
-    }
-
-    public function get_files($fid)
+    public function get_files($fid, $class='File')
     {
         $qry = sprintf("SELECT id, folder as parent, path, id as pid FROM paths WHERE NOT SUBSTR(path, -1, 1) == '/' AND folder = %d;", $fid);
-        return $this->get_objects($qry, 'File');
+        return $this->get_objects($qry, $class);
     }
 
-    public function get_version($vid)
+    public function get_version($vid, $class='Version')
     {
         $qry = sprintf("SELECT versions.id, path, created, created_i, deleted_i, checksum, size FROM versions LEFT JOIN repository ON(repository.id = versions.inode) WHERE id = %d;", $vid);
-        return $this->get_object($qry, 'Version');
+        return $this->get_object($qry, $class);
     }
 
-    public function get_iteration_timestamp($iid)
-    {
-        $qry = sprintf("SELECT start FROM iterations WHERE id = %d;", $iid);
-        return $this->get_value($qry);
-    }
-
-    public function get_versions($pid)
+    public function get_versions($pid, $class='Version')
     {
         $qry = sprintf("SELECT versions.id, path, created, created_i, deleted_i, checksum, size FROM versions LEFT JOIN repository ON(repository.id = versions.inode) WHERE path = %d ORDER BY created_i;", $pid);
-        return $this->get_objects($qry, 'Version');
+        return $this->get_objects($qry, $class);
     }
 
-    public function get_iterations($pid)
+    public function get_iterations($pid, $class='Version')
     {
         $qry = sprintf("
             SELECT
+                i.id,
                 i.id AS created_i,
                 i.id+1 AS deleted_i,
                 i.start AS created
@@ -103,7 +92,13 @@ class Database
                 JOIN paths AS p ON (p.id = v.path AND p.id = %d)
                 JOIN iterations AS i ON (i.id >= v.created_i AND (i.id < v.deleted_i OR v.deleted_i IS NULL))
             ORDER BY i.id;", $pid);
-        return $this->get_objects($qry, 'Version');
+        return $this->get_objects($qry, $class);
+    }
+
+    public function get_iteration_timestamp($iid)
+    {
+        $qry = sprintf("SELECT start FROM iterations WHERE id = %d;", $iid);
+        return $this->get_value($qry);
     }
 
     private function get_value($qry, $key = null)
@@ -135,7 +130,14 @@ class Database
         $results = $this->query($qry);
         while($row = $results->fetchArray())
         {
-            $objects[] = empty($class) ? $row : new $class($this, $row);
+            if (array_key_exists('id', $row))
+            {
+                $objects[$row['id']] = empty($class) ? $row : new $class($this, $row);
+            }
+            else
+            {
+                $objects[] = empty($class) ? $row : new $class($this, $row);
+            }
         }
         return $objects;
     }

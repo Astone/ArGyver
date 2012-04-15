@@ -7,13 +7,7 @@ class Version extends DbObject
     public function get_size($pretty=True)
     {
         $size = $this->get('size');
-
-        if ( !$pretty ) return $size;
-        
-        $log = min(max(floor(log($size, pow(2,10))), 0), 5);
-        
-        $txt = Array('B&nbsp;&nbsp;', 'KB', 'MB', 'GB', 'TB', 'PB');
-        return ($log == 0) ? sprintf("%d %s", $size, $txt[0]) : sprintf("%.2f %s", $size / pow(2, 10*$log) , $txt[$log]);
+        return $pretty ? pretty_file_size($size) : $size;
     }
     
     public function get_mtime()
