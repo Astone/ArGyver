@@ -64,15 +64,13 @@ class Folder extends Path
         
         $size = 0;
 
-        $folders = $this->get_folders();
-        $this->reset();
-        foreach ($folders as $f)
+        foreach ($this->get_folders() as $f)
         {
             @ $sub_size = $_SESSION['FOLDER_SIZES'][$aid][$f->id];
             if (! is_numeric($sub_size)) $_SESSION['FOLDER_SIZES'][$aid][$f->id] = 'pending';
         }
 
-        foreach ($folders as $f)
+        foreach ($this->get_folders() as $f)
         {
             $time_left = $max_time===null ? null : $max_time - (time() - $start);
             $sz = $f->calculate_size($time_left);
@@ -92,6 +90,8 @@ class Folder extends Path
 
         $_SESSION['FOLDER_SIZES'][$aid][$this->id] = $size;
 
+        $this->reset();
+
         return $size;
     }
 
@@ -106,9 +106,7 @@ class Folder extends Path
     
     private function _add_to_zip($zip, $repository, $root=null)
     {
-        $folders = $this->get_folders();
-        $this->reset();
-        foreach($folders as $f)
+        foreach($this->get_folders() as $f)
         {
             $f->_add_to_zip($zip, $repository, $root.'/'.$f->name);
         }        
@@ -117,5 +115,6 @@ class Folder extends Path
         {
             $zip->add_file_from_path($root.'/'.$f->name, $f->get_abs_path($repository));
         }        
+        $this->reset();
     }
 }
