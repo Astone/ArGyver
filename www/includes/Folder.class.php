@@ -100,17 +100,17 @@ class Folder extends Path
         ini_set('display_errors', 0);
 
         $zip = new ZipStream($this->name.'.zip');
-        $this->_add_to_zip($zip);
+        $this->_add_to_zip($zip, $repository);
         $zip->finish();
     }
     
-    private function _add_to_zip($zip, $root=null)
+    private function _add_to_zip($zip, $repository, $root=null)
     {
         $folders = $this->get_folders();
         $this->reset();
         foreach($folders as $f)
         {
-            $f->_add_to_zip($zip, $root.'/'.$f->name);
+            $f->_add_to_zip($zip, $repository, $root.'/'.$f->name);
         }        
 
         foreach($this->get_files() as $f)
