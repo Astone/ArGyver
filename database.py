@@ -37,34 +37,28 @@ class Database(object):
         self.execute(' \
             CREATE TABLE iterations ( \
                 id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, \
-                start INTEGER NOT NULL \
+                time INTEGER NOT NULL \
             );')
         self.execute(' \
-            CREATE TABLE folders ( \
+            CREATE TABLE items ( \
                 id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, \
-                parent INTEGER NOT NULL, \
-                name TEXT NOT NULL, \
-                path INTEGER NOT NULL \
-            );')
-        self.execute(' \
-            CREATE TABLE paths ( \
-                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, \
-                folder INTEGER, \
-                path TEXT NOT NULL \
+                parent INTEGER, \
+                name TEXT NOT NULL \
             );')
         self.execute(' \
             CREATE TABLE versions ( \
                 id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, \
-                path INTEGER NOT NULL, \
+                item INTEGER NOT NULL, \
                 inode INTEGER NULL, \
-                previous_version INTEGER NULL, \
+                time INTEGER NULL, \
+                size INTEGER NOT NULL, \
                 created INTEGER NOT NULL, \
-                created_i INTEGER NOT NULL, \
-                deleted_i INTEGER NULL \
+                deleted INTEGER NULL, \
+                previous_version INTEGER NULL \
             );')
         self.execute(' \
             CREATE TABLE repository ( \
-                id INTEGER PRIMARY KEY NOT NULL, \
+                inode INTEGER NULL, \
                 checksum TEXT NOT NULL, \
                 size INTEGER NOT NULL \
             );')
@@ -72,20 +66,18 @@ class Database(object):
     def create_indexes(self):
         self.execute('CREATE UNIQUE INDEX idx_iterations_id ON iterations (id);')
 
-        self.execute('CREATE UNIQUE INDEX idx_folders_id ON folders (id);')
-        self.execute('CREATE INDEX idx_folders_parent ON folders (parent);')
-        self.execute('CREATE INDEX idx_folders_path ON folders (path);')
-
-        self.execute('CREATE UNIQUE INDEX idx_paths_id ON paths (id);')
-        self.execute('CREATE INDEX idx_paths_folder ON paths (folder);')
-        self.execute('CREATE INDEX idx_paths_path ON paths (path);')
+        self.execute('CREATE UNIQUE INDEX idx_items_id ON items (id);')
+        self.execute('CREATE INDEX idx_items_parent ON items (parent);')
+        self.execute('CREATE INDEX idx_items_name ON items (name);')
 
         self.execute('CREATE UNIQUE INDEX idx_versions_id ON versions (id);')
-        self.execute('CREATE INDEX idx_versions_path ON versions (path);')
+        self.execute('CREATE INDEX idx_versions_item ON versions (item);')
         self.execute('CREATE INDEX idx_versions_inode ON versions (inode);')
+        self.execute('CREATE INDEX idx_versions_created ON versions (created);')
+        self.execute('CREATE INDEX idx_versions_deleted ON versions (deleted);')
         self.execute('CREATE INDEX idx_versions_previous ON versions (previous_version);')
 
-        self.execute('CREATE UNIQUE INDEX idx_repository_id ON repository (id);')
+        self.execute('CREATE UNIQUE INDEX idx_repository_inode ON repository (inode);')
         self.execute('CREATE UNIQUE INDEX idx_repository_checksum ON repository (checksum);')
 
     def execute(self, query, *args):
@@ -105,47 +97,55 @@ class Database(object):
         # For all (sub)folders in the temporary folder (storing all deleted/changed files):
         for (path, folders, files) in os.walk(os.path.join(temp, folder)):
             # For each subfolder and file in the folder:
-            for file_name in folders + files:
+            for item_name in folders + files:
+
                 # Construct the path to the folder or file in the snapshot and in the temporary folder
-                temp_path = os.path.join(path, file_name)
+                temp_path = os.path.join(path, item_name)
                 snap_path = os.path.join(snapshot, os.path.relpath(temp_path, temp))
                 
                 # If the source path is a symbolic link, ignore it
                 if os.path.islink(temp_path):
-                    warning("Tried to close %s in the DB, but it is a symbolic link." % temp_path)
+                    debug("Tried to delete %s in the DB, but it is a symbolic link." % temp_path)
                     continue
 
                 # If the source path does not exist, 'throw' an error
                 if not os.path.exists(temp_path):
-                    warning("Tried to close %s in the DB, but it doesn't exist on the disk." % temp_path)
+                    fatal("Tried to close %s in the DB, but it doesn't exist." % temp_path)
                     continue
 
-                if os.path.isdir(snap_path):
-                    debug("Tried to close %s in the DB, but it is folder that stil exists in the snapshot." % temp_path)
-                    continue
-
-                # Construct the relative path to store in the the database
+                # Construct the relative path
                 rel_path = os.path.relpath(snap_path, snapshot)
                 
-                # If it is a folder, add a slash
-                if os.path.isdir(temp_path):
-                    rel_path += os.path.sep
-            
-                # Get the path's id from the database
-                pid = self._get_path_id(rel_path)
+                # Get the item's id from the database
+                fid = self._get_item_id_by_path(rel_path)
 
-                # If it is not in the database, throw a warning, otherwise close it
-                if pid == None:
-                    warning("Path id of %s could not be found in the database" % rel_path)
-                else:
-                    self._close_version(pid)
+                # If it is not in the database, throw a error, otherwise close it
+                if fid == None:
+                    fatal("Path id of %s could not be found in the database" % rel_path)
+                    continue
+                
+                version = self._get_current_version(fid)
+                
+                # If there is no open version, throw a error, otherwise close it
+                if version == None:
+                    fatal("There is no version of %s in the database" % rel_path)
+
+                self._delete_version(version['id'])
+
+                if os.path.isdir(snap_path):
+                    self._add_folder_version(fid, version['time'], version['size'])
 
         # Remove deleted empty folders
-        for (pid, rel_path) in self._get_empty_folders(folder):
-            snap_path = os.path.join(snapshot, rel_path.encode('utf-8'))
+        for fid in self._get_empty_folder_ids(folder):
+            rel_path = self._get_path_by_item_id(fid)
+            snap_path = os.path.join(snapshot, rel_path)
             if not os.path.exists(snap_path):
-                debug("Closing empty folder %s" % rel_path.encode('utf-8'))
-                self._close_version(pid)
+                debug("Closing empty folder %s" % rel_path)
+                version = self._get_current_version(fid)
+                # If there is no open version, throw a error, otherwise close it
+                if version == None:
+                    error("There is no version of %s in the database" % rel_path)
+                self._delete_version(version['id'])
                 
 
 
@@ -177,7 +177,7 @@ class Database(object):
 
                 # If the source path does not exist, 'throw' an error
                 if not os.path.exists(abs_path):
-                    error("Tried to add path %s to the DB, but it doesn't exist on the disk." % abs_path)
+                    fatal("Tried to add path %s to the DB, but it doesn't exist on the disk." % abs_path)
                     continue
 
                 # Get some folder/file statistics
@@ -194,19 +194,19 @@ class Database(object):
                     inode = None
 
                 # Check if the path is allready in the database
-                pid = self._get_path_id(rel_path)
+                fid = self._get_item_id_by_path(rel_path)
                 
-                # If it is not, add it (parent folders are automatically added to the folders table)
-                if pid == None:
-                    pid = self._add_path(rel_path)
+                # If it is not, add it (parent folders are automatically added table)
+                if fid == None:
+                    fid = self._add_item(rel_path)
 
                     # If the path is a folder itself, add it to the folders table as well
                     if os.path.isdir(abs_path):
                         self._find_or_add_folder(rel_path.rstrip(os.path.sep))
 
                 # If it didn't exist or it was removed earlier, add a new version
-                if not self._path_is_open(pid):
-                    self._add_version(pid, inode, time)
+                if not self._path_is_open(fid):
+                    self._add_version(fid, inode, time)
 
         # Save all changes to the database
         self.commit()
@@ -253,7 +253,7 @@ class Database(object):
 
             #If the path doesn't exist, throw an error
             if not os.path.exists(abs_path):
-                error("Path %s could not be found" % abs_path)
+                fatal("Path %s could not be found" % abs_path)
                 continue
 
             # Get some folder/file statistics
@@ -269,43 +269,85 @@ class Database(object):
         warning("DB: update_history() is not implemented. This could be used to show if a file is moved, copied, deleted, etc in the GUI.")
 
     def _add_iteration(self):
-        query = ' \
-            INSERT INTO iterations \
-            (start) VALUES (?);'
+        debug("DB: Adding iteration")
+        query = 'INSERT INTO iterations (time) VALUES (?);'
         result = self.execute(query, mktime(datetime.now().timetuple()))
         return result.lastrowid
 
-    def _get_path_id(self, file_path):
-        query = ' \
-            SELECT id \
-            FROM paths \
-            WHERE path = ?;'
-        row = self.execute(query, file_path.decode('utf-8')).fetchone()
-        if row != None:
-            return row[0]
+    def _add_folder_version(self, fid, time=None, size=0):
+        debug("DB: Adding version (folder=%d)" % fid)
+        query = 'INSERT INTO versions (item, time, size, created) VALUES (?, ?, ?, ?);'
+        result = self.execute(query, fid, time, size, self.iteration)
+        return result.lastrowid
+        
+    def _get_item_id_by_path(self, path, parent=0):
+        if not isinstance(path, list):
+            items = path.split(os.path.sep)
+        query = 'SELECT id FROM items WHERE parent = ? AND name = ?;'
+        record = self.execute(query, parent, items[0].decode('utf-8')).fetchone()
+        if record != None:
+            fid = record[0]
+            if len(items) > 1:
+                return self._get_item_id_by_path(items[1:], fid)
+            else:
+                return fid
         return None
 
-    def _path_is_open(self, id):
-        query = ' \
-            SELECT * \
-            FROM versions \
-            WHERE path = ? \
-            AND deleted_i IS NULL;'
-        row = self.execute(query, id).fetchone()
-        if row != None:
-            return True
-        return False
+    def _get_path_by_item_id(self, fid):
+        query = 'SELECT name, parent FROM items WHERE id = ? ;'
+        record = self.execute(query, fid).fetchone()
+        if record == None:
+            fatal("Item %d not found in the database." % fid)
+            return None
+        name = record[0].encode('utf-8')
+        fid = record[1]
+        if fid > 0:
+            path = self._get_path_by_item_id(self, fid) 
+            if path == None:
+                return None
+            return path + os.path.sep + name
+        return name
+        
+    def _delete_version(self, vid):
+        debug("DB: Closing version (id=%d)" % vid)
+        query = 'UPDATE versions SET deleted = ? WHERE id = ? ;'
+        self.execute(query, self.iteration, vid)
 
-    def _add_path(self, file_path):
-        debug("DB: Adding path %s" % file_path)
+    def _get_current_version(self, item_id):
+        query = 'SELECT * FROM versions WHERE item = ? AND deleted IS NULL';
+        return self.execute(query, item_id).fetchone()
+
+    def _get_empty_folders(self):
+        query = 'SELECT * FROM items JOIN versions ON (WHERE size = 0 AND inode IS NULL AND deleted IS NULL)';
+        data = self.execute(query).fetchall()
+        for record in data:
+            record['name'] = record['name'].encode('utf-8')
+        return data
+
+################################################################################
+
+    def __add_path(self, path):
+        debug("DB: Adding item %s" % path)
         folder_id = self._find_or_add_folder(os.path.dirname(file_path.rstrip(os.path.sep)))
         query = ' \
             INSERT INTO paths \
             (folder, path) VALUES (?, ?);'
         result = self.execute(query, folder_id, file_path.decode('utf-8'))
-        return result.lastrowid
+        return result.lastrecordid
 
-    def _find_or_add_folder(self, path):
+
+    def __path_is_open(self, id):
+        query = ' \
+            SELECT * \
+            FROM versions \
+            WHERE path = ? \
+            AND deleted_i IS NULL;'
+        record = self.execute(query, id).fetchone()
+        if record != None:
+            return True
+        return False
+
+    def __find_or_add_folder(self, path):
         if path == '':
             return 0
         parent = 0
@@ -319,25 +361,25 @@ class Database(object):
             parent = fid
         return parent
 
-    def _find_folder(self, parent, name):
+    def __find_folder(self, parent, name):
         query = ' \
             SELECT id \
             FROM folders \
             WHERE parent = ? \
             AND name = ?;'
-        row = self.execute(query, parent, name.decode('utf-8')).fetchone()
-        if row != None:
-            return row[0]
+        record = self.execute(query, parent, name.decode('utf-8')).fetchone()
+        if record != None:
+            return record[0]
         return None
 
-    def _get_parent_path(self, path_id):
+    def __get_parent_path(self, path_id):
         query = 'SELECT folders.path FROM folders JOIN paths ON (paths.folder = folders.id) WHERE paths.id = ?;'
-        row = self.execute(query, path_id).fetchone()
-        if row != None:
-            return row[0]
+        record = self.execute(query, path_id).fetchone()
+        if record != None:
+            return record[0]
         return None
 
-    def _add_folder(self, parent, name, path):
+    def __add_folder(self, parent, name, path):
         debug("DB: Adding folder %s under %d" % (name, parent))
         query = ' \
             INSERT INTO folders \
@@ -345,7 +387,7 @@ class Database(object):
         result = self.execute(query, parent, name.decode('utf-8'), self._get_path_id(path))
         return result.lastrowid
 
-    def _add_version(self, path_id, inode, time):
+    def __add_version(self, path_id, inode, time):
         debug("DB: Adding version (path=%d, inode=%s, created=%d)" % (path_id, inode, time))
         query = ' \
             INSERT INTO versions \
@@ -354,7 +396,7 @@ class Database(object):
         self._update_version(self._get_parent_path(path_id), time)
         return result.lastrowid
 
-    def _close_version(self, path_id):
+    def __close_version(self, path_id):
         debug("DB: Closing version (path=%d)" % path_id)
         query = ' \
             UPDATE versions \
@@ -363,7 +405,7 @@ class Database(object):
             AND deleted_i IS NULL;'
         self.execute(query, self.iteration, path_id)
 
-    def _update_version(self, path_id, time):
+    def __update_version(self, path_id, time):
         if path_id == None:
             debug("DB: Not updating version reached the root.")
             return
@@ -374,21 +416,21 @@ class Database(object):
             query = 'UPDATE versions SET created = MAX(created, ?) WHERE path = ? AND deleted_i IS NULL;'
             self._update_version(self._get_parent_path(path_id), time)
 
-    def _get_checksums(self, pattern):
+    def __get_checksums(self, pattern):
         query = ' \
             SELECT checksum \
             FROM repository \
             WHERE checksum LIKE ? ;'
-        return [row[0] for row in self.execute(query, pattern).fetchall()]
+        return [record[0] for record in self.execute(query, pattern).fetchall()]
 
-    def _add_checksum(self, checksum, inode, size):
+    def __add_checksum(self, checksum, inode, size):
         debug("DB: Adding checksum (inode=%d, checksum=%s, size=%d)" % (inode, checksum, size))
         query = ' \
             INSERT INTO repository \
             (id, checksum, size) VALUES (?, ?, ?);'
         self.execute(query, inode, checksum, size)
 
-    def _get_unlinked_files(self, pattern):
+    def __get_unlinked_files(self, pattern):
         query = ' \
             SELECT versions.id, paths.path \
             FROM paths \
@@ -399,7 +441,7 @@ class Database(object):
     		AND NOT SUBSTR(paths.path, -1, 1) = ? ;'
         return self.execute(query, pattern, os.path.sep)
 
-    def _get_empty_folders(self, folder):
+    def __get_empty_folders(self, folder):
         query = ' \
             SELECT folder_paths.id, folder_paths.path \
             FROM folders \
@@ -412,7 +454,7 @@ class Database(object):
             GROUP BY folders.id ;'
         return self.execute(query, folder + os.path.sep + '%' + os.path.sep)
 
-    def _set_inode(self, version_id, inode):
+    def __set_inode(self, version_id, inode):
         debug("DB: Set inode (version=%d, inode=%d)" % (version_id, inode))
         query = ' \
             UPDATE versions \

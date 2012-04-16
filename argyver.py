@@ -92,11 +92,9 @@ class ArGyver(object):
             debug("Database is disabled.")
             return
         db.connect()
-        notice("Updating database (stage 1) for %s. (#%d)" % (folder, db.iteration))
         db.delete_old_paths(self.config.get_server_snapshot(), self.config.get_server_tmp(), folder)
         db.add_new_paths(self.config.get_server_snapshot(), folder)
         db.close()
-        notice("Updating database (stage 1) for %s finished." % folder)
     
     def update_db_repository(self, folder):
         db = self.config.get_server_database()
@@ -104,14 +102,12 @@ class ArGyver(object):
             debug("Database is disabled.")
             return
         if self.config.get_server_repository() == None:
-            debug("Skipping db stage 2: file linker is disabled.")
+            debug("File linker is disabled.")
             return
         db.connect()
-        notice("Updating database (stage 2) for %s. (#%d)" % (folder, db.iteration))
         db.add_new_repository_entries(self.config.get_server_repository())
         db.update_inodes(self.config.get_server_snapshot(), folder)
         db.close()
-        notice("Updating database (stage 2) for %s finished." % folder)
 
     def update_db_history(self):
         db = self.config.get_server_database()
@@ -119,10 +115,8 @@ class ArGyver(object):
             debug("Database is disabled.")
             return
         db.connect()
-        notice("Updating database (stage 3) (#%d)" % (db.iteration))
         db.update_history()
         db.close()
-        notice("Updating database (stage 3) finished.")
 
     def archive(self, folder):
     
