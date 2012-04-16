@@ -25,6 +25,7 @@ class Database(object):
 
     def connect(self):
         self.db = sql.connect(self.path)
+        self.db.row_factory = sql.Row
 
     def close(self):
         debug("DB: Closing connection to database %s" % self.path)
@@ -58,9 +59,8 @@ class Database(object):
             );')
         self.execute(' \
             CREATE TABLE repository ( \
-                inode INTEGER NULL, \
-                checksum TEXT NOT NULL, \
-                size INTEGER NOT NULL \
+                inode INTEGER PRIMARY KEY NOT NULL, \
+                checksum TEXT NOT NULL \
             );')
 
     def create_indexes(self):
@@ -86,6 +86,7 @@ class Database(object):
             cursor.execute(query, args)
         except Exception as e:
             error(str(e))
+            error(query)
         return cursor
 
     def commit(self, commit=True):
@@ -93,9 +94,9 @@ class Database(object):
             debug("DB: Commit #%d." % self.iteration)
             self.db.commit()
 
-    def delete_old_paths(self, snapshot, temp, folder):
+    def delete_old_items(self, snapshot, temp):
         # For all (sub)folders in the temporary folder (storing all deleted/changed files):
-        for (path, folders, files) in os.walk(os.path.join(temp, folder)):
+        for (path, folders, files) in os.walk(temp):
             # For each subfolder and file in the folder:
             for item_name in folders + files:
 
@@ -110,7 +111,7 @@ class Database(object):
 
                 # If the source path does not exist, 'throw' an error
                 if not os.path.exists(temp_path):
-                    fatal("Tried to close %s in the DB, but it doesn't exist." % temp_path)
+                    error("Tried to close %s in the DB, but it doesn't exist." % temp_path)
                     continue
 
                 # Construct the relative path
@@ -121,92 +122,73 @@ class Database(object):
 
                 # If it is not in the database, throw a error, otherwise close it
                 if fid == None:
-                    fatal("Path id of %s could not be found in the database" % rel_path)
+                    error("Path id of %s could not be found in the database" % rel_path)
                     continue
                 
                 version = self._get_current_version(fid)
                 
                 # If there is no open version, throw a error, otherwise close it
                 if version == None:
-                    fatal("There is no version of %s in the database" % rel_path)
+                    error("There is no version of %s in the database" % rel_path)
 
                 self._delete_version(version['id'])
 
                 if os.path.isdir(snap_path):
-                    self._add_folder_version(fid, version['time'], version['size'])
+                    self._add_version(fid, version['time'], version['size'])
 
         # Remove deleted empty folders
-        for fid in self._get_empty_folder_ids(folder):
+        for (fid, vid) in self._get_empty_folder_ids():
             rel_path = self._get_path_by_item_id(fid)
             snap_path = os.path.join(snapshot, rel_path)
             if not os.path.exists(snap_path):
                 debug("Closing empty folder %s" % rel_path)
-                version = self._get_current_version(fid)
-                # If there is no open version, throw a error, otherwise close it
-                if version == None:
-                    error("There is no version of %s in the database" % rel_path)
-                self._delete_version(version['id'])
-                
-
+                self._delete_version(vid)
 
         # Save all changes to the database
         self.commit()
     
-    def add_new_paths(self, root, folder):
+    def add_new_items(self, snapshot):
 
-        folder += os.path.sep
-
-	# Make sure the root is in the database
-        if self._get_path_id(folder) == None:
-            stat = os.stat(os.path.join(root, folder))
-            pid = self._add_path(folder)
-            self._add_folder(0, folder.rstrip(os.path.sep), folder)
-            self._add_version(pid, None, stat.st_mtime)
-
-        # For all (sub)folders in the destination folder:
-        for (path, folders, files) in os.walk(os.path.join(root, folder)):
+        # For all folders and files in the snaphot:
+        for (path, folders, files) in os.walk(snapshot):
             # For each subfolder and file in the folder:
-            for name in folders + files:
+            for item_name in folders + files:
                 # The absolute path is the path of the folder + the name of the subfolder or file
-                abs_path = os.path.join(path, name)
+                abs_path = os.path.join(path, item_name)
                 
                 # If the source path is a symbolic link, ignore it
                 if os.path.islink(abs_path):
-                    debug("Tried to add path %s to the DB, but it is a symbolic link." % abs_path)
+                    debug("Tried to add \"%s\" to the DB, but it is a symbolic link." % abs_path)
                     continue
 
                 # If the source path does not exist, 'throw' an error
                 if not os.path.exists(abs_path):
-                    fatal("Tried to add path %s to the DB, but it doesn't exist on the disk." % abs_path)
+                    error("Tried to add path \"%s\" to the DB, but it doesn't exist on the disk." % abs_path)
                     continue
 
-                # Get some folder/file statistics
-                stat = os.stat(abs_path)
-                inode = stat.st_ino
-                time = stat.st_mtime
-
                 # Determine the relative path to the snapshot folder                
-                rel_path = os.path.relpath(abs_path, root)
+                rel_path = os.path.relpath(abs_path, snapshot)
                 
-                # Add a slash if it is a folder
-                if os.path.isdir(abs_path):
-                    rel_path += os.path.sep
-                    inode = None
-
-                # Check if the path is allready in the database
-                fid = self._get_item_id_by_path(rel_path)
-                
-                # If it is not, add it (parent folders are automatically added table)
-                if fid == None:
-                    fid = self._add_item(rel_path)
-
-                    # If the path is a folder itself, add it to the folders table as well
-                    if os.path.isdir(abs_path):
-                        self._find_or_add_folder(rel_path.rstrip(os.path.sep))
+                # Check if the path is allready in the database or add it
+                fid = self._find_or_add_item(rel_path)
 
                 # If it didn't exist or it was removed earlier, add a new version
-                if not self._path_is_open(fid):
-                    self._add_version(fid, inode, time)
+                if self._get_current_version(fid) == None:
+                    stat = os.stat(abs_path)
+                    if os.path.isdir(abs_path):
+                        vid = self._add_version(fid, stat.st_mtime)
+                    else:
+                        vid = self._add_version(fid, stat.st_mtime, stat.st_size, stat.st_ino)
+                    # Update the parent folders
+                    version = self._get_parent_version(vid)
+                    while version:
+                        if version['created'] < self.iteration:
+                            self._delete_version(version['id'])
+                            self._add_version(version['item'], version['time'], version['size'])
+                            version = self._get_parent_version(version['id'])
+                        else:
+                            break
+                        
 
         # Save all changes to the database
         self.commit()
@@ -221,7 +203,7 @@ class Database(object):
                 batch = os.path.basename(path)
 
                 # Get all known checksums in this batch from the databse
-                db_checksums = self._get_checksums(batch+'%')
+                db_checksums = self._get_checksum_subset(batch+'%')
 
                 # Get the set difference to find out wich checksum files are on the disk but not in the database
                 new_checksums = set(fs_checksums) - set(db_checksums)
@@ -229,38 +211,36 @@ class Database(object):
                 # Add all new checksums acompanied with their inode
                 for checksum in new_checksums:
                     stat = os.stat(os.path.join(path, checksum))
-                    self._add_checksum(checksum, stat.st_ino, stat.st_size)
+                    self._add_checksum(checksum, stat.st_ino)
 
         # Save all changes to the database
         self.commit()
 
-    def update_inodes(self, root, folder):
-    
-        # Get a list of unlinked files (=versions) from the database
-        unlinked_files = self._get_unlinked_files(folder+'/%');
-        
+    def update_inodes(self, snapshot):
+
         # For each unlinked version, link it
-        for (version_id, rel_path) in unlinked_files:
+        for record in self._get_unlinked_files():
+            vid = record['vid']
+            rel_path = self._get_path_by_item_id(record['fid'])
             
             # Construct the absolute path
-            abs_path = os.path.join(root, rel_path.encode('utf-8'))
-            
+            abs_path = os.path.join(snapshot, rel_path)
                 
             # If the source path is a symbolic link, ignore it
             if os.path.islink(abs_path):
-                debug("Tried to close %s in the DB, but it is a symbolic link." % abs_path)
+                debug("Skipping inode update for %s, it is a symbolic link." % rel_path)
                 continue
 
             #If the path doesn't exist, throw an error
             if not os.path.exists(abs_path):
-                fatal("Path %s could not be found" % abs_path)
+                error("Path %s could not be found" % rel_path)
                 continue
 
             # Get some folder/file statistics
             stat = os.stat(abs_path)
 
             # Set the inode
-            self._set_inode(version_id, stat.st_ino)
+            self._set_inode(vid, stat.st_ino)
 
         # Save all changes to the database
         self.commit()
@@ -268,198 +248,143 @@ class Database(object):
     def update_history(self):
         warning("DB: update_history() is not implemented. This could be used to show if a file is moved, copied, deleted, etc in the GUI.")
 
+# Iterations
+
     def _add_iteration(self):
         debug("DB: Adding iteration")
         query = 'INSERT INTO iterations (time) VALUES (?);'
         result = self.execute(query, mktime(datetime.now().timetuple()))
         return result.lastrowid
 
-    def _add_folder_version(self, fid, time=None, size=0):
-        debug("DB: Adding version (folder=%d)" % fid)
-        query = 'INSERT INTO versions (item, time, size, created) VALUES (?, ?, ?, ?);'
-        result = self.execute(query, fid, time, size, self.iteration)
-        return result.lastrowid
-        
+# Items
+
+    def _find_or_add_item(self, path):
+        fid = self._get_item_id_by_path(path)
+        if fid == None:
+            fid = self._add_item(path);
+        return fid
+
+    def _add_item(self, path):
+        if not isinstance(path, list):
+            path = path.split(os.path.sep)
+        debug("DB: Adding item '%s'" % os.path.sep.join(path))
+        name = path.pop()
+        parent = self._find_or_add_item(path)
+        query = 'INSERT INTO items (parent, name) VALUES (?, ?);'
+        return self.execute(query, parent, name.decode('utf-8')).lastrowid
+
     def _get_item_id_by_path(self, path, parent=0):
         if not isinstance(path, list):
-            items = path.split(os.path.sep)
+            path = path.split(os.path.sep)
+        if len(path) == 0:
+            return parent
         query = 'SELECT id FROM items WHERE parent = ? AND name = ?;'
-        record = self.execute(query, parent, items[0].decode('utf-8')).fetchone()
+        record = self.execute(query, parent, path.pop(0).decode('utf-8')).fetchone()
         if record != None:
-            fid = record[0]
-            if len(items) > 1:
-                return self._get_item_id_by_path(items[1:], fid)
-            else:
-                return fid
+            fid = record['id']
+            return self._get_item_id_by_path(path, fid)
         return None
 
     def _get_path_by_item_id(self, fid):
+        if fid == 0:
+            return ''
         query = 'SELECT name, parent FROM items WHERE id = ? ;'
         record = self.execute(query, fid).fetchone()
         if record == None:
-            fatal("Item %d not found in the database." % fid)
+            error("Item %d not found in the database." % fid)
             return None
-        name = record[0].encode('utf-8')
-        fid = record[1]
-        if fid > 0:
-            path = self._get_path_by_item_id(self, fid) 
-            if path == None:
-                return None
-            return path + os.path.sep + name
-        return name
-        
+        path = self._get_path_by_item_id(record['parent']) 
+        if path == None:
+            return None
+        return os.path.join(path, record['name'].encode('utf-8'))
+
+    # The folder might contain files of size 0
+    def _get_empty_folder_ids(self):
+        query = ' \
+            SELECT items.id as fid, versions.id as vid \
+            FROM items \
+            JOIN versions ON (versions.item = items.id) \
+            WHERE size = 0 \
+            AND inode IS NULL \
+            AND deleted IS NULL;';
+        return self.execute(query)
+
+# Versions
+
+    def _add_version(self, fid, time, size=0, inode=None):
+        debug("DB: Adding version (item=%d)" % fid)
+        query = 'INSERT INTO versions (item, inode, time, size, created) VALUES (?, ?, ?, ?, ?);'
+        result = self.execute(query, fid, inode, time, size, self.iteration)
+        vid = result.lastrowid
+        self._set_time_to_parents(vid, time)
+        if size > 0:
+            self._add_size_to_parents(vid, size)
+        return vid
+
+    def _get_version(self, vid):
+        query = 'SELECT * FROM versions WHERE id = ?;';
+        return self.execute(query, vid).fetchone()
+
+    def _get_current_version(self, fid):
+        query = 'SELECT * FROM versions WHERE item = ? AND deleted IS NULL;';
+        return self.execute(query, fid).fetchone()
+
+    def _get_parent_version(self, vid):
+        query = 'SELECT parent FROM items JOIN versions ON (versions.item = items.id) WHERE versions.id = ?;';
+        fid = self.execute(query, vid).fetchone()['parent']
+        return self._get_current_version(fid)
+
     def _delete_version(self, vid):
         debug("DB: Closing version (id=%d)" % vid)
         query = 'UPDATE versions SET deleted = ? WHERE id = ? ;'
         self.execute(query, self.iteration, vid)
+        version = self._get_version(vid)
+        if version['size'] > 0:
+            self._add_size_to_parents(vid, -version['size'])
 
-    def _get_current_version(self, item_id):
-        query = 'SELECT * FROM versions WHERE item = ? AND deleted IS NULL';
-        return self.execute(query, item_id).fetchone()
-
-    def _get_empty_folders(self):
-        query = 'SELECT * FROM items JOIN versions ON (WHERE size = 0 AND inode IS NULL AND deleted IS NULL)';
-        data = self.execute(query).fetchall()
-        for record in data:
-            record['name'] = record['name'].encode('utf-8')
-        return data
-
-################################################################################
-
-    def __add_path(self, path):
-        debug("DB: Adding item %s" % path)
-        folder_id = self._find_or_add_folder(os.path.dirname(file_path.rstrip(os.path.sep)))
-        query = ' \
-            INSERT INTO paths \
-            (folder, path) VALUES (?, ?);'
-        result = self.execute(query, folder_id, file_path.decode('utf-8'))
-        return result.lastrecordid
-
-
-    def __path_is_open(self, id):
-        query = ' \
-            SELECT * \
-            FROM versions \
-            WHERE path = ? \
-            AND deleted_i IS NULL;'
-        record = self.execute(query, id).fetchone()
-        if record != None:
-            return True
-        return False
-
-    def __find_or_add_folder(self, path):
-        if path == '':
-            return 0
-        parent = 0
-        subpath = ''
-        path = path.split(os.path.sep)
-        for folder in path:
-            subpath = os.path.join(subpath, folder)
-            fid = self._find_folder(parent, folder)
-            if fid == None:
-                fid = self._add_folder(parent, folder, subpath + os.path.sep)
-            parent = fid
-        return parent
-
-    def __find_folder(self, parent, name):
-        query = ' \
-            SELECT id \
-            FROM folders \
-            WHERE parent = ? \
-            AND name = ?;'
-        record = self.execute(query, parent, name.decode('utf-8')).fetchone()
-        if record != None:
-            return record[0]
-        return None
-
-    def __get_parent_path(self, path_id):
-        query = 'SELECT folders.path FROM folders JOIN paths ON (paths.folder = folders.id) WHERE paths.id = ?;'
-        record = self.execute(query, path_id).fetchone()
-        if record != None:
-            return record[0]
-        return None
-
-    def __add_folder(self, parent, name, path):
-        debug("DB: Adding folder %s under %d" % (name, parent))
-        query = ' \
-            INSERT INTO folders \
-            (parent, name, path) VALUES (?, ?, ?);'
-        result = self.execute(query, parent, name.decode('utf-8'), self._get_path_id(path))
-        return result.lastrowid
-
-    def __add_version(self, path_id, inode, time):
-        debug("DB: Adding version (path=%d, inode=%s, created=%d)" % (path_id, inode, time))
-        query = ' \
-            INSERT INTO versions \
-            (path, inode, created, created_i) VALUES (?, ?, ?, ?);'
-        result = self.execute(query, path_id, inode, time, self.iteration)
-        self._update_version(self._get_parent_path(path_id), time)
-        return result.lastrowid
-
-    def __close_version(self, path_id):
-        debug("DB: Closing version (path=%d)" % path_id)
-        query = ' \
-            UPDATE versions \
-            SET deleted_i = ? \
-            WHERE path = ? \
-            AND deleted_i IS NULL;'
-        self.execute(query, self.iteration, path_id)
-
-    def __update_version(self, path_id, time):
-        if path_id == None:
-            debug("DB: Not updating version reached the root.")
+    def _add_size_to_parents(self, vid, size):
+        version = self._get_parent_version(vid)        
+        if version == None:
             return
-        debug("DB: Updating version (path=%d, modified=%d)" % (path_id, time))
-        query = 'SELECT created FROM versions WHERE path = ? AND deleted_i IS NULL;'
-        created = self.execute(query, path_id).fetchone()[0]
-        if time > created:
-            query = 'UPDATE versions SET created = MAX(created, ?) WHERE path = ? AND deleted_i IS NULL;'
-            self._update_version(self._get_parent_path(path_id), time)
+        query = 'UPDATE versions SET size = size + ? WHERE id = ? ;'
+        self.execute(query, size, version['id'])
+        self._add_size_to_parents(version['id'], size)
 
-    def __get_checksums(self, pattern):
+    def _set_time_to_parents(self, vid, time):
+        version = self._get_parent_version(vid)        
+        if version == None or version['time'] >= time:
+            return
+        query = 'UPDATE versions SET time = ? WHERE id = ? ;'
+        self.execute(query, time, version['id'])
+        self._set_time_to_parents(version['id'], time)
+
+    def _set_inode(self, vid, inode):
+        debug("DB: Set inode (version=%d, inode=%d)" % (vid, inode))
+        query = 'UPDATE versions SET inode = ? WHERE id = ?;'
+        self.execute(query, inode, vid)
+
+# Repository
+
+    def _add_checksum(self, checksum, inode):
+        debug("DB: Adding checksum (inode=%d, checksum=%s)" % (inode, checksum))
+        query = 'INSERT INTO repository (inode, checksum) VALUES (?, ?);'
+        self.execute(query, inode, checksum)
+
+    def _get_checksum_subset(self, pattern):
+        query = 'SELECT checksum FROM repository WHERE checksum LIKE ? ;'
+        return [record['checksum'] for record in self.execute(query, pattern).fetchall()]
+
+    def _get_inodes_in_repository(self):
+        query = 'SELECT inode FROM repository;'
+        return self.execute(query)
+
+    def _get_unlinked_files(self):
         query = ' \
-            SELECT checksum \
-            FROM repository \
-            WHERE checksum LIKE ? ;'
-        return [record[0] for record in self.execute(query, pattern).fetchall()]
-
-    def __add_checksum(self, checksum, inode, size):
-        debug("DB: Adding checksum (inode=%d, checksum=%s, size=%d)" % (inode, checksum, size))
-        query = ' \
-            INSERT INTO repository \
-            (id, checksum, size) VALUES (?, ?, ?);'
-        self.execute(query, inode, checksum, size)
-
-    def __get_unlinked_files(self, pattern):
-        query = ' \
-            SELECT versions.id, paths.path \
-            FROM paths \
-            INNER JOIN versions ON (versions.path = paths.id) \
-            LEFT JOIN repository ON (repository.id = versions.inode) \
-    		WHERE checksum IS NULL \
-    		AND paths.path LIKE ? \
-    		AND NOT SUBSTR(paths.path, -1, 1) = ? ;'
-        return self.execute(query, pattern, os.path.sep)
-
-    def __get_empty_folders(self, folder):
-        query = ' \
-            SELECT folder_paths.id, folder_paths.path \
-            FROM folders \
-            LEFT JOIN paths ON (paths.folder = folders.id) \
-            LEFT JOIN versions ON (versions.path = paths.id) \
-            JOIN paths as folder_paths ON (folder_paths.id = folders.path AND folder_paths.path LIKE ?) \
-            JOIN versions as folder_versions ON (folder_versions.path = folder_paths.id) \
-            WHERE versions.id IS NULL OR NOT versions.deleted_i IS NULL \
-            AND folder_versions.deleted_i IS NULL \
-            GROUP BY folders.id ;'
-        return self.execute(query, folder + os.path.sep + '%' + os.path.sep)
-
-    def __set_inode(self, version_id, inode):
-        debug("DB: Set inode (version=%d, inode=%d)" % (version_id, inode))
-        query = ' \
-            UPDATE versions \
-            SET inode = ? \
-            WHERE id = ?;'
-        self.execute(query, inode, version_id)
-
+            SELECT items.id as fid, versions.id as vid \
+            FROM items \
+            INNER JOIN versions ON (versions.item = items.id) \
+            LEFT JOIN repository ON (repository.inode = versions.inode) \
+            WHERE NOT versions.inode IS NULL \
+    		AND repository.inode IS NULL;'
+        return self.execute(query)
 

@@ -86,7 +86,6 @@ Or an absolute path if you wish. This is used by the file linker
 to save disk space. 
 Default: `.data/`
 
-
 ### server.tmp
 A temporary folder used by rsync to store all files that are
 changed. These files will be placed in the archive folder

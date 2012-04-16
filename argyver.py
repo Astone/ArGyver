@@ -35,10 +35,10 @@ class ArGyver(object):
             # For each source folder: synchronize, archive, free disk space
             for [dst, src] in self.sources.iteritems():
                 self.rsync(src, dst)
-                self.update_db_snapshot(dst)
-                self.archive(dst)
-                self.link_files(dst)
-                self.update_db_repository(dst)
+            self.update_db_snapshot()
+            self.archive()
+            self.link_files()
+            self.update_db_repository()
 # TODO:     self.update_db_history()
 
             # Remove some garbage
@@ -86,17 +86,17 @@ class ArGyver(object):
 
         notice("Synchronisation of \"%s\" (%s) finished." % (src, dst))
 
-    def update_db_snapshot(self, folder):
+    def update_db_snapshot(self):
         db = self.config.get_server_database()
         if db == None:
             debug("Database is disabled.")
             return
         db.connect()
-        db.delete_old_paths(self.config.get_server_snapshot(), self.config.get_server_tmp(), folder)
-        db.add_new_paths(self.config.get_server_snapshot(), folder)
+        db.delete_old_items(self.config.get_server_snapshot(), self.config.get_server_tmp())
+        db.add_new_items(self.config.get_server_snapshot())
         db.close()
     
-    def update_db_repository(self, folder):
+    def update_db_repository(self):
         db = self.config.get_server_database()
         if db == None:
             debug("Database is disabled.")
@@ -106,7 +106,7 @@ class ArGyver(object):
             return
         db.connect()
         db.add_new_repository_entries(self.config.get_server_repository())
-        db.update_inodes(self.config.get_server_snapshot(), folder)
+        db.update_inodes(self.config.get_server_snapshot())
         db.close()
 
     def update_db_history(self):
@@ -118,18 +118,18 @@ class ArGyver(object):
         db.update_history()
         db.close()
 
-    def archive(self, folder):
+    def archive(self):
     
         # If the archivation is disabled, do nothing
         if self.config.get_server_archive() == None:
             debug("Archivation is disabled.")
             return
 
-        notice("Starting archivation of \"%s\"." % (folder))
+        notice("Starting archivation.")
 
         # Construct the absolute archive path and the absolute temparory path.
-        arch_root = os.path.join(self.config.get_server_archive(), folder)
-        tmp_root = os.path.join(self.config.get_server_tmp(), folder)
+        arch_root = self.config.get_server_archive()
+        tmp_root = self.config.get_server_tmp()
 
         # Walk through all temporary folders recursively.
         for (path, _folders, files) in os.walk(tmp_root):
@@ -179,9 +179,9 @@ class ArGyver(object):
                     error("Tried to move \"%s\" to \"%s\" ... FAILED" % (tmp_path, arch_path))
                     error(str(e))
 
-        notice("Archivation of \"%s\" finished." % (folder))
+        notice("Archivation of finished.")
 
-    def link_files(self, folder):
+    def link_files(self):
 
         # If data linking is disabled, do nothing
         if self.config.get_server_repository() == None:
@@ -189,24 +189,23 @@ class ArGyver(object):
             return
 
         # Construct the absolute folder and repository
-        root = self.config.get_server_snapshot()
-        folder = os.path.join(root, folder)
+        snapshot = self.config.get_server_snapshot()
         repository = self.config.get_server_repository() 
 
         # Create a data linker instance and let it do the work
         db = self.config.get_server_database()
         if db == None:
-            notice("Starting fs based file linking in \"%s\"." % (folder))
-            linker = FileLinker(folder, repository)
+            notice("Starting fs based file linking.")
+            linker = FileLinker(snapshot, repository)
             linker.run()
         else:
-            notice("Starting db based file linking in \"%s\"." % (folder))
+            notice("Starting db based file linking.")
             db.connect()
-            linker = DbFileLinker(folder, repository, root, db)
+            linker = DbFileLinker(snapshot, repository, db)
             linker.run()
             db.close()
 
-        notice("File linking in \"%s\" finished." % (folder))
+        notice("File linking finished.")
 
     def remove_tmp_folder(self):
 
