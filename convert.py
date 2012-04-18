@@ -61,10 +61,10 @@ for (i, date, sources) in configs:
     fp.write(base + output)
     fp.close()
 
-    continue;
+#    continue;
 
-    os.system('./argyver.py -c config/convert.cfg -v 3')
+    os.system('./argyver.py -c config/convert.cfg -v 5')
     db = sqlite3.connect('/home/amethist/backup_new/.data.sqlite')
-    db.cursor().execute('UPDATE iterations SET start = ? WHERE id = ?', (mktime(datetime.strptime(date, '%Y-%m-%d').timetuple())+27*60*60, i))
+    db.cursor().execute('UPDATE iterations SET time = ? WHERE id = ?', (mktime(datetime.strptime(date, '%Y-%m-%d').timetuple())+27*60*60, i))
     db.commit()
     db.close()
