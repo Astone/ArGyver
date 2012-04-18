@@ -3,11 +3,19 @@ from datetime import datetime
 from time import mktime
 import sqlite3
 
+database = '/home/amethist/backup/.data.sqlite'
+
 data      = "src-data    : /home/amethist/data/%(date)s/"
 outlook   = "src-outlook : /home/amethist/outlook/%(date)s/"
 thuis_oud = "src-thuis   : /home/amethist/backups_oud/thuis/"
 thuis     = "src-thuis   : /home/amethist/thuis/"
 website   = "src-website : /var/www/amethist/"
+
+execute_before = {
+    data        : "cp -lr /home/amethist/data/%(date)s/ /home/amethist/backup/snapshot/data/; rsync -rlpEtgoHDhyv --delete-excluded --exclude=.git --exclude=Thumbs.db --exclude=desktop.ini --exclude=AlbumArt_*.* --exclude=\~\$* --exclude=archive --exclude=\~*.tmp --delete /home/amethist/data/%(date)s/ /home/amethist/backup/snapshot/data/",
+    thuis_oud   : "cp -lr /home/amethist/backup_oud/thuis/ /home/amethist/backup/snapshot/thuis/; rsync -rlpEtgoHDhyv --delete-excluded --exclude=.git --exclude=Thumbs.db --exclude=desktop.ini --exclude=AlbumArt_*.* --exclude=\~\$* --exclude=archive --exclude=\~*.tmp --delete /home/amethist/backup_oud/thuis/ /home/amethist/backup/snapshot/thuis/"}
+
+delay = 27*60*60
 
 configs = [
 ( 1, '2010-08-01', [data, outlook]),
@@ -44,27 +52,35 @@ configs = [
 (32, '2012-04-12', [data, outlook]),
 (33, '2012-04-13', [outlook]),
 (34, '2012-04-14', [data, outlook]),
-(35, '2012-04-15', [data, outlook, thuis, website])]
+(34, '2012-04-15', [data, outlook]),
+(34, '2012-04-16', [data, outlook]),
+(35, '2012-04-17', [data, outlook, thuis, website])]
 
 fp = file('config/convert.cfg.tpl', 'r')
 base = fp.read()
 fp.close()
 
 for (i, date, sources) in configs:
-    print "\n\n"
+    print "\n"
     print date + "  : " + str(datetime.now())
+
     output = ''
     for source in sources:
         output += source % {'date': date} + "\n"
-    print output
     fp = file('config/convert.cfg', 'w')
     fp.write(base + output)
     fp.close()
 
-#    continue;
+    for src in sources:
+        if src in execute_before:
+            print execute_before[src] % {'date': date}
+            os.system(execute_before[src] % {'date': date})
+            del execute_before[src]
+
+    print output
 
     os.system('./argyver.py -c config/convert.cfg -v 3')
-    db = sqlite3.connect('/home/amethist/backup/.data.sqlite')
-    db.cursor().execute('UPDATE iterations SET start = ? WHERE id = ?', (mktime(datetime.strptime(date, '%Y-%m-%d').timetuple())+27*60*60, i))
+    db = sqlite3.connect(database)
+    db.cursor().execute('UPDATE iterations SET start = ? WHERE id = ?', (mktime(datetime.strptime(date, '%Y-%m-%d').timetuple())+delay, i))
     db.commit()
     db.close()
