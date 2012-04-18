@@ -4,13 +4,13 @@ require_once('includes/all.php');
 
 $aid      = get('aid');
 $fid      = get('fid', 0);
-$pid      = get('pid');
+$id       = get('id');
 
 if ( ! empty($aid))
 {
     $archive  = get_archive($aid);
     $folder   = $archive->get_folder($fid);
-    $folders = $folder->get_folders();
-    $files   = $folder->get_files();
+    $parent   = $folder->get_parent();
+    $items    = $folder->get_items();
     include('templates/files.php');
 }

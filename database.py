@@ -97,6 +97,7 @@ class Database(object):
     def delete_old_items(self, snapshot, temp):
         # For all (sub)folders in the temporary folder (storing all deleted/changed files):
         for (path, folders, files) in os.walk(temp):
+            parent = self._get_item_id_by_path(os.path.relpath(path, temp))
             # For each subfolder and file in the folder:
             for item_name in folders + files:
 
@@ -118,7 +119,7 @@ class Database(object):
                 rel_path = os.path.relpath(snap_path, snapshot)
                 
                 # Get the item's id from the database
-                fid = self._get_item_id_by_path(rel_path)
+                fid = self._get_item_id_by_name(item_name, parent)
 
                 # If it is not in the database, throw a error, otherwise close it
                 if fid == None:
@@ -130,6 +131,7 @@ class Database(object):
                 # If there is no open version, throw a error, otherwise close it
                 if version == None:
                     error("There is no version of %s in the database" % rel_path)
+                    continue
 
                 self._delete_version(version['id'])
 
@@ -151,6 +153,7 @@ class Database(object):
 
         # For all folders and files in the snaphot:
         for (path, folders, files) in os.walk(snapshot):
+            parent = self._get_item_id_by_path(os.path.relpath(path, snapshot))
             # For each subfolder and file in the folder:
             for item_name in folders + files:
                 # The absolute path is the path of the folder + the name of the subfolder or file
@@ -170,7 +173,7 @@ class Database(object):
                 rel_path = os.path.relpath(abs_path, snapshot)
                 
                 # Check if the path is allready in the database or add it
-                fid = self._find_or_add_item(rel_path)
+                fid = self._find_or_add_item(item_name, parent)
 
                 # If it didn't exist or it was removed earlier, add a new version
                 if self._get_current_version(fid) == None:
@@ -258,31 +261,32 @@ class Database(object):
 
 # Items
 
-    def _find_or_add_item(self, path):
-        fid = self._get_item_id_by_path(path)
+    def _find_or_add_item(self, name, parent):
+        fid = self._get_item_id_by_name(name, parent)
         if fid == None:
-            fid = self._add_item(path);
+            fid = self._add_item(name, parent);
         return fid
 
-    def _add_item(self, path):
-        if not isinstance(path, list):
-            path = path.split(os.path.sep)
-        debug("DB: Adding item '%s'" % os.path.sep.join(path))
-        name = path.pop()
-        parent = self._find_or_add_item(path)
+    def _add_item(self, name, parent):
+        debug("DB: Adding item '%s' under %d" % (name, parent))
         query = 'INSERT INTO items (parent, name) VALUES (?, ?);'
         return self.execute(query, parent, name.decode('utf-8')).lastrowid
 
     def _get_item_id_by_path(self, path, parent=0):
         if not isinstance(path, list):
             path = path.split(os.path.sep)
-        if len(path) == 0:
+        if len(path) == 0 or path == ['.']:
             return parent
-        query = 'SELECT id FROM items WHERE parent = ? AND name = ?;'
-        record = self.execute(query, parent, path.pop(0).decode('utf-8')).fetchone()
-        if record != None:
-            fid = record['id']
+        fid = self._get_item_id_by_name(path.pop(0), parent)
+        if fid != None:
             return self._get_item_id_by_path(path, fid)
+        return None
+
+    def _get_item_id_by_name(self, name, parent):
+        query = 'SELECT id FROM items WHERE parent = ? AND name = ?;'
+        record = self.execute(query, parent, name.decode('utf-8')).fetchone()
+        if record != None:
+            return record['id']
         return None
 
     def _get_path_by_item_id(self, fid):

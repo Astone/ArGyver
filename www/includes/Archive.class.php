@@ -77,7 +77,6 @@ class Archive
     public function get_folder($fid)
     {
         $db = $this->get_db();
-        if ($fid === 0) return new Folder($db, Array('id' => 0));
         return $db->get_folder($fid);
     }
 
@@ -87,22 +86,22 @@ class Archive
         return $db->get_folders($fid);
     }
 
-    public function get_path($pid)
+    public function get_item($pid)
     {
         $db = $this->get_db();
-        return $db->get_path($pid);
+        return $db->get_item($pid);
     }
 
     public function get_file($pid)
     {
         $db = $this->get_db();
-        return $db->get_path($pid, 'File');
+        return $db->get_item($pid, 'File');
     }
 
-    public function get_paths($fid)
+    public function get_items($fid)
     {
         $db = $this->get_db();
-        return $db->get_paths($fid);
+        return $db->get_items($fid);
     }
 
     public function get_version($vid)

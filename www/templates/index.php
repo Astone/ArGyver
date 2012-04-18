@@ -7,8 +7,8 @@
         <frame src="./archives.php<?=$aid?>" name="archives" />
         <frameset cols="240,*,240">
             <frame src="./folders.php<?=$aid.$fid.$flink?>" name="folders" />
-            <frame src="./files.php<?=$aid.$fid.$pid.$plink?>" name="files" />
-            <frame src="./versions.php<?=$aid.$fid.$pid.$vlink?>" name="versions" />
+            <frame src="./files.php<?=$aid.$fid.$id.$ilink?>" name="files" />
+            <frame src="./versions.php<?=$aid.$id?>" name="versions" />
         </frameset>
     </frameset>
 </html>

@@ -7,8 +7,12 @@
         <script src="./js/files.js" language="JavaScript"></script>
     <head>
     <body>
-        <h1><?php echo $folder->name ? $folder->name : $archive->name ?></h1>
-<?php if (! empty($folders) || ! empty($files)) : ?>
+<?php if ($parent) : ?></h1>
+        <h1><a href="./?aid=<?=$aid?>&fid=<?=$parent->id?>&id=<?=$parent->id?>" title="<?=$parent->name ?>" target="_top">&laquo;</a> <?=$folder->name?></h1>
+<?php else : ?></h1>
+        <h1><?=$archive->name ?></h1>
+<?php endif ?></h1>
+<?php if (! empty($items)) : ?>
         <table width="100%" cellspacing="0" border="0">
             <thead>
                 <tr>
@@ -20,13 +24,15 @@
                 </tr>
             </thead>
             <tbody>
-<?php foreach($folders as $f) : ?>
-                <tr class="folder <?php echo $f->is_open() ? "open" : "closed" ?>">
-                    <td>
-                    <?php echo $f->get_path_id() == $pid ? "<a name=\"p$pid\" />" : "" ?>
-                    <?php $icon=get_icon('dir') ?>
-                    <?php echo $icon ? "<img src=\"$icon\" alt=\"$f->name\" width=\"16\" height=\"16\" />" : '' ?>
-                    <a href="./?aid=<?=$aid?>&fid=<?=$f->id?>" target="_top" title="open folder"><?=$f ->name?></a>
+<?php foreach($items as $f) : ?>
+                <tr class="file<?php echo $f->id == $id ? " current" : "" ?> <?php echo $f->exists() ? "open" : "closed" ?>">
+                    <td class="name">
+                        <?php echo $f->id == $id ? "<a name=\"i$id\" />" : "" ?>
+                        <a href="./download.php?aid=<?=$aid?>&id=<?=$f->id?>" target="_blank" title="Download <?=$f->name?>">
+                        <?php $icon=get_icon( is_a($f, 'Folder') ? 'dir' : $f->name) ?>
+                        <?php echo $icon ? "<img src=\"$icon\" alt=\"$f->name\" width=\"16\" height=\"16\" />" : '<b>[&darr;]</b>' ?>
+                        </a>
+                        <a href="./?aid=<?=$aid?>&fid=<?php echo is_a($f, 'Folder') ? $f->id: $fid ?>&id=<?=$f->id?>" target="_top" title="Show versions of <?=$f->name?>"><?=$f->name?></a>
                     </td>
                     <td class="date"><?=date("d-m-Y", $f->get_version()->get_mtime())?></td>
                     <td class="time"><?=date("H:i:s", $f->get_version()->get_mtime())?></td>
@@ -37,23 +43,7 @@
                     <?= $f->get_size(true) ?>
 <?php endif ?>
                     </td>
-                    <td class="versions"><?=sizeof($f->get_iterations())?></td>
-                </tr>
-<?php endforeach ?>
-<?php foreach($files as $p) : ?>
-                <tr class="file<?php echo $p->id == $pid ? " current" : "" ?> <?php echo $p->is_open() ? "open" : "closed" ?>">
-                    <td class="name">
-                        <?php echo $p->id == $pid ? "<a name=\"p$pid\" />" : "" ?>
-                        <a href="./download.php?aid=<?=$aid?>&pid=<?=$p->id?>" target="_blank" title="download">
-                        <?php $icon=get_icon($p->name) ?>
-                        <?php echo $icon ? "<img src=\"$icon\" alt=\"$p->name\" width=\"16\" height=\"16\" />" : '<b>[&darr;]</b>' ?>
-                        </a>
-                        <a href="./?aid=<?=$aid?>&fid=<?=$fid?>&pid=<?=$p->id?>" target="_top" title="show versions"><?=$p->name?></a>
-                    </td>
-                    <td class="date"><?=date("d-m-Y", $p->get_version()->get_mtime())?></td>
-                    <td class="time"><?=date("H:i:s", $p->get_version()->get_mtime())?></td>
-                    <td class="size"><?=$p->get_size()?></td>
-                    <td class="versions"><?=sizeof($p->get_versions())?></td>
+                    <td class="versions"><?=sizeof($f->get_versions())?></td>
                 </tr>
 <?php endforeach ?>
             </tbody>

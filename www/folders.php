@@ -8,9 +8,7 @@ $fid      = get('fid', 0);
 if ( ! empty($aid))
 {
     $archive  = get_archive($aid);
-    
     $folder   = $archive->get_folder($fid);
-
     $parent   = $folder->get_parent();
     $parents  = $folder->get_parents();
     $siblings = empty($fid) ? $folder->get_folders() : $parent->get_folders();
