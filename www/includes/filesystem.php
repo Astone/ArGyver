@@ -36,8 +36,11 @@ function get_icon($file_name)
 
 function pretty_file_size($size)
 {
-    $txt = Array('B&nbsp;&nbsp;', 'KB', 'MB', 'GB', 'TB', 'PB');
-    $log = min(max(floor(log($size, pow(2,10))), 0), 5);
-    return ($log == 0) ? sprintf("%d %s", $size, $txt[0]) : sprintf("%.2f %s", $size / pow(2, 10*$log) , $txt[$log]);
+    if ($size > 1000 * pow(2, 40)) return sprintf("%.2f PB", $size / pow(2, 50));
+    if ($size > 1000 * pow(2, 30)) return sprintf("%.2f TB", $size / pow(2, 40));
+    if ($size > 1000 * pow(2, 20)) return sprintf("%.2f GB", $size / pow(2, 30));
+    if ($size > 1000 * pow(2, 10)) return sprintf("%.2f MB", $size / pow(2, 20));
+    if ($size > 1000 * pow(2,  0)) return sprintf("%.2f KB", $size / pow(2, 10));
+    return sprintf("%d B&nbsp;&nbsp;", $size);
 }
 
