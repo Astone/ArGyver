@@ -9,18 +9,18 @@
         <h1><?= $archive->name ?></h1>
         <ul class="folders">
 <?php foreach ($parents as $p) : ?>
-            <li class="<?php echo $p->is_open() ? "open" : "closed" ?>"><a href="./?aid=<?= $aid ?>&fid=<?= $p->id ?>" target="_top"><?= $p->name ?></a>
+            <li class="<?php echo $p->exists() ? "open" : "closed" ?>"><a href="./?aid=<?= $aid ?>&fid=<?= $p->id ?>&id=<?= $p->id ?>" target="_top"><?= $p->name ?></a>
                 <ul>
 <?php endforeach ?>
 <?php foreach ($siblings as $s) : ?>
-                    <li class="<?php echo ($fid == $s->id) ? 'current ' : '' ?><?php echo $s->is_open() ? 'open' : 'closed' ?>">
+                    <li class="<?php echo ($fid == $s->id) ? 'current ' : '' ?><?php echo $s->exists() ? 'open' : 'closed' ?>">
                         <a name="f<?=$s->id?>" />
-                        <a href="./?aid=<?= $aid ?>&fid=<?= $s->id ?>" target="_top"><?= $s->name ?></a>
+                        <a href="./?aid=<?= $aid ?>&fid=<?= $s->id ?>&id=<?= $s->id ?>" target="_top"><?= $s->name ?></a>
 <?php if ($fid == $s->id) :?>
                         <ul>
 <?php foreach ($children as $c) : ?>
-                            <li class="<?php echo $c->is_open() ? 'open' : 'closed' ?>">
-                                <a href="./?aid=<?= $aid ?>&fid=<?= $c->id ?>" target="_top"><?= $c->name ?></a>
+                            <li class="<?php echo $c->exists() ? 'open' : 'closed' ?>">
+                                <a href="./?aid=<?= $aid ?>&fid=<?= $c->id ?>&id=<?= $c->id ?>" target="_top"><?= $c->name ?></a>
                             </li>
 <?php endforeach ?>
                         </ul>

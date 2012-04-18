@@ -44,7 +44,7 @@ class DbObject
     
     public function __tostring()
     {
-        return get_class($this) + ": " + $this->name;
+        return get_class($this) . ": " . $this->name;
     }
 }
 
