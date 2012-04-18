@@ -2,14 +2,14 @@
 
 require_once(ROOT.'/includes/DbObject.class.php');
 
-class Path extends DbObject
+class Item extends DbObject
 {
     protected $version;
 
     public function __construct($db, $data=Array())
     {
         DbObject::__construct($db, $data);
-        $this->name = basename($this->get('path'));
+        $this->name = $this->get('name');
     }
     
     public function get_parent()
@@ -31,7 +31,7 @@ class Path extends DbObject
 
     public function get_version($vid=null)
     {
-        if (empty($this->version) || ! empty($vid))
+        if ($vid || empty($this->version))
         {
             $versions = $this->get_versions();
             if (empty($vid))
@@ -48,13 +48,23 @@ class Path extends DbObject
 
     public function get_versions()
     {
-        return $this->get('versions', 'get_versions', 'pid');
+        return $this->get('versions', 'get_versions', 'id');
     }
     
-    public function is_open()
+    public function get_size($pretty=true)
+    {
+        return $this->get_version()->get_size($pretty);
+    }
+
+    public function get_abs_path($repository, $vid=null)
+    {
+        return $this->get_version($vid)->get_abs_path($repository);
+    }
+
+    public function exists()
     {
         if ($this->id == 0) return true;
-        return $this->get_version()->is_open();
+        return $this->get_version()->exists();
     }
 }
 

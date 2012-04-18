@@ -10,22 +10,27 @@ class Version extends DbObject
         return $pretty ? pretty_file_size($size) : $size;
     }
     
+    public function get_inode()
+    {
+        return $this->get('inode');
+    }
+    
     public function get_mtime()
     {
-        return $this->get('created');
+        return $this->get('time');
     }
 
     public function get_deleted()
     {
-        return $this->get('deleted_i', 'get_iteration_timestamp');
+        return $this->get('deleted', 'get_iteration_timestamp');
     }
 
     public function get_created()
     {
-        return $this->get('created_i', 'get_iteration_timestamp');
+        return $this->get('created', 'get_iteration_timestamp');
     }
 
-    public function is_open()
+    public function exists()
     {
         return $this->get_deleted() === null;
     }

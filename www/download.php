@@ -3,12 +3,14 @@
 require_once('includes/all.php');
 
 $aid      = get('aid');
-$pid      = get('pid');
-$fid      = get('fid');
+$id      = get('id');
 $vid      = get('vid');
-$iid      = get('iid');
 
 $archive  = get_archive($aid);
-if ($fid) $archive->get_folder($fid)->download($archive->get_repository(), $iid);
-if ($pid) $archive->get_file($pid)->download($archive->get_repository(), $vid);
+$item     = $archive->get_item($id);
+$version  = $item->get_version($vid);
+
+$item     = $version->get_inode() ? $archive->get_file($id) : $archive->get_folder($id);
+
+$item->download($archive->get_repository(), $vid);
 

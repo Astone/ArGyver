@@ -3,13 +3,12 @@
 require_once('includes/all.php');
 
 $aid      = get('aid');
-$fid      = get('fid');
-$pid      = get('pid');
+$id       = get('id');
 
-if ($fid || $pid)
+if ($id)
 {
     $archive  = get_archive($aid);
-    $path     = $pid ? $archive->get_file($pid) : $archive->get_folder($fid);
-    $versions = $pid ? $path->get_versions() : $path->get_iterations();
+    $item     = $archive->get_item($id);
+    $versions = $item->get_versions();
     include('templates/versions.php');
 }
