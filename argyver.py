@@ -35,14 +35,14 @@ class ArGyver(object):
             # For each source folder: synchronize, archive, free disk space
             for [dst, src] in self.sources.iteritems():
                 self.rsync(src, dst)
-            self.update_db_snapshot()
-            self.archive()
-            self.link_files()
+                self.update_db_snapshot()
+                self.archive()
+                self.link_files()
             self.update_db_repository()
 # TODO:     self.update_db_history()
+            self.remove_tmp_folder()
 
             # Remove some garbage
-            self.remove_tmp_folder()
             
             # Remove the lock file
             lock.unlock()

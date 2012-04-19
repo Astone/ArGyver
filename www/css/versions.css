@@ -1,5 +1,33 @@
+ul
+{
+    padding             : 0;
+}
+
+li
+{
+    list-style          : none;
+    margin-bottom       : 0.5em;
+}
+
+li ul
+{
+    padding             : 0 0 0 2em;
+}
+
+li li
+{
+    font-size           : 8pt;
+    margin              : 0;
+}
+
 li.closed
 {
     color               : #C33;
+}
+
+li img
+{
+    margin-top          : 2px;
+    margin-bottom       : -4px;
 }
 

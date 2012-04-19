@@ -9,7 +9,6 @@ class File extends Item
         $file_path = $this->get_abs_path($repository, $vid);
 
         if (file_exists($file_path)) {
-            die($this->get_size());
             header('Content-Description: File Transfer');
             header('Content-Type: application/octet-stream');
             header('Content-Disposition: attachment; filename='.$this->name);

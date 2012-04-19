@@ -3,7 +3,7 @@
 require_once('includes/all.php');
 
 $aid      = get('aid');
-$id      = get('id');
+$id       = get('id');
 $vid      = get('vid');
 
 $archive  = get_archive($aid);

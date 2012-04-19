@@ -69,7 +69,7 @@ class Database
 
     public function get_versions($id, $class='Version')
     {
-        $qry = sprintf("SELECT id, time, created, deleted, size, inode FROM versions WHERE item = %d ORDER BY created;", $id);
+        $qry = sprintf("SELECT versions.id, time, created, deleted, size, versions.inode, checksum FROM versions LEFT JOIN repository ON (repository.inode = versions.inode) WHERE item = %d ORDER BY created;", $id);
         return $this->get_objects($qry, $class);
     }
 
@@ -122,7 +122,10 @@ class Database
     
     private function query($qry)
     {
+#        $locale = setlocale(LC_ALL, 0);
+#        setlocale(LC_ALL, 'en_US');
         @$result = $this->db->query($qry);
+#        setlocale(LC_ALL, $locale);
         if ($result === false)
         {
             die("DB Error: " . $this->db->lastErrorMsg() . "<br />" . $qry);

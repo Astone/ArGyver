@@ -80,3 +80,8 @@ td.size
     text-align          : right;
 }
 
+h1 img
+{
+    margin-bottom       : -8px;
+}
+

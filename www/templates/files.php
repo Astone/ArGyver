@@ -4,13 +4,14 @@
         <title>ArGyvers Files</title>
         <link rel="stylesheet" type="text/css" href="./css/main.css" />
         <link rel="stylesheet" type="text/css" href="./css/files.css" />
-        <script src="./js/files.js" language="JavaScript"></script>
     <head>
     <body>
 <?php if ($parent) : ?></h1>
-        <h1><a href="./?aid=<?=$aid?>&fid=<?=$parent->id?>&id=<?=$parent->id?>" title="<?=$parent->name ?>" target="_top">&laquo;</a> <?=$folder->name?></h1>
+        <a href="./?aid=<?=$aid?>&fid=<?=$parent->id?>&id=<?=$parent->id?>" title="<?=$parent->name ?>" target="_top">
+            <h1><img src="./img/folder.png" alt="<?=$folder->name?>" /> <?=$folder->name?></h1>
+        </a>
 <?php else : ?></h1>
-        <h1><?=$archive->name ?></h1>
+            <h1><img src="./img/archive.png" alt="<?=$archive->name?>" /> <?=$archive->name?></h1>
 <?php endif ?></h1>
 <?php if (! empty($items)) : ?>
         <table width="100%" cellspacing="0" border="0">
@@ -28,20 +29,15 @@
                 <tr class="file<?php echo $f->id == $id ? " current" : "" ?> <?php echo $f->exists() ? "open" : "closed" ?>">
                     <td class="name">
                         <?php echo $f->id == $id ? "<a name=\"i$id\" />" : "" ?>
-                        <a href="./download.php?aid=<?=$aid?>&id=<?=$f->id?>" target="_blank" title="Download <?=$f->name?>">
-                        <?php $icon=get_icon( is_a($f, 'Folder') ? 'dir' : $f->name) ?>
-                        <?php echo $icon ? "<img src=\"$icon\" alt=\"$f->name\" width=\"16\" height=\"16\" />" : '<b>[&darr;]</b>' ?>
+                        <a href="./?aid=<?=$aid?>&fid=<?php echo $f->is_folder() ? $f->id: $fid ?>&id=<?=$f->id?>" target="_top" title="Show versions of <?=$f->name?>">
+                            <img src="<?= get_icon( $f->is_folder() ? 'folder' : $f->name)?>" alt="<?=$f->name?>" width="16" height="16" />
+                            <?=$f->name?>
                         </a>
-                        <a href="./?aid=<?=$aid?>&fid=<?php echo is_a($f, 'Folder') ? $f->id: $fid ?>&id=<?=$f->id?>" target="_top" title="Show versions of <?=$f->name?>"><?=$f->name?></a>
                     </td>
-                    <td class="date"><?=date("d-m-Y", $f->get_version()->get_mtime())?></td>
-                    <td class="time"><?=date("H:i:s", $f->get_version()->get_mtime())?></td>
+                    <td class="date"><?=date(DATE_FORMAT, $f->get_version()->get_mtime())?></td>
+                    <td class="time"><?=date(TIME_FORMAT, $f->get_version()->get_mtime())?></td>
                     <td class="size">
-<?php if($f->get_size(false) === null) : ?>
-                    <a href="./calculate_size.php?aid=<?=$aid?>&fid=<?=$f->id?>" target="_self" title="calculate size" onclick="return calculate_size('<?= str_replace('\'', '\\\'', $f->name) ?>');"><?= $f->get_size(true) ?></a>
-<?php else : ?>
                     <?= $f->get_size(true) ?>
-<?php endif ?>
                     </td>
                     <td class="versions"><?=sizeof($f->get_versions())?></td>
                 </tr>

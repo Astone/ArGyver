@@ -15,6 +15,11 @@ class Version extends DbObject
         return $this->get('inode');
     }
     
+    public function get_checksum()
+    {
+        return $this->get('checksum');
+    }
+    
     public function get_mtime()
     {
         return $this->get('time');
@@ -37,7 +42,7 @@ class Version extends DbObject
     
     public function get_abs_path($root)
     {
-        $checksum = $this->get('checksum');
+        $checksum = $this->get_checksum();
         return $root . '/' . substr($checksum, 0, 2) . '/' . $checksum;
     }
 }

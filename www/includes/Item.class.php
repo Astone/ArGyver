@@ -66,5 +66,12 @@ class Item extends DbObject
         if ($this->id == 0) return true;
         return $this->get_version()->exists();
     }
+    
+    public function is_folder()
+    {
+        if (is_a($this, 'Folder')) return True;
+        if ($this->get_version()->get_checksum()) return False;
+        return True;
+    }
 }
 
