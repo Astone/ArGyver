@@ -18,10 +18,12 @@
             </li>
 <?php endif ?>
             <li class="open">
-                <a href="./download.php?aid=<?=$aid?>&id=<?=$id?>&vid=<?=$v->id?>" target="_blank" title="download" <?php echo ($v->get_size(false) >= LARGE_FILE_SIZE) ? "onclick=\"return download(\"$item->name\", \"".$item->get_size()."\", ".($item->is_folder()?'true':'false').")" : '' ?>>
+                <a href="./download.php?aid=<?=$aid?>&id=<?=$id?>&vid=<?=$v->id?>" target="_blank" title="Download <?=$item->name?>">
                     <img src="<?= get_icon( $item->is_folder() ? 'folder' : $item->name)?>" alt="<?=$item->name?>" width="16" height="16" />
+                    <?= $v->exists() ? '<strong>' : ''?>
                     <?= date(LONG_DATE_FORMAT, $v->get_created()) ?>
                     <ul><li><?= date(DATE_FORMAT, $v->get_mtime()) ?> | <?= date(TIME_FORMAT, $v->get_mtime()) ?> | <?= $v->get_size() ?></li></ul>
+                    <?= $v->exists() ? '</strong>' : ''?>
                 </a>
             </li>
 <?php $v_ = $v; endforeach ?>
@@ -33,6 +35,7 @@
             </li>
 <?php endif ?>
         </ul>
+        <a name="end" />
     </body>
 </html>
 
