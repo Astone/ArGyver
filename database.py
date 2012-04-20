@@ -92,9 +92,9 @@ class Database(object):
             debug("DB: Commit #%d." % self.iteration)
             self.db.commit()
 
-    def delete_old_items(self, snapshot, temp):
+    def delete_old_items(self, snapshot, temp, folder):
         # For all (sub)folders in the temporary folder (storing all deleted/changed files):
-        for (path, folders, files) in os.walk(temp):
+        for (path, folders, files) in os.walk(os.path.join(temp, folder)):
             parent = self._get_item_id_by_path(os.path.relpath(path, temp))
             # For each subfolder and file in the folder:
             for item_name in folders + files:
@@ -133,9 +133,6 @@ class Database(object):
 
                 self._delete_version(version['id'])
 
-                if os.path.isdir(snap_path):
-                    self._add_version(fid, os.stat(snap_path).st_mtime)
-
         # Remove deleted empty folders
         for (fid, vid) in self._get_empty_folder_ids():
             rel_path = self._get_path_by_item_id(fid)
@@ -147,10 +144,14 @@ class Database(object):
         # Save all changes to the database
         self.commit()
     
-    def add_new_items(self, snapshot):
+    def add_new_items(self, snapshot, folder):
+
+        if not self._get_item_id_by_name(folder):
+            fid = self._add_item(folder)
+            self._add_version(fid)
 
         # For all folders and files in the snaphot:
-        for (path, folders, files) in os.walk(snapshot):
+        for (path, folders, files) in os.walk(os.path.join(snapshot, folder)):
             parent = self._get_item_id_by_path(os.path.relpath(path, snapshot))
             # For each subfolder and file in the folder:
             for item_name in folders + files:
@@ -167,9 +168,6 @@ class Database(object):
                     error("Tried to add path \"%s\" to the DB, but it doesn't exist on the disk." % abs_path)
                     continue
 
-                # Determine the relative path to the snapshot folder                
-                rel_path = os.path.relpath(abs_path, snapshot)
-                
                 # Check if the path is allready in the database or add it
                 fid = self._find_or_add_item(item_name, parent)
 
@@ -275,13 +273,13 @@ class Database(object):
 
 # Items
 
-    def _find_or_add_item(self, name, parent):
+    def _find_or_add_item(self, name, parent=0):
         fid = self._get_item_id_by_name(name, parent)
         if fid == None:
             fid = self._add_item(name, parent);
         return fid
 
-    def _add_item(self, name, parent):
+    def _add_item(self, name, parent=0):
         debug("DB: Adding item '%s' under %d" % (name, parent))
         query = 'INSERT INTO items (parent, name) VALUES (?, ?);'
         return self.execute(query, parent, name.decode('utf-8')).lastrowid
@@ -296,7 +294,7 @@ class Database(object):
             return self._get_item_id_by_path(path, fid)
         return None
 
-    def _get_item_id_by_name(self, name, parent):
+    def _get_item_id_by_name(self, name, parent=0):
         query = 'SELECT id FROM items WHERE parent = ? AND name = ?;'
         record = self.execute(query, parent, name.decode('utf-8')).fetchone()
         if record != None:
@@ -370,7 +368,7 @@ class Database(object):
         self.execute(query, self.iteration, vid)
         version = self._get_version(vid)
 
-    def _update_version(self, vid, size, time):
+    def _update_version(self, vid, time, size):
         query = 'UPDATE versions SET size = ?, time = ? WHERE id = ? ;'
         self.execute(query, size, time, vid)
 

@@ -35,7 +35,7 @@ class ArGyver(object):
             # For each source folder: synchronize, archive, free disk space
             for [dst, src] in self.sources.iteritems():
                 self.rsync(src, dst)
-                self.update_db_snapshot()
+                self.update_db_snapshot(dst)
                 self.archive()
                 self.link_files()
             self.update_db_versions()
@@ -87,14 +87,14 @@ class ArGyver(object):
 
         notice("Synchronisation of \"%s\" (%s) finished." % (src, dst))
 
-    def update_db_snapshot(self):
+    def update_db_snapshot(self, folder):
         db = self.config.get_server_database()
         if db == None:
             debug("Database is disabled.")
             return
         db.connect()
-        db.delete_old_items(self.config.get_server_snapshot(), self.config.get_server_tmp())
-        db.add_new_items(self.config.get_server_snapshot())
+        db.delete_old_items(self.config.get_server_snapshot(), self.config.get_server_tmp(), folder)
+        db.add_new_items(self.config.get_server_snapshot(), folder)
         db.close()
     
     def update_db_versions(self):
@@ -242,5 +242,5 @@ class ArGyver(object):
 if __name__ == '__main__':
     import cProfile
     command = "A = ArGyver(); A.run()"
-    cProfile.runctx( command, globals(), locals(), filename="argyver.profile" );
+    cProfile.runctx( command, globals(), locals(), filename="logs/%s.profile" % datetime.now() );
     
