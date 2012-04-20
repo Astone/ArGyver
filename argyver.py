@@ -27,7 +27,7 @@ class ArGyver(object):
         # Assure that only one instance of ArGyver is running.
         lock = PidLock(server_root=self.config.get_server_root())
         if lock.locked():
-            warning("ArGyver already running with pid %d, stopping" % lock.pid())
+            warning("ArGyver already running with pid %d!" % lock.pid())
         else:
         
             # Create a lock file in the /tmp folder
