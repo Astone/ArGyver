@@ -81,7 +81,7 @@ for (i, date, sources) in configs:
 
     print output
 
-    os.system("./argyver.py -c config/convert.cfg -v 3 -l logs/%s.log -ll 4" % date)
+    os.system("./argyver.py -c config/convert.cfg -v 4 -l logs/%s.log -ll 4" % date)
     db = sqlite3.connect(database)
     db.cursor().execute('UPDATE iterations SET time = ? WHERE id = ?', (mktime(datetime.strptime(date, '%Y-%m-%d').timetuple())+delay, i))
     db.commit()
