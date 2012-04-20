@@ -37,7 +37,7 @@
                     <td class="date"><?=date(DATE_FORMAT, $f->get_version()->get_mtime())?></td>
                     <td class="time"><?=date(TIME_FORMAT, $f->get_version()->get_mtime())?></td>
                     <td class="size">
-                    <?= $f->get_size(true) ?>
+                    <?php echo $f->get_size(false) === null ? '<img src="./img/loader.gif" alt="ArGyver is busy"/>' : $f->get_size(true) ?>
                     </td>
                     <td class="versions"><?=sizeof($f->get_versions())?></td>
                 </tr>

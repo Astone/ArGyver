@@ -79,10 +79,10 @@ class Database
         return $this->get_value($qry);
     }
 
-    public function iteration_finished($iid)
+    public function get_iteration_finished($iid)
     {
         $qry = sprintf("SELECT finished FROM iterations WHERE id = %d;", $iid);
-        return (bool) $this->get_value($qry);
+        return $this->get_value($qry);
     }
 
     private function get_value($qry, $key = null)

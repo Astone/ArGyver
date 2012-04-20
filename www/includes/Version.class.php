@@ -40,6 +40,11 @@ class Version extends DbObject
         return $this->get_deleted() === null;
     }
     
+    public function busy()
+    {
+        return $this->get('created', 'get_iteration_finished') === null;
+    }
+    
     public function get_abs_path($root)
     {
         $checksum = $this->get_checksum();
