@@ -75,8 +75,14 @@ class Database
 
     public function get_iteration_timestamp($iid)
     {
-        $qry = sprintf("SELECT time FROM iterations WHERE id = %d;", $iid);
+        $qry = sprintf("SELECT start FROM iterations WHERE id = %d;", $iid);
         return $this->get_value($qry);
+    }
+
+    public function iteration_finished($iid)
+    {
+        $qry = sprintf("SELECT finished FROM iterations WHERE id = %d;", $iid);
+        return (bool) $this->get_value($qry);
     }
 
     private function get_value($qry, $key = null)
