@@ -52,7 +52,7 @@ class Database(object):
                 item INTEGER NOT NULL, \
                 inode INTEGER NULL, \
                 time INTEGER NOT NULL, \
-                size INTEGER NOT NULL, \
+                size INTEGER NULL, \
                 created INTEGER NOT NULL, \
                 deleted INTEGER NULL, \
                 previous_version INTEGER NULL \
@@ -149,7 +149,7 @@ class Database(object):
         if not self._get_item_id_by_name(folder):
             abs_path = os.path.join(snapshot, folder)
             fid = self._add_item(folder)
-            self._add_version(fid, os.stat(abs_path).st_time)
+            self._add_version(fid, os.stat(abs_path).st_mtime)
 
         # For all folders and files in the snaphot:
         for (path, folders, files) in os.walk(os.path.join(snapshot, folder)):
@@ -174,10 +174,10 @@ class Database(object):
 
                 # If it didn't exist or it was removed earlier, add a new version
                 if self._get_current_version(fid) == None:
+                    stat = os.stat(abs_path)
                     if os.path.isdir(abs_path):
-                        self._add_version(fid, os.stat(abs_path).st_time)
+                        self._add_version(fid, stat.st_mtime)
                     else:
-                        stat = os.stat(abs_path)
                         self._add_version(fid, stat.st_mtime, stat.st_size, stat.st_ino)
 
         # Save all changes to the database
@@ -339,7 +339,7 @@ class Database(object):
 
 # Versions
 
-    def _add_version(self, fid, time=0, size=0, inode=None):
+    def _add_version(self, fid, time=0, size=None, inode=None):
         debug("DB: Adding version (item=%d)" % fid)
         query = 'INSERT INTO versions (item, inode, time, size, created) VALUES (?, ?, ?, ?, ?);'
         result = self.execute(query, fid, inode, time, size, self.iteration)

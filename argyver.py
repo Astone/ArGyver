@@ -227,8 +227,8 @@ class ArGyver(object):
             linker.run()
             db.close()
 
-        notice("<<< File linking finished\n")
         notice(str(linker))
+        notice("<<< File linking finished\n")
 
     def remove_tmp_folder(self):
 
