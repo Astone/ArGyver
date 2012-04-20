@@ -149,7 +149,7 @@ class Database(object):
         if not self._get_item_id_by_name(folder):
             abs_path = os.path.join(snapshot, folder)
             fid = self._add_item(folder)
-            self._add_version(fid, os.stat(abs_path).st_time)
+            self._add_version(fid, os.stat(abs_path).st_mtime)
 
         # For all folders and files in the snaphot:
         for (path, folders, files) in os.walk(os.path.join(snapshot, folder)):
@@ -175,7 +175,7 @@ class Database(object):
                 # If it didn't exist or it was removed earlier, add a new version
                 if self._get_current_version(fid) == None:
                     if os.path.isdir(abs_path):
-                        self._add_version(fid, os.stat(abs_path).st_time)
+                        self._add_version(fid, os.stat(abs_path).st_mtime)
                     else:
                         stat = os.stat(abs_path)
                         self._add_version(fid, stat.st_mtime, stat.st_size, stat.st_ino)
