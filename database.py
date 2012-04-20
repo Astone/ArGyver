@@ -51,7 +51,7 @@ class Database(object):
                 id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, \
                 item INTEGER NOT NULL, \
                 inode INTEGER NULL, \
-                time INTEGER NULL, \
+                time INTEGER NOT NULL, \
                 size INTEGER NOT NULL, \
                 created INTEGER NOT NULL, \
                 deleted INTEGER NULL, \
@@ -68,14 +68,12 @@ class Database(object):
 
         self.execute('CREATE UNIQUE INDEX idx_items_id ON items (id);')
         self.execute('CREATE INDEX idx_items_parent ON items (parent);')
-        self.execute('CREATE INDEX idx_items_name ON items (name);')
+        self.execute('CREATE UNIQUE INDEX idx_items_name ON items (parent, name);')
 
         self.execute('CREATE UNIQUE INDEX idx_versions_id ON versions (id);')
         self.execute('CREATE INDEX idx_versions_item ON versions (item);')
-        self.execute('CREATE INDEX idx_versions_inode ON versions (inode);')
-        self.execute('CREATE INDEX idx_versions_created ON versions (created);')
-        self.execute('CREATE INDEX idx_versions_deleted ON versions (deleted);')
-        self.execute('CREATE INDEX idx_versions_previous ON versions (previous_version);')
+        self.execute('CREATE UNIQUE INDEX idx_versions_current ON versions (item, deleted);')
+        self.execute('CREATE UNIQUE INDEX idx_versions ON versions (item, created, deleted);')
 
         self.execute('CREATE UNIQUE INDEX idx_repository_inode ON repository (inode);')
         self.execute('CREATE UNIQUE INDEX idx_repository_checksum ON repository (checksum);')
@@ -125,9 +123,9 @@ class Database(object):
                 if fid == None:
                     error("Path id of %s could not be found in the database" % rel_path)
                     continue
-                
+
                 version = self._get_current_version(fid)
-                
+                                               
                 # If there is no open version, throw a error, otherwise close it
                 if version == None:
                     error("There is no version of %s in the database" % rel_path)
@@ -136,7 +134,7 @@ class Database(object):
                 self._delete_version(version['id'])
 
                 if os.path.isdir(snap_path):
-                    self._add_version(fid, version['time'], version['size'])
+                    self._add_version(fid, os.stat(snap_path).st_mtime)
 
         # Remove deleted empty folders
         for (fid, vid) in self._get_empty_folder_ids():
@@ -177,24 +175,40 @@ class Database(object):
 
                 # If it didn't exist or it was removed earlier, add a new version
                 if self._get_current_version(fid) == None:
-                    stat = os.stat(abs_path)
                     if os.path.isdir(abs_path):
-                        vid = self._add_version(fid, stat.st_mtime)
+                        self._add_version(fid, os.stat(abs_path).st_size)
                     else:
-                        vid = self._add_version(fid, stat.st_mtime, stat.st_size, stat.st_ino)
-                    # Update the parent folders
-                    version = self._get_parent_version(vid)
-                    while version:
-                        if version['created'] < self.iteration:
-                            self._delete_version(version['id'])
-                            self._add_version(version['item'], version['time'], version['size'])
-                            version = self._get_parent_version(version['id'])
-                        else:
-                            break
-                        
+                        stat = os.stat(abs_path)
+                        self._add_version(fid, stat.st_mtime, stat.st_size, stat.st_ino)
 
         # Save all changes to the database
         self.commit()
+
+    def propagate_changes(self, parent=None):
+        if parent == None:
+            parent = {'id': 0, 'time': 0}
+        time = parent['time']
+        created = 0
+        size = 0
+        for item in self._get_items(parent['id']):
+            if item['inode'] == None:
+                (t, c, s) = self.propagate_changes(item)
+            else:
+                t = item['time']
+                c = item['created']
+                s = item['size']
+            time = max(time, t)
+            created = max(created, c)
+            size += s
+
+        if parent['id'] > 0:
+            if parent['created'] < created:
+                self._delete_version(parent['vid'])
+                self._add_version(parent['id'], time, size)
+            else:
+                self._update_version(parent['vid'], time, size)
+
+        return (time, created, size)
 
     def add_new_repository_entries(self, repository):
         # Walk through all folders in the repository
@@ -313,54 +327,52 @@ class Database(object):
             AND deleted IS NULL;';
         return self.execute(query)
 
+    def _get_items(self, parent):
+        query = ' \
+            SELECT items.id as id, versions.id as vid, inode, size, time, created \
+            FROM items \
+            JOIN versions ON (versions.item = items.id AND versions.deleted IS NULL) \
+            WHERE items.parent = ? ;';
+        result = self.execute(query, parent)
+        if result == None:
+            return []
+        return result
+
 # Versions
 
-    def _add_version(self, fid, time, size=0, inode=None):
+    def _add_version(self, fid, time=0, size=0, inode=None):
         debug("DB: Adding version (item=%d)" % fid)
         query = 'INSERT INTO versions (item, inode, time, size, created) VALUES (?, ?, ?, ?, ?);'
         result = self.execute(query, fid, inode, time, size, self.iteration)
         vid = result.lastrowid
-        self._set_time_to_parents(vid, time)
-        if size > 0:
-            self._add_size_to_parents(vid, size)
         return vid
 
     def _get_version(self, vid):
-        query = 'SELECT * FROM versions WHERE id = ?;';
+        query = 'SELECT * FROM versions WHERE id = ?;'
         return self.execute(query, vid).fetchone()
 
     def _get_current_version(self, fid):
-        query = 'SELECT * FROM versions WHERE item = ? AND deleted IS NULL;';
+        query = 'SELECT * FROM versions WHERE item = ? AND deleted IS NULL;'
         return self.execute(query, fid).fetchone()
 
     def _get_parent_version(self, vid):
-        query = 'SELECT parent FROM items JOIN versions ON (versions.item = items.id) WHERE versions.id = ?;';
-        fid = self.execute(query, vid).fetchone()['parent']
-        return self._get_current_version(fid)
+        query = ' \
+            SELECT p.* \
+            FROM versions \
+            JOIN items ON (items.id = versions.item) \
+            JOIN versions AS p ON (p.item = items.parent AND p.deleted IS NULL) \
+            WHERE versions.id = ?;'
+        return self.execute(query, vid).fetchone()
 
     def _delete_version(self, vid):
         debug("DB: Closing version (id=%d)" % vid)
         query = 'UPDATE versions SET deleted = ? WHERE id = ? ;'
         self.execute(query, self.iteration, vid)
         version = self._get_version(vid)
-        if version['size'] > 0:
-            self._add_size_to_parents(vid, -version['size'])
 
-    def _add_size_to_parents(self, vid, size):
-        version = self._get_parent_version(vid)        
-        if version == None:
-            return
-        query = 'UPDATE versions SET size = size + ? WHERE id = ? ;'
-        self.execute(query, size, version['id'])
-        self._add_size_to_parents(version['id'], size)
-
-    def _set_time_to_parents(self, vid, time):
-        version = self._get_parent_version(vid)        
-        if version == None or version['time'] >= time:
-            return
-        query = 'UPDATE versions SET time = ? WHERE id = ? ;'
-        self.execute(query, time, version['id'])
-        self._set_time_to_parents(version['id'], time)
+    def _update_version(self, vid, size, time):
+        query = 'UPDATE versions SET size = ?, time = ? WHERE id = ? ;'
+        self.execute(query, size, time, vid)
 
     def _set_inode(self, vid, inode):
         debug("DB: Set inode (version=%d, inode=%d)" % (vid, inode))

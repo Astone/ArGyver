@@ -12,13 +12,13 @@ thuis     = "src-thuis   : /home/amethist/thuis/"
 website   = "src-website : /var/www/amethist/"
 
 execute_before = {
-#    data        : "cp -lr /home/amethist/data/%(date)s/ /home/amethist/backup/snapshot/data/; rsync -rlpEtgoHDhyv --delete-excluded --exclude=.git --exclude=Thumbs.db --exclude=desktop.ini --exclude=AlbumArt_*.* --exclude=\~\$* --exclude=archive --exclude=\~*.tmp --delete /home/amethist/data/%(date)s/ /home/amethist/backup/snapshot/data/",
+    data        : "cp -lr /home/amethist/data/%(date)s/ /home/amethist/backup/snapshot/data/; rsync -rlpEtgoHDhyv --delete-excluded --exclude=.git --exclude=Thumbs.db --exclude=desktop.ini --exclude=AlbumArt_*.* --exclude=\~\$* --exclude=archive --exclude=\~*.tmp --delete /home/amethist/data/%(date)s/ /home/amethist/backup/snapshot/data/",
     thuis_oud   : "cp -lr /home/amethist/backup_oud/thuis/ /home/amethist/backup/snapshot/thuis/; rsync -rlpEtgoHDhyv --delete-excluded --exclude=.git --exclude=Thumbs.db --exclude=desktop.ini --exclude=AlbumArt_*.* --exclude=\~\$* --exclude=archive --exclude=\~*.tmp --delete /home/amethist/backup_oud/thuis/ /home/amethist/backup/snapshot/thuis/"}
 
 delay = 27*60*60
 
 configs = [
-#( 1, '2010-08-01', [data, outlook]),
+( 1, '2010-08-01', [data, outlook]),
 ( 2, '2010-09-01', [data]),
 ( 3, '2010-10-01', [data]),
 ( 4, '2010-11-01', [data]),
@@ -53,8 +53,10 @@ configs = [
 (33, '2012-04-13', [outlook]),
 (34, '2012-04-14', [data, outlook]),
 (34, '2012-04-15', [data, outlook]),
-(34, '2012-04-16', [data, outlook]),
-(35, '2012-04-17', [data, outlook, thuis, website])]
+(35, '2012-04-16', [data, outlook]),
+(36, '2012-04-17', [data, outlook]),
+(37, '2012-04-18', [data, outlook]),
+(38, '2012-04-19', [data, outlook, thuis, website])]
 
 fp = file('config/convert.cfg.tpl', 'r')
 base = fp.read()
@@ -79,7 +81,7 @@ for (i, date, sources) in configs:
 
     print output
 
-    os.system('./argyver.py -c config/convert.cfg -v 3')
+    os.system("./argyver.py -c config/convert.cfg -v 4 -l logs/%s.log -ll 5" % date)
     db = sqlite3.connect(database)
     db.cursor().execute('UPDATE iterations SET time = ? WHERE id = ?', (mktime(datetime.strptime(date, '%Y-%m-%d').timetuple())+delay, i))
     db.commit()

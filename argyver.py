@@ -6,7 +6,7 @@ from filelinker import FileLinker
 from dbfilelinker import DbFileLinker
 from datetime import datetime
 import os, shutil
-from subprocess import check_output, CalledProcessError
+from subprocess import Popen, PIPE, CalledProcessError
 
 class ArGyver(object):
     
@@ -38,6 +38,7 @@ class ArGyver(object):
                 self.update_db_snapshot()
                 self.archive()
                 self.link_files()
+            self.update_db_versions()
             self.update_db_repository()
 # TODO:     self.update_db_history()
             self.remove_tmp_folder()
@@ -74,15 +75,15 @@ class ArGyver(object):
 
         try:
             # Execute the rsync command and capture the output.
-            output = check_output([cmd] + opt + ['--delete'] + bu + [src] + [snapshot])
+            rsync = Popen([cmd] + opt + ['--delete'] + bu + [src] + [snapshot], stdout=PIPE, shell=False)
+            while rsync.poll() == None:
+                output = rsync.stdout.readline().strip()
+                if output:
+                    notice(output)
 
         except CalledProcessError as e:
             # Display an error if the rsync command fails.
             error(str(e))
-
-        else:
-            # Or display a debug if the rsync command was succesfull.
-            notice(output)
 
         notice("Synchronisation of \"%s\" (%s) finished." % (src, dst))
 
@@ -96,6 +97,15 @@ class ArGyver(object):
         db.add_new_items(self.config.get_server_snapshot())
         db.close()
     
+    def update_db_versions(self):
+        db = self.config.get_server_database()
+        if db == None:
+            debug("Database is disabled.")
+            return
+        db.connect()
+        db.propagate_changes()
+        db.close()
+
     def update_db_repository(self):
         db = self.config.get_server_database()
         if db == None:
@@ -230,6 +240,7 @@ class ArGyver(object):
 
 # These three lines let the ArGyver actually do something
 if __name__ == '__main__':
-    A = ArGyver()
-    A.run()
-
+    import cProfile
+    command = "A = ArGyver(); A.run()"
+    cProfile.runctx( command, globals(), locals(), filename="argyver.profile" );
+    
