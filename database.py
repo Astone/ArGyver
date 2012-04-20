@@ -31,6 +31,9 @@ class Database(object):
         debug("DB: Closing connection to database %s" % self.path)
         self.commit()
         self.db.close()
+        
+    def finish(self):
+        self._finish_iteration()
 
     def create(self):
         debug("DB: Creating empty database %s" % os.path.basename(self.path))
@@ -38,7 +41,8 @@ class Database(object):
         self.execute(' \
             CREATE TABLE iterations ( \
                 id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, \
-                time INTEGER NOT NULL \
+                start INTEGER NOT NULL, \
+                finished INTEGER NULL \
             );')
         self.execute(' \
             CREATE TABLE items ( \
@@ -268,8 +272,14 @@ class Database(object):
 
     def _add_iteration(self):
         debug("DB: Adding iteration")
-        query = 'INSERT INTO iterations (time) VALUES (?);'
+        query = 'INSERT INTO iterations (start) VALUES (?);'
         result = self.execute(query, mktime(datetime.now().timetuple()))
+        return result.lastrowid
+
+    def _finish_iteration(self):
+        debug("DB: Finishing iteration")
+        query = 'UPDATE iterations SET finished = ? WHERE id = ?;'
+        result = self.execute(query, mktime(datetime.now().timetuple()), self.iteration)
         return result.lastrowid
 
 # Items

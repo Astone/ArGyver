@@ -42,8 +42,7 @@ class ArGyver(object):
             self.update_db_repository()
 # TODO:     self.update_db_history()
             self.remove_tmp_folder()
-
-            # Remove some garbage
+            self.finish()
             
             # Remove the lock file
             lock.unlock()
@@ -121,7 +120,7 @@ class ArGyver(object):
             debug("File linker is disabled.")
             return
         db.connect()
-        notice(">>> Adding new repository entries to the databasen")
+        notice(">>> Adding new repository entries to the database")
         db.add_new_repository_entries(self.config.get_server_repository())
         notice("<<< Ading repository entries finished\n")
         notice(">>> Updating inodes in the database")
@@ -247,6 +246,15 @@ class ArGyver(object):
             error(str(e))
 
         debug("<<< Removing temporary folder finished\n")
+
+    def finish(self):
+        db = self.config.get_server_database()
+        if db == None:
+            debug("Database is disabled.")
+            return
+        db.connect()
+        db.finish()
+        db.close()
 
     def rebuild_repository(self):
         warning("rebuild_repository() should update all inode references in a database.")

@@ -83,7 +83,8 @@ for (i, date, sources) in configs:
 
     os.system("./argyver.py -c config/convert.cfg -v 3 -l logs/%s.log -ll 4" % date)
     db = sqlite3.connect(database)
-    db.cursor().execute('UPDATE iterations SET time = ? WHERE id = ?', (mktime(datetime.strptime(date, '%Y-%m-%d').timetuple())+delay, i))
+    time = mktime(datetime.strptime(date, '%Y-%m-%d').timetuple()) + delay
+    db.cursor().execute('UPDATE iterations SET start = ?, finished = ? + (finished - start) WHERE id = ?', (time, time, i))
     db.commit()
     db.close()
 
