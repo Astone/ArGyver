@@ -6,7 +6,7 @@
         <link rel="stylesheet" type="text/css" href="./css/folders.css" />
     <head>
     <body>
-        <h1><img src="./img/archive.png" alt="<?=$archive->name?>" /> <?=$archive->name?></h1>
+        <a href="./?aid=<?= $aid ?>" title="<?=$archive->name?>" target="_top"><h1><img src="./img/archive.png" alt="<?=$archive->name?>" /> <?=$archive->name?></h1></a>
         <ul class="folders">
 <?php foreach ($parents as $p) : ?>
             <li class="<?php echo $p->exists() ? "open" : "closed" ?>">
