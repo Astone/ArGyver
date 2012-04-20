@@ -50,7 +50,7 @@ class ArGyver(object):
 
     def rsync(self, src, dst):
 
-        notice("Starting synchronisation of \"%s\" (%s)." % (src, dst))
+        notice(">>> Synchronizing \"%s\" (%s)." % (src, dst))
 
         # Construct the rsync command.
         # Files that have changed or are deleted are backuped in a temporary
@@ -85,7 +85,7 @@ class ArGyver(object):
             # Display an error if the rsync command fails.
             error(str(e))
 
-        notice("Synchronisation of \"%s\" (%s) finished." % (src, dst))
+        notice("<<< Synchronisation of \"%s\" (%s) finished.\n" % (src, dst))
 
     def update_db_snapshot(self, folder):
         db = self.config.get_server_database()
@@ -93,8 +93,12 @@ class ArGyver(object):
             debug("Database is disabled.")
             return
         db.connect()
+        notice(">>> Removing old files from the database (%s)." % (folder))
         db.delete_old_items(self.config.get_server_snapshot(), self.config.get_server_tmp(), folder)
+        notice("<<< Removing old files finished (%s).\n" % (folder))
+        notice(">>> Adding new files to the database (%s)." % (folder))
         db.add_new_items(self.config.get_server_snapshot(), folder)
+        notice("<<< Adding new files finished (%s).\n" % (folder))
         db.close()
     
     def update_db_versions(self):
@@ -103,7 +107,9 @@ class ArGyver(object):
             debug("Database is disabled.")
             return
         db.connect()
+        notice(">>> Propagating sizes and timestamps trough the database")
         db.propagate_changes()
+        notice("<<< Propagating sizes and timestamps finished\n")
         db.close()
 
     def update_db_repository(self):
@@ -115,8 +121,12 @@ class ArGyver(object):
             debug("File linker is disabled.")
             return
         db.connect()
+        notice(">>> Adding new repository entries to the databasen")
         db.add_new_repository_entries(self.config.get_server_repository())
+        notice("<<< Ading repository entries finished\n")
+        notice(">>> Updating inodes in the database")
         db.update_inodes(self.config.get_server_snapshot())
+        notice("<< Updating inodes finished\n")
         db.close()
 
     def update_db_history(self):
@@ -125,7 +135,9 @@ class ArGyver(object):
             debug("Database is disabled.")
             return
         db.connect()
+        notice(">>> Updating database history")
         db.update_history()
+        notice("<< Updating database history finished\n")
         db.close()
 
     def archive(self):
@@ -135,7 +147,7 @@ class ArGyver(object):
             debug("Archivation is disabled.")
             return
 
-        notice("Starting archivation.")
+        notice(">>> Starting archivation.")
 
         # Construct the absolute archive path and the absolute temparory path.
         arch_root = self.config.get_server_archive()
@@ -189,7 +201,7 @@ class ArGyver(object):
                     error("Tried to move \"%s\" to \"%s\" ... FAILED" % (tmp_path, arch_path))
                     error(str(e))
 
-        notice("Archivation of finished.")
+        notice("<<< Archivation finished\n")
 
     def link_files(self):
 
@@ -205,17 +217,17 @@ class ArGyver(object):
         # Create a data linker instance and let it do the work
         db = self.config.get_server_database()
         if db == None:
-            notice("Starting fs based file linking.")
+            notice(">>> Starting fs based file linking.")
             linker = FileLinker(snapshot, repository)
             linker.run()
         else:
-            notice("Starting db based file linking.")
+            notice(">>> Starting db based file linking.")
             db.connect()
             linker = DbFileLinker(snapshot, repository, db)
             linker.run()
             db.close()
 
-        notice("File linking finished.")
+        notice("<<< File linking finished\n")
         notice(str(linker))
 
     def remove_tmp_folder(self):
@@ -226,13 +238,15 @@ class ArGyver(object):
         if tmp_root == None:
             return
 
-        debug("Removing temporary folder \"%s\" recursively" % tmp_root)
+        debug(">>> Removing temporary folder \"%s\" recursively" % tmp_root)
 
         try:
             shutil.rmtree(tmp_root)
         except Exception as e:
             error("Tried to remove temporary folder \"%s\"... FAILED" % tmp_root)
             error(str(e))
+
+        debug("<<< Removing temporary folder finished\n")
 
     def rebuild_repository(self):
         warning("rebuild_repository() should update all inode references in a database.")

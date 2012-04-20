@@ -11,7 +11,7 @@ class Item extends DbObject
         DbObject::__construct($db, $data);
         $this->name = $this->get('name');
     }
-    
+
     public function get_parent()
     {
         return $this->get('parent', 'get_folder');
@@ -50,7 +50,7 @@ class Item extends DbObject
     {
         return $this->get('versions', 'get_versions', 'id');
     }
-    
+
     public function get_size($pretty=true)
     {
         return $this->get_version()->get_size($pretty);
@@ -66,11 +66,11 @@ class Item extends DbObject
         if ($this->id == 0) return true;
         return $this->get_version()->exists();
     }
-    
+
     public function is_folder()
     {
         if (is_a($this, 'Folder')) return True;
-        if ($this->get_version()->get_checksum()) return False;
+        if ($this->get_version()->get_inode()) return False;
         return True;
     }
 }

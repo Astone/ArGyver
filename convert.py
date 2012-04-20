@@ -52,11 +52,11 @@ configs = [
 (32, '2012-04-12', [data, outlook]),
 (33, '2012-04-13', [outlook]),
 (34, '2012-04-14', [data, outlook]),
-(34, '2012-04-15', [data, outlook]),
-(35, '2012-04-16', [data, outlook]),
-(36, '2012-04-17', [data, outlook]),
-(37, '2012-04-18', [data, outlook]),
-(38, '2012-04-19', [data, outlook, thuis, website])]
+(35, '2012-04-15', [data, outlook]),
+(36, '2012-04-16', [data, outlook]),
+(37, '2012-04-17', [data, outlook]),
+(38, '2012-04-18', [data, outlook]),
+(39, '2012-04-19', [data, outlook, thuis, website])]
 
 fp = file('config/convert.cfg.tpl', 'r')
 base = fp.read()
@@ -81,8 +81,10 @@ for (i, date, sources) in configs:
 
     print output
 
-    os.system("./argyver.py -c config/convert.cfg -v 4 -l logs/%s.log -ll 5" % date)
+    os.system("./argyver.py -c config/convert.cfg -v 3 -l logs/%s.log -ll 4" % date)
     db = sqlite3.connect(database)
     db.cursor().execute('UPDATE iterations SET time = ? WHERE id = ?', (mktime(datetime.strptime(date, '%Y-%m-%d').timetuple())+delay, i))
     db.commit()
     db.close()
+
+    os.system("cat logs/%s.log | mail -s \"%s is finished\" bram.stoeller@gmail.com" % (date, date))
