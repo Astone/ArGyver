@@ -6,12 +6,12 @@
         <link rel="stylesheet" type="text/css" href="./css/archives.css" />
     <head>
     <body>
-        <h1>ArGyver v3.1 alpha</h1>
+        <h1>ArGyver v3.1 beta</h1>
 <?php if ($archives) : ?>
         <ul class="archives">
 <?php foreach ($archives as $archive) : ?>
 <?php if ($archive->db_exists()) : ?>
-            <li class="enabled<?= $archive->id == get('aid') ? current : '' ?>">
+            <li class="enabled<?= $archive->id == get('aid') ? ' current' : '' ?>">
                 <a href="./?aid=<?= $archive->id ?>" target="_top"><?= $archive->name ?></a>
             </li>
 <?php else: ?>

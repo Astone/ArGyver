@@ -1,8 +1,10 @@
 <?php define('ROOT', dirname(__FILE__));
 
-require_once('includes/all.php');
+require_once(ROOT.'/includes/all.php');
 
-$aid = get('aid', '', '?aid='); # Archive ID
+if (isset($_GET['clear_session'])) unset($_SESSION);
+
+$aid = get('aid', '?aid=1', '?aid='); # Archive ID
 $fid = get('fid', '', '&fid='); # Folder ID
 $pid = get('pid', '', '&pid='); # Path ID
 $vid = get('vid', '', '&vid='); # Version ID

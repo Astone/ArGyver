@@ -1,5 +1,4 @@
 #!/usr/bin/env python2.7
-
 from verbose import *
 from config import Config
 from pidlock import PidLock
@@ -40,7 +39,7 @@ class ArGyver(object):
                 self.archive(dst)
                 self.link_files(dst)
                 self.update_db_repository(dst)
-            self.update_db_history()
+# TODO:     self.update_db_history()
 
             # Remove some garbage
             self.remove_tmp_folder()

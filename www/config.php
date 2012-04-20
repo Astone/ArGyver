@@ -4,4 +4,6 @@
 define('CONFIG_PATH', ROOT.'/../config');
 define('CONFIG_PATTERN', '*.cfg');
 
+define('ICON_PATH', "./img/ext/%s.png");
+
 ?>

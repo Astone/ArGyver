@@ -22,3 +22,28 @@ li.current li a:hover
 {
     color           : #F60;
 }
+
+li.open a,
+li.current.open a
+{
+}
+
+li.closed,
+li.closed a
+{
+    text-decoration     : line-through;
+    color               : #CCC;
+}
+
+li.current.closed a
+{
+    text-decoration     : line-through;
+    color               : #C96;
+}
+
+li.current li.closed a
+{
+    text-decoration     : line-through;
+    color               : #CCC;
+}
+
