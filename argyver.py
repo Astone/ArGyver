@@ -81,10 +81,13 @@ class ArGyver(object):
                 output = rsync.stdout.readline().strip()
                 if output:
                     debug(output)
-		stat = os.statvfs(snapshot)
-		if disk.f_bsize * disk.f_bavail < MIN_DISK_SPACE:
-                    error('Almost out of disk space! (%s of %s used)', (pretty_size(disk.f_bsize * (disk.f_blocks - disk.f_bavail)), pretty_size(disk.f_bsize * disk.f_blocks))
+                disk = os.statvfs(snapshot)
+                if disk.f_bsize * disk.f_bavail < MIN_DISK_SPACE:
+                    error('Almost out of disk space! (%s of %s used)' % (pretty_size(disk.f_bsize * (disk.f_blocks - disk.f_bavail)), pretty_size(disk.f_bsize * disk.f_blocks)))
                     rsync.terminate()
+                    rsync.wait()
+                    break
+
         except CalledProcessError as e:
             # Display an error if the rsync command fails.
             error(str(e))
@@ -267,6 +270,7 @@ class ArGyver(object):
 
 
 def pretty_size(size):
+    size = float(size)
     if (size > 1000 * 2**40): return "%.2f PB" % (size / 2**50)
     if (size > 1000 * 2**30): return "%.2f TB" % (size / 2**40)
     if (size > 1000 * 2**20): return "%.2f GB" % (size / 2**30)
