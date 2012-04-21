@@ -99,7 +99,12 @@ class FileLinker(object):
         if not os.path.isdir(idx_dir):
             debug("Make dir %s" % os.path.relpath(idx_dir, self.repository))
             os.makedirs(idx_dir)
-        os.link(file_path, idx_path)
+        try:
+            os.link(file_path, idx_path)
+        except Exception as e:
+            os.rename(tmp_path, file_path)
+            error("Tried to store %s to %s." % (file_path, idx_path))
+            error(str(e))
         self.new_bytes += os.stat(idx_path).st_size
 
     def link_file(self, file_path, idx_path):

@@ -97,45 +97,17 @@ class Database(object):
             self.db.commit()
 
     def delete_old_items(self, snapshot, temp, folder):
+
+        if os.path.isdir(os.path.join(temp, folder)):
+            self.delete_old_item(snapshot, temp, temp, folder)
+
         # For all (sub)folders in the temporary folder (storing all deleted/changed files):
         for (path, folders, files) in os.walk(os.path.join(temp, folder)):
             parent = self._get_item_id_by_path(os.path.relpath(path, temp))
+
             # For each subfolder and file in the folder:
             for item_name in folders + files:
-
-                # Construct the path to the folder or file in the snapshot and in the temporary folder
-                temp_path = os.path.join(path, item_name)
-                snap_path = os.path.join(snapshot, os.path.relpath(temp_path, temp))
-                
-                # If the source path is a symbolic link, ignore it
-                if os.path.islink(temp_path):
-                    debug("Tried to delete %s in the DB, but it is a symbolic link." % temp_path)
-                    continue
-
-                # If the source path does not exist, 'throw' an error
-                if not os.path.exists(temp_path):
-                    error("Tried to close %s in the DB, but it doesn't exist." % temp_path)
-                    continue
-
-                # Construct the relative path
-                rel_path = os.path.relpath(snap_path, snapshot)
-                
-                # Get the item's id from the database
-                fid = self._get_item_id_by_name(item_name, parent)
-
-                # If it is not in the database, throw a error, otherwise close it
-                if fid == None:
-                    error("Path id of %s could not be found in the database" % rel_path)
-                    continue
-
-                version = self._get_current_version(fid)
-                                               
-                # If there is no open version, throw a error, otherwise close it
-                if version == None:
-                    error("There is no version of %s in the database" % rel_path)
-                    continue
-
-                self._delete_version(version['id'])
+                self.delete_old_item(snapshot, temp, path, item_name, parent)
 
         # Remove deleted empty folders
         for (fid, vid) in self._get_empty_folder_ids():
@@ -148,44 +120,80 @@ class Database(object):
         # Save all changes to the database
         self.commit()
     
+    def delete_old_item(self, snapshot, temp, path, item_name, parent=0):
+        # Construct the path to the folder or file in the snapshot and in the temporary folder
+        temp_path = os.path.join(path, item_name)
+        snap_path = os.path.join(snapshot, os.path.relpath(temp_path, temp))
+                
+        # If the source path is a symbolic link, ignore it
+        if os.path.islink(temp_path):
+            debug("Tried to delete %s in the DB, but it is a symbolic link." % temp_path)
+            return
+
+        # If the source path does not exist, 'throw' an error
+        if not os.path.exists(temp_path):
+            error("Tried to delete %s in the DB, but it doesn't exist." % temp_path)
+            return
+
+        # Construct the relative path
+        rel_path = os.path.relpath(snap_path, snapshot)
+                
+        # Get the item's id from the database
+        fid = self._get_item_id_by_name(item_name, parent)
+
+        # If it is not in the database, throw a error, otherwise close it
+        if fid == None:
+            error("Path id of %s could not be found in the database" % rel_path)
+            return
+
+        version = self._get_current_version(fid)
+                                               
+        # If there is no open version, throw a error, otherwise close it
+        if version == None:
+            error("There is no version of %s in the database" % rel_path)
+            return
+
+        self._delete_version(version['id'])
+
     def add_new_items(self, snapshot, folder):
 
-        if not self._get_item_id_by_name(folder):
-            abs_path = os.path.join(snapshot, folder)
-            fid = self._add_item(folder)
-            self._add_version(fid, os.stat(abs_path).st_mtime)
+        self.add_new_item(snapshot, folder)
 
         # For all folders and files in the snaphot:
         for (path, folders, files) in os.walk(os.path.join(snapshot, folder)):
             parent = self._get_item_id_by_path(os.path.relpath(path, snapshot))
+
             # For each subfolder and file in the folder:
             for item_name in folders + files:
-                # The absolute path is the path of the folder + the name of the subfolder or file
-                abs_path = os.path.join(path, item_name)
-                
-                # If the source path is a symbolic link, ignore it
-                if os.path.islink(abs_path):
-                    debug("Tried to add \"%s\" to the DB, but it is a symbolic link." % abs_path)
-                    continue
-
-                # If the source path does not exist, 'throw' an error
-                if not os.path.exists(abs_path):
-                    error("Tried to add path \"%s\" to the DB, but it doesn't exist on the disk." % abs_path)
-                    continue
-
-                # Check if the path is allready in the database or add it
-                fid = self._find_or_add_item(item_name, parent)
-
-                # If it didn't exist or it was removed earlier, add a new version
-                if self._get_current_version(fid) == None:
-                    stat = os.stat(abs_path)
-                    if os.path.isdir(abs_path):
-                        self._add_version(fid, stat.st_mtime)
-                    else:
-                        self._add_version(fid, stat.st_mtime, stat.st_size, stat.st_ino)
+                self.add_new_item(path, item_name, parent)
 
         # Save all changes to the database
         self.commit()
+
+    def add_new_item(self, path, item_name, parent=0):
+        # The absolute path is the path of the folder + the name of the subfolder or file
+        abs_path = os.path.join(path, item_name)
+                
+        # If the source path is a symbolic link, ignore it
+        if os.path.islink(abs_path):
+            debug("Tried to add \"%s\" to the DB, but it is a symbolic link." % abs_path)
+            return
+
+        # If the source path does not exist, 'throw' an error
+        if not os.path.exists(abs_path):
+            error("Tried to add path \"%s\" to the DB, but it doesn't exist on the disk." % abs_path)
+            return
+
+        # Check if the path is allready in the database or add it
+        fid = self._find_or_add_item(item_name, parent)
+
+        # If it didn't exist or it was removed earlier, add a new version
+        if self._get_current_version(fid) == None:
+            stat = os.stat(abs_path)
+            if os.path.isdir(abs_path):
+                self._add_version(fid, stat.st_mtime)
+            else:
+                self._add_version(fid, stat.st_mtime, stat.st_size, stat.st_ino)
 
     def propagate_changes(self, parent=None):
         if parent == None:

@@ -78,7 +78,7 @@ class ArGyver(object):
             while rsync.poll() == None:
                 output = rsync.stdout.readline().strip()
                 if output:
-                    notice(output)
+                    debug(output)
 
         except CalledProcessError as e:
             # Display an error if the rsync command fails.

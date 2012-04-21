@@ -7,13 +7,13 @@ database = '/home/amethist/backup/.data.sqlite'
 
 data      = "src-data    : /home/amethist/data/%(date)s/"
 outlook   = "src-outlook : /home/amethist/outlook/%(date)s/"
-thuis_oud = "src-thuis   : /home/amethist/backups_oud/thuis/"
+thuis_oud = "src-thuis   : /home/amethist/backup_oud/thuis/"
 thuis     = "src-thuis   : /home/amethist/thuis/"
 website   = "src-website : /var/www/amethist/"
 
 execute_before = {
-    data        : "cp -lr /home/amethist/data/%(date)s/ /home/amethist/backup/snapshot/data/; rsync -rlpEtgoHDhyv --delete-excluded --exclude=.git --exclude=Thumbs.db --exclude=desktop.ini --exclude=AlbumArt_*.* --exclude=\~\$* --exclude=archive --exclude=\~*.tmp --delete /home/amethist/data/%(date)s/ /home/amethist/backup/snapshot/data/",
-    thuis_oud   : "cp -lr /home/amethist/backup_oud/thuis/ /home/amethist/backup/snapshot/thuis/; rsync -rlpEtgoHDhyv --delete-excluded --exclude=.git --exclude=Thumbs.db --exclude=desktop.ini --exclude=AlbumArt_*.* --exclude=\~\$* --exclude=archive --exclude=\~*.tmp --delete /home/amethist/backup_oud/thuis/ /home/amethist/backup/snapshot/thuis/"}
+    data        : ["cp -lr /home/amethist/data/%(date)s/ /home/amethist/backup/snapshot/data/", "rsync -rlpEtgoHDhyv --delete-excluded --exclude=.git --exclude=Thumbs.db --exclude=desktop.ini --exclude=AlbumArt_*.* --exclude=\~\$* --exclude=archive --exclude=\~*.tmp --delete /home/amethist/data/%(date)s/ /home/amethist/backup/snapshot/data/"],
+    thuis_oud   : ["cp -lr /home/amethist/backup_oud/thuis/ /home/amethist/backup/snapshot/thuis/", "rsync -rlpEtgoHDhyv --delete-excluded --exclude=.git --exclude=Thumbs.db --exclude=desktop.ini --exclude=AlbumArt_*.* --exclude=\~\$* --exclude=archive --exclude=\~*.tmp --delete /home/amethist/backup_oud/thuis/ /home/amethist/backup/snapshot/thuis/"]}
 
 delay = 27*60*60
 
@@ -56,7 +56,8 @@ configs = [
 (36, '2012-04-16', [data, outlook]),
 (37, '2012-04-17', [data, outlook]),
 (38, '2012-04-18', [data, outlook]),
-(39, '2012-04-19', [data, outlook, thuis, website])]
+(39, '2012-04-19', [data, outlook]),
+(40, '2012-04-20', [data, outlook, thuis, website])]
 
 fp = file('config/convert.cfg.tpl', 'r')
 base = fp.read()
@@ -75,8 +76,9 @@ for (i, date, sources) in configs:
 
     for src in sources:
         if src in execute_before:
-            print execute_before[src] % {'date': date}
-            os.system(execute_before[src] % {'date': date})
+            for cmd in execute_before[src]:
+                print cmd % {'date': date}
+                os.system(cmd % {'date': date})
             del execute_before[src]
 
     print output
