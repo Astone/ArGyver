@@ -76,17 +76,26 @@ class ArGyver(object):
 
         try:
             # Execute the rsync command and capture the output.
-            rsync = Popen([cmd] + opt + ['--delete'] + bu + [src] + [snapshot], stdout=PIPE, shell=False)
+            rsync = Popen([cmd] + opt + ['--delete'] + bu + [src] + [snapshot], stdout=PIPE, stderr=PIPE, shell=False)
             while rsync.poll() == None:
                 output = rsync.stdout.readline().strip()
                 if output:
                     debug(output)
+                err = rsync.stderr.readline().strip()
+                if err:
+                    error(err)
+
                 disk = os.statvfs(snapshot)
                 if disk.f_bsize * disk.f_bavail < MIN_DISK_SPACE:
                     error('Almost out of disk space! (%s of %s used)' % (pretty_size(disk.f_bsize * (disk.f_blocks - disk.f_bavail)), pretty_size(disk.f_bsize * disk.f_blocks)))
                     rsync.terminate()
+                    output = rsync.stdout.read().strip()
+                    if output:
+                        debug(output)
+                    err = rsync.stderr.read().strip()
+                    if err:
+                        error(err)
                     rsync.wait()
-                    break
 
         except CalledProcessError as e:
             # Display an error if the rsync command fails.
