@@ -156,6 +156,7 @@ class FileLinker(object):
         return md5.hexdigest()
 
 def pretty_size(size):
+    size = float(size)
     if (size > 1000 * 2**40): return "%.2f PB" % (size / 2**50) 
     if (size > 1000 * 2**30): return "%.2f TB" % (size / 2**40) 
     if (size > 1000 * 2**20): return "%.2f GB" % (size / 2**30) 
