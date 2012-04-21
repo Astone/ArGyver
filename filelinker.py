@@ -156,11 +156,11 @@ class FileLinker(object):
         return md5.hexdigest()
 
 def pretty_size(size):
-    if (size > 1000 * math.pow(2, 40)): return "%.2f PB" % (size / math.pow(2, 50))
-    if (size > 1000 * math.pow(2, 30)): return "%.2f TB" % (size / math.pow(2, 40))
-    if (size > 1000 * math.pow(2, 20)): return "%.2f GB" % (size / math.pow(2, 30))
-    if (size > 1000 * math.pow(2, 10)): return "%.2f MB" % (size / math.pow(2, 20))
-    if (size > 1000 * math.pow(2,  0)): return "%.2f KB" % (size / math.pow(2, 10))
+    if (size > 1000 * 2**40): return "%.2f PB" % (size / 2**50) 
+    if (size > 1000 * 2**30): return "%.2f TB" % (size / 2**40) 
+    if (size > 1000 * 2**20): return "%.2f GB" % (size / 2**30) 
+    if (size > 1000 * 2**10): return "%.2f MB" % (size / 2**20) 
+    if (size > 1000):         return "%.2f KB" % (size / 2**10) 
     return "%d bytes" % size;
 
 if __name__ == "__main__":

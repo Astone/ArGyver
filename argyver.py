@@ -8,6 +8,8 @@ from datetime import datetime
 import os, shutil
 from subprocess import Popen, PIPE, CalledProcessError
 
+MIN_DISK_SPACE = 10 * (2**30) # 10 GB
+
 class ArGyver(object):
     
     config = None
@@ -79,7 +81,10 @@ class ArGyver(object):
                 output = rsync.stdout.readline().strip()
                 if output:
                     debug(output)
-
+		stat = os.statvfs(snapshot)
+		if disk.f_bsize * disk.f_bavail < MIN_DISK_SPACE:
+                    error('Almost out of disk space! (%s of %s used)', (pretty_size(disk.f_bsize * (disk.f_blocks - disk.f_bavail)), pretty_size(disk.f_bsize * disk.f_blocks))
+                    rsync.terminate()
         except CalledProcessError as e:
             # Display an error if the rsync command fails.
             error(str(e))
@@ -259,6 +264,15 @@ class ArGyver(object):
     def rebuild_repository(self):
         warning("rebuild_repository() should update all inode references in a database.")
         fatal("rebuild_repository() not implemented!")
+
+
+def pretty_size(size):
+    if (size > 1000 * 2**40): return "%.2f PB" % (size / 2**50)
+    if (size > 1000 * 2**30): return "%.2f TB" % (size / 2**40)
+    if (size > 1000 * 2**20): return "%.2f GB" % (size / 2**30)
+    if (size > 1000 * 2**10): return "%.2f MB" % (size / 2**20)
+    if (size > 1000):         return "%.2f KB" % (size / 2**10)
+    return "%d bytes" % size;
 
 # These three lines let the ArGyver actually do something
 if __name__ == '__main__':
