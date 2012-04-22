@@ -126,7 +126,7 @@ A temporary folder used by rsync to store all files that are
 changed. These files will be placed in the archive folder
 after rsync has terminated. Again a relative path to the server
 root. Or an absolute path if you wish.
-Default: `[disabled]`
+Default: `.tmp/`
 
 ### sources
 A list of source locations.
