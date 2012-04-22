@@ -6,7 +6,7 @@
         <link rel="stylesheet" type="text/css" href="./css/archives.css" />
     <head>
     <body>
-        <h1>ArGyver v3.1 beta</h1>
+        <h1>ArGyver v3.1</h1>
 <?php if ($archives) : ?>
         <ul class="archives">
 <?php foreach ($archives as $archive) : ?>
