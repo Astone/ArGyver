@@ -81,6 +81,7 @@ class ArGyver(object):
                 output = rsync.stdout.readline().strip()
                 if output:
                     debug(output)
+                """
                 err = rsync.stderr.readline().strip()
                 if err:
                     error(err)
@@ -96,6 +97,9 @@ class ArGyver(object):
                     if err:
                         error(err)
                     rsync.wait()
+                """
+            if output:
+                notice(output)
 
         except CalledProcessError as e:
             # Display an error if the rsync command fails.

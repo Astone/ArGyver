@@ -12,8 +12,8 @@ thuis     = "src-thuis   : /home/amethist/thuis/"
 website   = "src-website : /var/www/amethist/"
 
 execute_before = {
-    data        : ["cp -lr /home/amethist/data/%(date)s/ /home/amethist/backup/snapshot/data/", "rsync -rlpEtgoHDhyv --delete-excluded --exclude=.git --exclude=Thumbs.db --exclude=desktop.ini --exclude=AlbumArt_*.* --exclude=\~\$* --exclude=archive --exclude=\~*.tmp --delete /home/amethist/data/%(date)s/ /home/amethist/backup/snapshot/data/"],
-    thuis_oud   : ["cp -lr /home/amethist/backup_oud/thuis/ /home/amethist/backup/snapshot/thuis/", "rsync -rlpEtgoHDhyv --delete-excluded --exclude=.git --exclude=Thumbs.db --exclude=desktop.ini --exclude=AlbumArt_*.* --exclude=\~\$* --exclude=archive --exclude=\~*.tmp --delete /home/amethist/backup_oud/thuis/ /home/amethist/backup/snapshot/thuis/"]}
+    data        : ["cp -lr /home/amethist/data/%(date)s/ /home/amethist/backup/snapshot/data", "rsync -rlpEtgoHDhyv --delete-excluded --exclude=.git --exclude=Thumbs.db --exclude=desktop.ini --exclude=AlbumArt_*.* --exclude=\~\$* --exclude=archive --exclude=\~*.tmp --delete /home/amethist/data/%(date)s/ /home/amethist/backup/snapshot/data/"],
+    thuis_oud   : ["cp -lr /home/amethist/backup_oud/thuis/ /home/amethist/backup/snapshot/thuis", "rsync -rlpEtgoHDhyv --delete-excluded --exclude=.git --exclude=Thumbs.db --exclude=desktop.ini --exclude=AlbumArt_*.* --exclude=\~\$* --exclude=archive --exclude=\~*.tmp --delete /home/amethist/backup_oud/thuis/ /home/amethist/backup/snapshot/thuis/"]}
 
 delay = 27*60*60
 
@@ -83,7 +83,7 @@ for (i, date, sources) in configs:
 
     print output
 
-    os.system("./argyver.py -c config/convert.cfg -v 4 -l logs/%s.log -ll 4" % date)
+    os.system("./argyver.py -c config/convert.cfg -v 4 -l logs/%s.log -ll 5" % date)
     db = sqlite3.connect(database)
     time = mktime(datetime.strptime(date, '%Y-%m-%d').timetuple()) + delay
     db.cursor().execute('UPDATE iterations SET start = ?, finished = ? + (finished - start) WHERE id = ?', (time, time, i))
