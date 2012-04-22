@@ -32,6 +32,21 @@ class Database(object):
         self.commit()
         self.db.close()
         
+
+    def execute(self, query, *args):
+        cursor = self.db.cursor()
+        try:
+            cursor.execute(query, args)
+        except Exception as e:
+            error(str(e))
+            error(query)
+        return cursor
+
+    def commit(self, commit=True):
+        if commit:
+            debug("DB: Commit #%d." % self.iteration)
+            self.db.commit()
+
     def finish(self):
         self._finish_iteration()
 
@@ -81,20 +96,6 @@ class Database(object):
 
         self.execute('CREATE UNIQUE INDEX idx_repository_inode ON repository (inode);')
         self.execute('CREATE UNIQUE INDEX idx_repository_checksum ON repository (checksum);')
-
-    def execute(self, query, *args):
-        cursor = self.db.cursor()
-        try:
-            cursor.execute(query, args)
-        except Exception as e:
-            error(str(e))
-            error(query)
-        return cursor
-
-    def commit(self, commit=True):
-        if commit:
-            debug("DB: Commit #%d." % self.iteration)
-            self.db.commit()
 
     def delete_old_items(self, snapshot, temp, folder):
 

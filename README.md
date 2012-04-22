@@ -1,10 +1,14 @@
-ArGyver 2.0 alpha
-=================
+ArGyver 3.1
+===========
 
 ArGyver is backup utility based on rsync, it stores each version
 of your files individually in a file based archive. It can
 maintain archives for local and remote file systems for any
 number of machines.
+
+The web interface is a bit premature. It uses old fashion frames
+and page reloads. You're welcome to implement a proper web
+interface using AJAX etc :)
 
     usage: backup.py [-h] -c CONFIG_FILE [-l LOG_FILE]
            [-ll {0,1,2,3,4,5}] [-v {0,1,2,3,4,5}]
@@ -25,23 +29,24 @@ Installation
 
 1.  Place ArGyver somewhere on the server side.
 
-2.  Edit the config file argyver.conf. See 'Configuration' below.
+2.  Edit the config file config/argyver.conf.
+    See 'Configuration' below.
 
-3.  Make sure you have ssh access to all remote source locations.
+3.  Make sure you have (ssh) access to all remote source locations.
     You might need to do some public/private key magic:
 
-    http://lmgtfy.com/?q=ssh+keys
+    http://lmgtfy.com/?q=ssh+key
 
 4.  Find out if Argyver likes your config skills.
-    Select the max verbosity level to see what you did wrong :)
+    Select the maximum verbosity level to see what you did wrong :)
 
         $ ./argyver.py -c argyver.conf -v5
 
-5.  ArGyver needs to be scheduled using a cron job.
+5.  ArGyver should be scheduled as a cron job.
     To edit your systems cron jobs use: crontab -e
 
-6.  Let's assume ArGyver is in Angus' home folder and you want to
-    run ArGyver every hour on the hour.
+6.  Let's assume ArGyver is in Angus' home folder and you want
+    to run ArGyverevery hour on the hour.
     Then add something like this to your crontab:
 
         0 * * * * /home/angus/ArGyver/argyver.py -c /home/angus/ArGyver/argyver.conf -l /home/angus/ArGyver/argyver.log -v 2
@@ -50,6 +55,30 @@ Installation
     always clear from which root folder the crontab executes
     its commands.
 
+Web Interface
+-------------
+You can use the web interface to browse and download all
+versions of your files. To enable the webinterface you
+need a webserver and php 5.
+
+1.  Set the `repository` and `database` in config/argyver.conf.
+    If you changed the location of your config file, you should
+    alter the CONFIG_PATH variable in www/config.php.
+
+2.  If your webserver can be reached from the World Wide Web,
+    add a .htaccess and .htpasswd file in the www folder to
+    prevent unauthorized people from browsing your files.
+
+    http://lmgtfy.com/?q=.htaccess+.htpasswd
+
+3. Create a symbolic link to the www folder in your webroot:
+
+        $ ln -s /home/angus/ArGyver/www /var/www/argyver
+
+4. Open your favourite browser and go to:
+
+    http://localhost/argyver
+
 
 Configuration
 -------------
@@ -57,14 +86,14 @@ Configuration
 ### options.rsync_options
 
 You can specify your own rsync options. But I would recommend
-you to leave this the default, which is `-rlpEtgoHDyv`
+you to leave this the default, which is `-rlpEtgoHDuyv`
 
 this means `r`ecurse into directories, copy sym`l`inks as
 symlinks, preserve `p`ermissions, `E`xecutability, modification
 `t`imes, `g`roup, `o`wner, `H`ard links, `D`evice files and
-special files. The `y` is for the 'fuzzy' mode, which means that
-rsync finds a similar file for basis if no destination file
-exists. The last one is `v`erbosity.
+special files, `u`pdate only. The `y` is for the 'fuzzy' mode,
+which means that rsync finds a similar file for basis if no
+destination file exists. The last one is `v`erbosity.
 
 ### server.root 
 The root folder on the server, where the backups are created.
@@ -84,14 +113,20 @@ Default: `archive/`
 The folder where all data is stored, relative to the server root.
 Or an absolute path if you wish. This is used by the file linker
 to save disk space. 
-Default: `.data/`
+Default: `[disabled]`
+
+### server.database
+A database file where all version information data, relative to
+the server root. Or an absolute path if you wish. This is used
+by web interface.
+Default: `[disabled]`
 
 ### server.tmp
 A temporary folder used by rsync to store all files that are
 changed. These files will be placed in the archive folder
 after rsync has terminated. Again a relative path to the server
 root. Or an absolute path if you wish.
-Default: `.tmp/`
+Default: `[disabled]`
 
 ### sources
 A list of source locations.
@@ -120,3 +155,4 @@ Some more examples:
     src-pics/private: username@ip-address:Pictures/
     src-pics/download: username@ip-address:Downloads/Images/
     src-pics: /home/angus/Pictures/helicopters
+

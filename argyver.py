@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 from verbose import *
 from config import Config
 from pidlock import PidLock
@@ -8,6 +8,7 @@ from datetime import datetime
 import os, shutil
 from subprocess import Popen, PIPE, CalledProcessError
 
+# Not implemented yet:
 MIN_DISK_SPACE = 10 * (2**30) # 10 GB
 
 class ArGyver(object):
@@ -81,7 +82,7 @@ class ArGyver(object):
                 output = rsync.stdout.readline().strip()
                 if output:
                     debug(output)
-                """
+                """ TODO:
                 err = rsync.stderr.readline().strip()
                 if err:
                     error(err)
