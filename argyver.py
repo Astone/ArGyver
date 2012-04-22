@@ -294,7 +294,6 @@ def pretty_size(size):
 
 # These three lines let the ArGyver actually do something
 if __name__ == '__main__':
-    import cProfile
-    command = "A = ArGyver(); A.run()"
-    cProfile.runctx( command, globals(), locals(), filename="logs/%s.profile" % datetime.now() );
+    A = ArGyver()
+    A.run()
     
