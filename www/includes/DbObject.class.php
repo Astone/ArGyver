@@ -28,12 +28,12 @@ class DbObject
 
         if (empty($callback)) return $value;
         
-        if (array_key_exists($dbkey, $this->data) && ! array_key_exists($key, $this->objects))
+        if (array_key_exists($dbkey, $this->data) && ! array_key_exists($key.'|'.$callback, $this->objects))
         {
-            $this->objects[$key] = $this->db->$callback($value);
+            $this->objects[$key.'|'.$callback] = $this->db->$callback($value);
         }
 
-        return $this->objects[$key];
+        return $this->objects[$key.'|'.$callback];
     }
 
     public function reset()
@@ -44,7 +44,7 @@ class DbObject
     
     public function __tostring()
     {
-        return get_class($this) + ": " + $this->name;
+        return get_class($this) . ": " . $this->name;
     }
 }
 

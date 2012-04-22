@@ -2,6 +2,7 @@
 
 import os
 import hashlib
+import math
 from verbose import *
 from argparse import ArgumentParser
 
@@ -12,6 +13,8 @@ class FileLinker(object):
     folder = None
     repository = None
     inodes = None
+    new_bytes = 0
+    linked_bytes = 0
 
     def __init__(self, folder=".", repository=".data", inodes=None):
         self.folder = os.path.abspath(folder)
@@ -78,7 +81,7 @@ class FileLinker(object):
                             self.store_file(file_path, idx_path)
                             inodes[stats.st_ino] = None
                     else:
-                        self.link_file(file_path, idx_path)               
+                        self.link_file(file_path, idx_path)
 
     def get_inodes(self):
         if self.inodes == None:
@@ -96,7 +99,13 @@ class FileLinker(object):
         if not os.path.isdir(idx_dir):
             debug("Make dir %s" % os.path.relpath(idx_dir, self.repository))
             os.makedirs(idx_dir)
-        os.link(file_path, idx_path)
+        try:
+            os.link(file_path, idx_path)
+        except Exception as e:
+            os.rename(tmp_path, file_path)
+            error("Tried to store %s to %s." % (file_path, idx_path))
+            error(str(e))
+        self.new_bytes += os.stat(idx_path).st_size
 
     def link_file(self, file_path, idx_path):
         debug("Linking %s to %s" % (os.path.relpath(file_path, self.folder), os.path.relpath(idx_path, self.repository)))
@@ -119,12 +128,16 @@ class FileLinker(object):
         except Exception as e:
             error("Tried to change the timestamp of %s to atime=%d, mtime=%d." % (file_path, atime, mtime))
             error(str(e))
+        self.linked_bytes += idx_stats.st_size
 
     def get_index_path(self, file_path):
         file_hash = self.get_file_hash(file_path)
         if file_hash == None:
             return 
         return os.path.join(self.repository, file_hash[0:2], file_hash)
+
+    def __str__(self):
+        return "%s: %s added to the repository, %s saved by linking files." % (self.__class__.__name__, pretty_size(self.new_bytes), pretty_size(self.linked_bytes))
         
     @staticmethod
     def get_file_hash(file_path):
@@ -142,8 +155,18 @@ class FileLinker(object):
         filePointer.close()
         return md5.hexdigest()
 
+def pretty_size(size):
+    size = float(size)
+    if (size > 1000 * 2**40): return "%.2f PB" % (size / 2**50) 
+    if (size > 1000 * 2**30): return "%.2f TB" % (size / 2**40) 
+    if (size > 1000 * 2**20): return "%.2f GB" % (size / 2**30) 
+    if (size > 1000 * 2**10): return "%.2f MB" % (size / 2**20) 
+    if (size > 1000):         return "%.2f KB" % (size / 2**10) 
+    return "%d bytes" % size;
+
 if __name__ == "__main__":
     linker = FileLinker()
     linker.parse_arguments()
     linker.run()
+    print linker
 

@@ -1,6 +1,6 @@
 <?php defined('ROOT') ? : die('Access denied to '. __FILE__);
 
-require_once(ROOT.'/includes/Path.class.php');
+require_once(ROOT.'/includes/Item.class.php');
 require_once(ROOT.'/includes/Folder.class.php');
 require_once(ROOT.'/includes/File.class.php');
 require_once(ROOT.'/includes/Version.class.php');
@@ -43,61 +43,45 @@ class Database
         return is_a($this->db, 'Exception') ? $this->db->getMessage() : null;
     }
 
+    public function get_item($fid, $class='Item')
+    {
+        $qry = sprintf("SELECT id, parent, name FROM items WHERE id = %d", $fid);
+        return $this->get_object($qry, $class);
+    }
+
     public function get_folder($fid, $class='Folder')
     {
-        if ($fid === 0) return new Folder($this, Array('id'=>0));
-        $qry = sprintf("SELECT folders.id, parent, name, paths.path, folders.id as fid, paths.id as pid FROM folders JOIN paths ON (paths.id = folders.path) WHERE folders.id = %d", $fid);
-        return $this->get_object($qry, $class);
+        if ($fid === 0) return new $class($this, Array('id' => 0));
+        return $this->get_item($fid, $class);
     }
 
     public function get_folders($fid, $class='Folder')
     {
-        $qry = sprintf("SELECT folders.id, parent, name, paths.path, folders.id as fid, paths.id as pid FROM folders JOIN paths ON (paths.id = folders.path) WHERE parent = %d ORDER BY lower(name)", $fid);
+        $qry = sprintf("SELECT DISTINCT items.id, parent, name FROM items JOIN versions ON (versions.item = items.id) WHERE parent = %d AND inode IS NULL ORDER BY lower(name)", $fid);
         return $this->get_objects($qry, $class);
-    }
-
-    public function get_path($pid, $class='Path')
-    {
-        $qry = sprintf("SELECT id, folder as parent, path, id as pid FROM paths WHERE id = %d;", $pid);
-        return $this->get_object($qry, $class);
     }
 
     public function get_files($fid, $class='File')
     {
-        $qry = sprintf("SELECT id, folder as parent, path, id as pid FROM paths WHERE NOT SUBSTR(path, -1, 1) == '/' AND folder = %d;", $fid);
+        $qry = sprintf("SELECT DISTINCT items.id, parent, name FROM items JOIN versions ON (versions.item = items.id) WHERE parent = %d AND inode IS NOT NULL ORDER BY lower(name)", $fid);
         return $this->get_objects($qry, $class);
     }
 
-    public function get_version($vid, $class='Version')
+    public function get_versions($id, $class='Version')
     {
-        $qry = sprintf("SELECT versions.id, path, created, created_i, deleted_i, checksum, size FROM versions LEFT JOIN repository ON(repository.id = versions.inode) WHERE id = %d;", $vid);
-        return $this->get_object($qry, $class);
-    }
-
-    public function get_versions($pid, $class='Version')
-    {
-        $qry = sprintf("SELECT versions.id, path, created, created_i, deleted_i, checksum, size FROM versions LEFT JOIN repository ON(repository.id = versions.inode) WHERE path = %d ORDER BY created_i;", $pid);
-        return $this->get_objects($qry, $class);
-    }
-
-    public function get_iterations($pid, $class='Version')
-    {
-        $qry = sprintf("
-            SELECT
-                i.id,
-                i.id AS created_i,
-                i.id+1 AS deleted_i,
-                i.start AS created
-            FROM versions AS v
-                JOIN paths AS p ON (p.id = v.path AND p.id = %d)
-                JOIN iterations AS i ON (i.id >= v.created_i AND (i.id < v.deleted_i OR v.deleted_i IS NULL))
-            ORDER BY i.id;", $pid);
+        $qry = sprintf("SELECT versions.id, time, created, deleted, size, versions.inode, checksum FROM versions LEFT JOIN repository ON (repository.inode = versions.inode) WHERE item = %d ORDER BY created;", $id);
         return $this->get_objects($qry, $class);
     }
 
     public function get_iteration_timestamp($iid)
     {
         $qry = sprintf("SELECT start FROM iterations WHERE id = %d;", $iid);
+        return $this->get_value($qry);
+    }
+
+    public function get_iteration_finished($iid)
+    {
+        $qry = sprintf("SELECT finished FROM iterations WHERE id = %d;", $iid);
         return $this->get_value($qry);
     }
 
@@ -144,7 +128,10 @@ class Database
     
     private function query($qry)
     {
+#        $locale = setlocale(LC_ALL, 0);
+#        setlocale(LC_ALL, 'en_US');
         @$result = $this->db->query($qry);
+#        setlocale(LC_ALL, $locale);
         if ($result === false)
         {
             die("DB Error: " . $this->db->lastErrorMsg() . "<br />" . $qry);

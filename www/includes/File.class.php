@@ -1,19 +1,9 @@
 <?php defined('ROOT') ? : die('Access denied to '. __FILE__);
 
-require_once(ROOT.'/includes/Path.class.php');
+require_once(ROOT.'/includes/Item.class.php');
 
-class File extends Path
+class File extends Item
 {
-    public function get_size($pretty=true)
-    {
-        return $this->get_version()->get_size($pretty);
-    }
-
-    public function get_abs_path($repository, $vid=null)
-    {
-        return $this->get_version($vid)->get_abs_path($repository);
-    }
-
     public function download($repository, $vid=null)
     {
         $file_path = $this->get_abs_path($repository, $vid);

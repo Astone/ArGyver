@@ -3,23 +3,24 @@
 import os
 from verbose import *
 from filelinker import FileLinker
+from datetime import datetime
+from time import mktime
 
 class DbFileLinker(FileLinker):
 
-    root = None
     db = None
 
-    def __init__(self, folder, repository, root, db):
-        super(DbFileLinker, self).__init__(folder, repository)
-        self.root = root
+    def __init__(self, snapshot, repository, db):
+        super(DbFileLinker, self).__init__(snapshot, repository)
         self.db = db
 
     def run(self):
         inodes = self.get_inodes()
-        for (rel_path,) in self.get_unlinked_files():
+        for record in self.db._get_unlinked_files():
+            rel_path = self.db._get_path_by_item_id(record['fid'])
 
             # Contruct a proper path
-            abs_path = os.path.join(self.root, rel_path.encode('utf-8'))
+            abs_path = os.path.join(self.folder, rel_path)
 
             # This might seem strange, but if the file is a symbolic link to
             # non existing location (or a folder) this would cause us trouble.
@@ -51,28 +52,13 @@ class DbFileLinker(FileLinker):
 
     def get_inodes(self):
         if self.inodes == None:
-            debug("Loading repository")
-            result = self.db.execute('SELECT id FROM repository;')
+            result = self.db._get_inodes_in_repository()
             if result == None:
                 return {}
             else:
                result = result.fetchall()
-            inodes = [row[0] for row in result]
+            inodes = [row['inode'] for row in result]
             self.inodes = dict(zip(inodes, [None]*len(inodes)))
             debug("%d inodes loaded" % len(self.inodes))
         return self.inodes
-
-    def get_unlinked_files(self):
-        debug("Loading unlinked files")
-        result = self.db.execute(' \
-            SELECT paths.path \
-            FROM paths \
-            INNER JOIN versions ON (versions.path = paths.id) \
-            LEFT JOIN repository ON (repository.id = versions.inode) \
-    		WHERE checksum IS NULL \
-    		AND NOT SUBSTR(paths.path, -1, 1) = ?', os.path.sep)
-        if result == None:
-            return []
-        else:
-           return result
 
