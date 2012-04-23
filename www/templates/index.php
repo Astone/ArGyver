@@ -3,7 +3,7 @@
     <head>
         <title>ArGyver v3.1 beta</title>
     <head>
-    <frameset rows="60,*" >
+    <frameset rows="100,*" >
         <frame src="./archives.php<?=$aid.$fid.$id?>" name="archives" />
         <frameset cols="240,*,240">
             <frame src="./folders.php<?=$aid.$fid.$flink?>" name="folders" />
