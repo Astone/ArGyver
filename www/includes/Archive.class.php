@@ -110,6 +110,12 @@ class Archive
         return $db->get_version($vid);
     }
 
+    public function get_iterations()
+    {
+        $db = $this->get_db();
+        return $db->get_iterations();
+    }
+
     public function get_versions($pid)
     {
         $db = $this->get_db();

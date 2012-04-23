@@ -41,7 +41,7 @@ tr.open td a
 tr.closed td,
 tr.closed td a
 {
-    color               : #CCC;
+    color               : #AAA;
 }
 
 tr.closed td a
@@ -61,7 +61,7 @@ tr.closed td a:hover
 
 tr.closed td a img
 {
-    opacity             : 0.4;
+    opacity             : 0.5;
 }
 
 

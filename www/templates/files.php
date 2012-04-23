@@ -31,7 +31,7 @@
                         <?php echo $f->id == $id ? "<a name=\"i$id\" />" : "" ?>
                         <a href="./?aid=<?=$aid?>&fid=<?php echo $f->is_folder() ? $f->id: $fid ?>&id=<?=$f->id?>" target="_top" title="Show versions of <?=$f->name?>">
                             <img src="<?= get_icon( $f->is_folder() ? 'folder' : $f->name)?>" alt="<?=$f->name?>" width="16" height="16" />
-                            <?=$f->name?>
+                            <?=str_replace(' ', '&nbsp', htmlentities($f->name))?>
                         </a>
                     </td>
                     <td class="date"><?=date(DATE_FORMAT, $f->get_version()->get_mtime())?></td>

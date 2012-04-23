@@ -20,7 +20,7 @@ class Folder extends Item
         return $this->get('files', 'get_files', 'id');
     }
 
-    public function download($repository, $iid=null)
+    public function download($repository)
     {
         ini_set('display_errors', 0);
 
@@ -28,18 +28,18 @@ class Folder extends Item
         $this->_add_to_zip($zip, $repository);
         $zip->finish();
     }
-    
+
     private function _add_to_zip($zip, $repository, $root=null)
     {
         foreach($this->get_folders() as $f)
         {
             $f->_add_to_zip($zip, $repository, $root.'/'.$f->name);
-        }        
+        }
 
         foreach($this->get_files() as $f)
         {
             $zip->add_file_from_path($root.'/'.$f->name, $f->get_abs_path($repository));
-        }        
+        }
         $this->reset();
     }
 }

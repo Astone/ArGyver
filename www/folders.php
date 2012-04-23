@@ -14,7 +14,6 @@ if ( ! empty($aid))
     $parent   = $folder->get_parent();
     $parents  = $folder->get_parents();
     $siblings = empty($fid) ? $folder->get_folders() : $parent->get_folders();
-
     $children = $folder->get_folders();
 
     include('templates/folders.php');

@@ -7,7 +7,10 @@
     <head>
     <body>
         <h1><?php echo $item ? $item->name : 'Versions' ?></h1>
-<?php echo $item ? '<p>Click to download:</p>' : '' ?>
+<?php if (empty($versions)) :?>
+	<p>No versions found.</p>
+<?php else :?>
+        <p>Click to download:</p>
         <ul>
 <?php $v_ = null; foreach ($versions as $v) : ?>
 <?php if ($v_ && $v_->get_deleted() != $v->get_created()) : ?>
@@ -35,14 +38,15 @@
             </li>
 <?php endif ?>
 <?php $v_ = $v; endforeach ?>
-<?php if (! $v->exists()) : ?>
+<?php if (isset($v) && ! $v->exists()) : ?>
             <li class="closed">
-                <img src="<?= get_icon('deleted')?>" alt="<?=$item->name?>" width="16" height="16" />
+                <img src="./img/deleted.png" alt="<?=$item->name?>" width="16" height="16" />
                 <?= date(LONG_DATE_FORMAT, $v_->get_deleted()) ?>
                 <ul><li>deleted</li></ul>
             </li>
 <?php endif ?>
         </ul>
+<?php endif ?>
         <a name="end" />
     </body>
 </html>
