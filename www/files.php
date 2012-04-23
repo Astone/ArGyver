@@ -9,7 +9,7 @@ $id       = get('id');
 if ( ! empty($aid))
 {
     $archive  = get_archive($aid);
-    if (empty($archive)) exit();
+    if (empty($archive) || !$archive->db_exists()) exit();
 
     $folder   = $archive->get_folder($fid);
     $parent   = $folder->get_parent();

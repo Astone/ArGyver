@@ -1,5 +1,5 @@
-ArGyver 3.2
-===========
+ArGyver v3.2
+============
 
 ArGyver is backup utility based on rsync, it stores each version
 of your files individually in a file based archive. It can

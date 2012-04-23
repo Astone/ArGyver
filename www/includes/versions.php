@@ -12,14 +12,8 @@ else
 
         $aid = get('aid', 1);
         $archive = get_archive($aid);
-        $iterations = $archive->get_iterations();
-        if (empty($iterations))
-        {
-            $_SESSION['MAX_V'] = null;
-            $_SESSION['MIN_V'] = null;
-        }
-        else
-        {
+        if ($archive && $archive->db_exists() && $iterations = $archive->get_iterations())
+	{
             $last = array_pop($iterations);
             $_SESSION['MAX_V'] = $last['id'];
 
@@ -29,6 +23,11 @@ else
                 $v = array_pop($iterations);
             }
             $_SESSION['MIN_V'] = $v['id'];
+        }
+        else
+        {
+            $_SESSION['MAX_V'] = null;
+            $_SESSION['MIN_V'] = null;
         }
     }
 

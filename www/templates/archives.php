@@ -6,7 +6,7 @@
         <link rel="stylesheet" type="text/css" href="./css/archives.css" />
     <head>
     <body>
-<?php if ($aid) : ?>
+<?php if ($archive && $archive->db_exists()): ?>
     <form action="./" target="_top" method="GET" style="float:right">
     <input type="hidden" name="aid" value="<?=$aid?>" />
     <input type="hidden" name="fid" value="<?=$fid?>" />
@@ -27,7 +27,9 @@
     </form>
 <?php endif ?>
         <h1>ArGyver v3.2</h1>
-<?php if ($archives) : ?>
+<?php if ( empty($archives)) : ?>
+        <p>No archives found check your configurations</p>
+<?php elseif ($ok > 1) : ?>
         <ul class="archives">
 <?php foreach ($archives as $a) : ?>
 <?php if ($a->db_exists()) : ?>

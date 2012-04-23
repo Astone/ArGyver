@@ -154,14 +154,21 @@ class Database
 
     private function query($qry)
     {
-        $locale = setlocale(LC_ALL, 0);
-        setlocale(LC_ALL, 'en_US');
-        @$result = $this->db->query($qry);
-        setlocale(LC_ALL, $locale);
-        if ($result === false)
+        if (is_a($this->db, 'SQLite3'))
         {
-            die("DB Error: " . $this->db->lastErrorMsg() . "<br />" . $qry);
+            $locale = setlocale(LC_ALL, 0);
+            setlocale(LC_ALL, 'en_US');
+            $result = $this->db->query($qry);
+            setlocale(LC_ALL, $locale);
+            if ($result === false)
+            {
+                die("DB Error: " . $this->db->lastErrorMsg() . "<br />" . $qry);
+            }
+            return $result;
         }
-        return $result;
+        else
+        {
+            die("DB Error: " . $this->db->getMessage() . "<br />" . $qry);
+        }
     }
 }

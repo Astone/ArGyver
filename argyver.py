@@ -8,6 +8,8 @@ from datetime import datetime
 import os, shutil
 from subprocess import Popen, PIPE, CalledProcessError
 
+VERSION = [3, 2]
+
 # Not implemented yet:
 MIN_DISK_SPACE = 10 * (2**30) # 10 GB
 
