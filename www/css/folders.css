@@ -12,6 +12,7 @@ ul ul
 li
 {
     list-style      : none;
+    white-space     : nowrap;
 }
 
 li.current,
@@ -42,7 +43,12 @@ li.closed,
 li.closed a
 {
     text-decoration     : line-through;
-    color               : #CCC;
+    color               : #AAA;
+}
+
+li.closed a img
+{
+    opacity             : 0.5;
 }
 
 li.current.closed a
@@ -54,7 +60,7 @@ li.current.closed a
 li.current li.closed a
 {
     text-decoration     : line-through;
-    color               : #CCC;
+    color               : #AAA;
 }
 
 h1 img

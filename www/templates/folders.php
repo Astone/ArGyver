@@ -12,7 +12,7 @@
             <li class="<?php echo $p->exists() ? "open" : "closed" ?>">
                 <a href="./?aid=<?= $aid ?>&fid=<?= $p->id ?>&id=<?= $p->id ?>" target="_top">
                     <img src="<?= get_icon('folder_open')?>" alt="<?=$p->name?>" width="16" height="16" />
-                    <?= $p->name ?>
+                    <?=str_replace(' ', '&nbsp;', htmlentities($p->name))?>
                 </a>
                 <ul>
 <?php endforeach ?>
@@ -21,7 +21,7 @@
                         <a name="f<?=$s->id?>" />
                         <a href="./?aid=<?= $aid ?>&fid=<?= $s->id ?>&id=<?= $s->id ?>" target="_top">
                             <img src="<?= get_icon($fid == $s->id ? 'folder_open' : 'folder')?>" alt="<?=$s->name?>" width="16" height="16" />
-                            <?= $s->name ?>
+                            <?=str_replace(' ', '&nbsp;', htmlentities($s->name))?>
                         </a>
 <?php if ($fid == $s->id) :?>
                         <ul>
@@ -29,7 +29,7 @@
                             <li class="<?php echo $c->exists() ? 'open' : 'closed' ?>">
                                 <a href="./?aid=<?= $aid ?>&fid=<?= $c->id ?>&id=<?= $c->id ?>" target="_top">
                                 <img src="<?= get_icon('folder')?>" alt="<?=$c->name?>" width="16" height="16" />
-                                    <?= $c->name ?>
+                                <?=str_replace(' ', '&nbsp;', htmlentities($c->name))?>
                                 </a>
                             </li>
 <?php endforeach ?>
