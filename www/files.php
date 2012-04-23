@@ -9,6 +9,8 @@ $id       = get('id');
 if ( ! empty($aid))
 {
     $archive  = get_archive($aid);
+    if (empty($archive)) exit();
+
     $folder   = $archive->get_folder($fid);
     $parent   = $folder->get_parent();
     $items    = $folder->get_items();

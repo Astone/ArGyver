@@ -1,7 +1,7 @@
 <?php defined('ROOT') ? : die('Access denied') ?>
 <html>
     <head>
-        <title>ArGyver v3.1</title>
+        <title>ArGyver v3.2</title>
     <head>
     <frameset rows="100,*" >
         <frame src="./archives.php<?=$aid?>" name="archives" />

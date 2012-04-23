@@ -3,7 +3,7 @@
 setlocale(LC_ALL, 'nl_NL');
 
 # Specify the path that stores the ArGyver config files.
-define('CONFIG_PATH', ROOT.'/../config');
+define('CONFIG_PATH', ROOT.'/../confi');
 define('CONFIG_PATTERN', '*.cfg');
 
 define('LONG_DATE_FORMAT', 'D j F Y' ); # d Month yyyy

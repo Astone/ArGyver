@@ -20,6 +20,6 @@ function get_archives()
 function get_archive($aid)
 {
     $archives = get_archives();
-    return $archives[$aid-1];
+    return isset($archives[$aid-1]) ? $archives[$aid-1] : null;
 }
 

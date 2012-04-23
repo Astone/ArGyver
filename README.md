@@ -1,4 +1,4 @@
-ArGyver 3.1
+ArGyver 3.2
 ===========
 
 ArGyver is backup utility based on rsync, it stores each version
