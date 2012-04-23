@@ -2,7 +2,12 @@
 
 require_once('includes/all.php');
 
-$archives = get_archives(); 
+$aid = get('aid');
+$fid = get('fid');
+$id  = get('id');
+
+$archive = get_archive($aid);
+$archives = get_archives();
 
 include('templates/archives.php');
 

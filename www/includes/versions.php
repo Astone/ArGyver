@@ -3,25 +3,38 @@
 if ($vid = get('vid'))
 {
     define('MIN_V', $vid);
-    define('MAX_V', $vid);
+    define('MIN_V', $vid);
 }
 else
 {
-    if (isset($_SESSION['VERSION_LOWER_BOUND']))
+    if ( ! isset($_SESSION['MAX_V']) || ! isset($_SESSION['MIN_V']))
     {
-        define('MIN_V', $_SESSION['VERSION_LOWER_BOUND']);
-    }
-    else
-    {
-        define('MIN_V', 0);
-    }
-    if (isset($_SESSION['VERSION_UPPER_BOUND']))
-    {
-        define('MAX_V', $_SESSION['VERSION_UPPER_BOUND']);
-    }
-    else
-    {
-        define('MAX_V', PHP_INT_MAX);
-    }
-}
 
+        $aid = get('aid', 1);
+        $archive = get_archive($aid);
+        $iterations = $archive->get_iterations();
+        if (empty($iterations))
+        {
+            $_SESSION['MAX_V'] = null;
+            $_SESSION['MIN_V'] = null;
+        }
+        else
+        {
+            $last = array_pop($iterations);
+            $_SESSION['MAX_V'] = $last['id'];
+
+            $v = $last;
+            while ( ! empty($iterations) && $last['start'] - $v['start'] < TIME_WINDOW *86400)
+            {
+                $v = array_pop($iterations);
+            }
+            $_SESSION['MIN_V'] = $v['id'];
+        }
+    }
+
+    if ($min_v = get('min_vid')) $_SESSION['MIN_V'] = $min_v;
+    if ($max_v = get('max_vid')) $_SESSION['MAX_V'] = max($min_v, $max_v);
+
+    define('MIN_V', $_SESSION['MIN_V']);
+    define('MAX_V', $_SESSION['MAX_V']);
+}

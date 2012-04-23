@@ -9,17 +9,17 @@ class Version extends DbObject
         $size = $this->get('size');
         return $pretty ? pretty_file_size($size) : $size;
     }
-    
+
     public function get_inode()
     {
         return $this->get('inode');
     }
-    
+
     public function get_checksum()
     {
         return $this->get('checksum');
     }
-    
+
     public function get_mtime()
     {
         return $this->get('time');
@@ -37,14 +37,15 @@ class Version extends DbObject
 
     public function exists()
     {
-        return $this->get_deleted() === null;
+        $deleted = $this->get('deleted');
+        return $deleted === null || $deleted > MAX_V;
     }
-    
+
     public function busy()
     {
         return $this->get('created', 'get_iteration_finished') === null;
     }
-    
+
     public function get_abs_path($root)
     {
         $checksum = $this->get_checksum();

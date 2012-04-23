@@ -6,17 +6,37 @@
         <link rel="stylesheet" type="text/css" href="./css/archives.css" />
     <head>
     <body>
+<?php if ($aid) : ?>
+    <form action="./" target="_top" method="GET" style="float:right">
+    <input type="hidden" name="aid" value="<?=$aid?>" />
+    <input type="hidden" name="fid" value="<?=$fid?>" />
+    <input type="hidden" name="id" value="<?=$id?>" />
+    Time window:
+    <select name="min_vid">
+<?php foreach ($archive->get_iterations() as $v) : ?>
+        <option value="<?=$v['id']?>" <? if ($v['id'] == MIN_V) echo 'selected'?>><?= date(DATE_FORMAT.' ('.TIME_FORMAT.')', $v['start']) ?></option>
+<?php endforeach ?>
+    </select>
+    -
+    <select name="max_vid">
+<?php foreach ($archive->get_iterations() as $v) : ?>
+        <option value="<?=$v['id']?>" <? if ($v['id'] == MAX_V) echo 'selected'?>><?= date(DATE_FORMAT.' ('.TIME_FORMAT.')', $v['start']) ?></option>
+<?php endforeach ?>
+    </select>
+    <input type="submit" value="Go" />
+    </form>
+<?php endif ?>
         <h1>ArGyver v3.1</h1>
 <?php if ($archives) : ?>
         <ul class="archives">
-<?php foreach ($archives as $archive) : ?>
-<?php if ($archive->db_exists()) : ?>
-            <li class="enabled<?= $archive->id == get('aid') ? ' current' : '' ?>">
-                <a href="./?aid=<?= $archive->id ?>" target="_top"><?= $archive->name ?></a>
+<?php foreach ($archives as $a) : ?>
+<?php if ($a->db_exists()) : ?>
+            <li class="enabled<?= $a->id == $aid ? ' current' : '' ?>">
+                <a href="./?aid=<?= $a->id ?>" target="_top"><?= $a->name ?></a>
             </li>
 <?php else: ?>
                 <li class="disabled">
-                    <a title="<?= $archive->db_error() ?>"><?= $archive->name ?></a>
+                    <a title="<?= $a->db_error() ?>"><?= $a->name ?></a>
                 </li>
 <?php endif ?>
 <?php endforeach ?>

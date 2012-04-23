@@ -6,6 +6,8 @@ setlocale(LC_ALL, 'nl_NL');
 define('CONFIG_PATH', ROOT.'/../config');
 define('CONFIG_PATTERN', '*.cfg');
 
+define('TIME_WINDOW', 30); # days
+
 define('LONG_DATE_FORMAT', 'D j F Y' ); # d Month yyyy
 define('DATE_FORMAT', 'd-m-Y' ); # dd-mm-yyyy
 define('TIME_FORMAT', 'H:i' );   # hh:mm

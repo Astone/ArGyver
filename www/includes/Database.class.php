@@ -93,6 +93,12 @@ class Database
         return $this->get_objects($qry, $class);
     }
 
+    public function get_iterations()
+    {
+        $qry = "SELECT id, start FROM iterations ORDER BY start;";
+        return $this->get_objects($qry);
+    }
+
     public function get_iteration_timestamp($vid)
     {
         $qry = sprintf("SELECT start FROM iterations WHERE id = %d;", $vid);
