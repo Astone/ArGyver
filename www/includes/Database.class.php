@@ -57,31 +57,51 @@ class Database
 
     public function get_folders($fid, $class='Folder')
     {
-        $qry = sprintf("SELECT DISTINCT items.id, parent, name FROM items JOIN versions ON (versions.item = items.id) WHERE parent = %d AND inode IS NULL ORDER BY lower(name)", $fid);
+        $qry = "
+            SELECT DISTINCT items.id, parent, name
+            FROM items JOIN versions ON (versions.item = items.id)
+            WHERE parent = %d
+            AND inode IS NULL
+            AND created <= %d AND (deleted > %d OR deleted IS NULL)
+            ORDER BY lower(name);";
+        $qry = sprintf($qry, $fid, MAX_V, MIN_V);
         return $this->get_objects($qry, $class);
     }
 
     public function get_files($fid, $class='File')
     {
-        $qry = sprintf("SELECT DISTINCT items.id, parent, name FROM items JOIN versions ON (versions.item = items.id) WHERE parent = %d AND inode IS NOT NULL ORDER BY lower(name)", $fid);
+        $qry = "
+            SELECT DISTINCT items.id, parent, name
+            FROM items JOIN versions ON (versions.item = items.id)
+            WHERE parent = %d
+            AND inode IS NOT NULL
+            AND created <= %d AND (deleted > %d OR deleted IS NULL)
+            ORDER BY lower(name);";
+        $qry = sprintf($qry, $fid, MAX_V, MIN_V);
         return $this->get_objects($qry, $class);
     }
 
     public function get_versions($id, $class='Version')
     {
-        $qry = sprintf("SELECT versions.id, time, created, deleted, size, versions.inode, checksum FROM versions LEFT JOIN repository ON (repository.inode = versions.inode) WHERE item = %d ORDER BY created;", $id);
+        $qry = "
+            SELECT created as id, time, created, deleted, size, versions.inode, checksum
+            FROM versions LEFT JOIN repository ON (repository.inode = versions.inode)
+            WHERE item = %d
+            AND created <= %d AND (deleted > %d OR deleted IS NULL)
+            ORDER BY created;";
+        $qry = sprintf($qry, $id, MAX_V, MIN_V);
         return $this->get_objects($qry, $class);
     }
 
-    public function get_iteration_timestamp($iid)
+    public function get_iteration_timestamp($vid)
     {
-        $qry = sprintf("SELECT start FROM iterations WHERE id = %d;", $iid);
+        $qry = sprintf("SELECT start FROM iterations WHERE id = %d;", $vid);
         return $this->get_value($qry);
     }
 
-    public function get_iteration_finished($iid)
+    public function get_iteration_finished($vid)
     {
-        $qry = sprintf("SELECT finished FROM iterations WHERE id = %d;", $iid);
+        $qry = sprintf("SELECT finished FROM iterations WHERE id = %d;", $vid);
         return $this->get_value($qry);
     }
 
@@ -125,13 +145,13 @@ class Database
         }
         return $objects;
     }
-    
+
     private function query($qry)
     {
-#        $locale = setlocale(LC_ALL, 0);
-#        setlocale(LC_ALL, 'en_US');
+        $locale = setlocale(LC_ALL, 0);
+        setlocale(LC_ALL, 'en_US');
         @$result = $this->db->query($qry);
-#        setlocale(LC_ALL, $locale);
+        setlocale(LC_ALL, $locale);
         if ($result === false)
         {
             die("DB Error: " . $this->db->lastErrorMsg() . "<br />" . $qry);

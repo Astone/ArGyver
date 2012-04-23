@@ -4,8 +4,6 @@ require_once(ROOT.'/includes/DbObject.class.php');
 
 class Item extends DbObject
 {
-    protected $version;
-
     public function __construct($db, $data=Array())
     {
         DbObject::__construct($db, $data);
@@ -31,19 +29,10 @@ class Item extends DbObject
 
     public function get_version($vid=null)
     {
-        if ($vid || empty($this->version))
-        {
-            $versions = $this->get_versions();
-            if (empty($vid))
-            {
-                $this->version = array_pop($versions);
-            }
-            else
-            {
-                $this->version = $versions[$vid];
-            }
-        }
-        return $this->version;
+        $versions = $this->get_versions();
+        if (empty($versions)) return null;
+        if (empty($vid)) $vid = end(array_keys($versions));
+        return $versions[$vid];
     }
 
     public function get_versions()
@@ -56,9 +45,9 @@ class Item extends DbObject
         return $this->get_version()->get_size($pretty);
     }
 
-    public function get_abs_path($repository, $vid=null)
+    public function get_abs_path($repository)
     {
-        return $this->get_version($vid)->get_abs_path($repository);
+        return $this->get_version()->get_abs_path($repository);
     }
 
     public function exists()

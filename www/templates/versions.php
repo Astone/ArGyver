@@ -37,7 +37,7 @@
 <?php $v_ = $v; endforeach ?>
 <?php if (! $v->exists()) : ?>
             <li class="closed">
-                <img src="<?= get_icon('deleted')?>" alt="<?=$item->name?>" width="16" height="16" />
+                <img src="./img/deleted.png" alt="<?=$item->name?>" width="16" height="16" />
                 <?= date(LONG_DATE_FORMAT, $v_->get_deleted()) ?>
                 <ul><li>deleted</li></ul>
             </li>

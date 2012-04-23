@@ -7,7 +7,7 @@ class DbObject
     protected $db = null;
     private $data = Array();
     private $objects = Array();
-    
+
     public function __construct($db, $data=Array())
     {
         $this->db = $db;
@@ -15,7 +15,7 @@ class DbObject
         $this->id = $this->get('id');
         $this->name = get_class($this);
     }
-    
+
     protected function get($key, $callback=null, $dbkey=null)
     {
         $dbkey = empty($dbkey) ? $key : $dbkey;
@@ -23,14 +23,16 @@ class DbObject
         if ( ! array_key_exists($dbkey, $this->data)) return null;
 
         $value = $this->data[$dbkey];
-        
+
         $value = is_string($value) ? utf8_decode($value) : $value;
 
         if (empty($callback)) return $value;
-        
-        if (array_key_exists($dbkey, $this->data) && ! array_key_exists($key.'|'.$callback, $this->objects))
+
+        $cachekey = $key.'|'.$callback;
+
+        if (array_key_exists($dbkey, $this->data) && ! array_key_exists($cachekey, $this->objects))
         {
-            $this->objects[$key.'|'.$callback] = $this->db->$callback($value);
+            $this->objects[$cachekey] = $this->db->$callback($value);
         }
 
         return $this->objects[$key.'|'.$callback];
@@ -41,7 +43,7 @@ class DbObject
         unset($this->objects);
         $this->objects = Array();
     }
-    
+
     public function __tostring()
     {
         return get_class($this) . ": " . $this->name;
