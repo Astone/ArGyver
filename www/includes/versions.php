@@ -3,7 +3,7 @@
 if ($vid = get('vid'))
 {
     define('MIN_V', $vid);
-    define('MIN_V', $vid);
+    define('MAX_V', $vid);
 }
 else
 {
