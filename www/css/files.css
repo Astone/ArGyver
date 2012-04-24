@@ -85,3 +85,7 @@ h1 img
     margin-bottom       : -8px;
 }
 
+td.thumbnail
+{
+    text-align          : right;
+}
