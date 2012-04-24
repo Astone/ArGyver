@@ -57,3 +57,9 @@ li.deleted
     padding             : 0;
 }
 
+img.thumbnail
+{
+    border              : 1px solid #69C;
+    border-radius       : 4px;
+    margin              : auto;
+}

@@ -45,9 +45,9 @@ class Item extends DbObject
         return $this->get_version()->get_size($pretty);
     }
 
-    public function get_abs_path($repository)
+    public function get_abs_path()
     {
-        return $this->get_version()->get_abs_path($repository);
+        return $this->get_version()->get_abs_path();
     }
 
     public function exists()
@@ -61,6 +61,11 @@ class Item extends DbObject
         if (is_a($this, 'Folder')) return True;
         if ($this->get_version()->get_inode()) return False;
         return True;
+    }
+
+    public function get_thumbnail()
+    {
+        return $this->get_version()->get_thumbnail();
     }
 }
 

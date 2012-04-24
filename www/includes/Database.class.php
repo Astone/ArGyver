@@ -8,13 +8,15 @@ require_once(ROOT.'/includes/Version.class.php');
 class Database
 {
     private $path;
-    private $repository;
     private $db;
 
-    public function __construct( $path, $repository )
+    public function __construct( $path )
     {
+        $this->connect( $path )
+    }
+
+    public function connect( $path )
         $this->path = $path;
-        $this->repository = $repository;
         try
         {
             $this->db = new SQLite3($this->path);

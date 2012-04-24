@@ -12,5 +12,5 @@ $version  = $item->get_version($vid);
 
 $item     = $version->get_inode() ? $archive->get_file($id) : $archive->get_folder($id);
 
-$item->download($archive->get_repository(), $vid);
+$item->download($vid);
 

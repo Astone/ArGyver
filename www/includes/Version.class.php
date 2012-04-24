@@ -51,4 +51,11 @@ class Version extends DbObject
         $checksum = $this->get_checksum();
         return $root . '/' . substr($checksum, 0, 2) . '/' . $checksum;
     }
+
+    public function get_thumbnail($root)
+    {
+        $checksum = $this->get_checksum();
+        $path = $root . '/' . substr($checksum, 0, 2) . '/' . $checksum . '.png';
+        return './thumbnail.php?file=' . $checksum';
+    }
 }

@@ -7,6 +7,7 @@
     <head>
     <body>
         <h1><?php echo $item ? $item->name : 'Versions' ?></h1>
+<?php if ($item->get_thumbnail()) :?><img src="<?= $item->get_thumbnail() ?>" alt="<?=$item->name?>" class="thumbnail" /><?php endif ?>
 <?php if (empty($versions)) :?>
 	<p>No versions found.</p>
 <?php else :?>
