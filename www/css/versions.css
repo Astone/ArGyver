@@ -57,3 +57,10 @@ li.deleted
     padding             : 0;
 }
 
+img.thumbnail
+{
+    display             : block;
+    border-radius       : 3px;
+    box-shadow          : 1px 1px 6px #888;
+    margin              : auto;
+}

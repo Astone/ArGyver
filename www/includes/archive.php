@@ -20,6 +20,11 @@ function get_archives()
 function get_archive($aid)
 {
     $archives = get_archives();
-    return isset($archives[$aid-1]) ? $archives[$aid-1] : null;
+    $archive = isset($archives[$aid-1]) ? $archives[$aid-1] : null;
+    if ($archive)
+    {
+        $archive->read_config();
+    }
+    return $archive;
 }
 

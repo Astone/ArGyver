@@ -40,27 +40,37 @@ class Item extends DbObject
         return $this->get('versions', 'get_versions', 'id');
     }
 
-    public function get_size($pretty=true)
+    public function get_size($pretty=true, $vid=null)
     {
-        return $this->get_version()->get_size($pretty);
+        return $this->get_version($vid)->get_size($pretty);
     }
 
-    public function get_abs_path($repository)
+    public function get_abs_path($vid=null)
     {
-        return $this->get_version()->get_abs_path($repository);
+        return $this->get_version($vid)->get_abs_path();
     }
 
-    public function exists()
+    public function exists($vid=null)
     {
         if ($this->id == 0) return true;
-        return $this->get_version()->exists();
+        return $this->get_version($vid)->exists();
     }
 
-    public function is_folder()
+    public function is_folder($vid=null)
     {
         if (is_a($this, 'Folder')) return True;
-        if ($this->get_version()->get_inode()) return False;
+        if ($this->get_version($vid)->get_inode()) return False;
         return True;
+    }
+
+    public function get_thumbnail_path($vid=null)
+    {
+        return $this->get_version($vid)->get_thumbnail_path();
+    }
+
+    public function has_thumbnail($vid=null)
+    {
+        return $this->get_version($vid)->has_thumbnail();
     }
 }
 

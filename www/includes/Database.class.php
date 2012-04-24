@@ -8,13 +8,16 @@ require_once(ROOT.'/includes/Version.class.php');
 class Database
 {
     private $path;
-    private $repository;
     private $db;
 
-    public function __construct( $path, $repository )
+    public function __construct( $path )
+    {
+        $this->connect( $path );
+    }
+
+    public function connect( $path )
     {
         $this->path = $path;
-        $this->repository = $repository;
         try
         {
             $this->db = new SQLite3($this->path);
@@ -44,6 +47,12 @@ class Database
     }
 
     public function get_item($fid, $class='Item')
+    {
+        $qry = sprintf("SELECT id, parent, name FROM items WHERE id = %d", $fid);
+        return $this->get_object($qry, $class);
+    }
+
+    public function get_file($fid, $class='File')
     {
         $qry = sprintf("SELECT id, parent, name FROM items WHERE id = %d", $fid);
         return $this->get_object($qry, $class);

@@ -46,9 +46,19 @@ class Version extends DbObject
         return $this->get('created', 'get_iteration_finished') === null;
     }
 
-    public function get_abs_path($root)
+    public function get_abs_path()
     {
         $checksum = $this->get_checksum();
-        return $root . '/' . substr($checksum, 0, 2) . '/' . $checksum;
+        return $this->db->repository . '/' . substr($checksum, 0, 2) . '/' . $checksum;
+    }
+
+    public function get_thumbnail_path()
+    {
+        $checksum = $this->get_checksum();
+        return $this->db->thumbnails . '/' . substr($checksum, 0, 2) . '/' . $checksum . '.png';
+    }
+    public function has_thumbnail()
+    {
+        return file_exists($this->get_thumbnail_path());
     }
 }

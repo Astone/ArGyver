@@ -8,9 +8,10 @@ $vid      = get('vid');
 
 $archive  = get_archive($aid);
 $item     = $archive->get_item($id);
-$version  = $item->get_version($vid);
 
-$item     = $version->get_inode() ? $archive->get_file($id) : $archive->get_folder($id);
-
-$item->download($vid);
+header('Content-Type: image/png');
+ob_clean();
+flush();
+readfile($item->get_thumbnail_path($vid));
+exit();
 
