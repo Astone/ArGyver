@@ -3,6 +3,7 @@
 import os
 import math
 from PythonMagick import _PythonMagick as pm
+from verbose import *
 
 src         = '../backup/.data/'
 dst         = '../backup/.thumbs/'
@@ -12,24 +13,26 @@ font_size   = 12
 font_color  = '#003366FF'
 background  = '#FFFFFF00'
 
+set_verbosity(5)
 
 dst_size = pm.Geometry(dst_size[0], dst_size[1])
 
 for (src_folder, folders, files) in os.walk(src):
 
-    print src_folder
+    debug("Folder \"%s\"" % src_folder)
 
     src_folder = os.path.abspath(src_folder)
     dst_folder = os.path.abspath(os.path.join(dst, os.path.relpath(src_folder, src)))
 
     if not os.path.exists(dst_folder):
+        debug("Create dir \"%s\"" % dst_folder)
         os.mkdir(dst_folder)    
     
     for src_name in files:
         src_path = os.path.join(src_folder, src_name)
-        dst_path = os.path.join(dst_folder, src_name)
+        dst_path = os.path.join(dst_folder, src_name + '.png')
 
-        if os.path.exists(dst_path+'.txt') or os.path.exists(dst_path+'.png'):
+        if os.path.exists(dst_path):
             continue
 
         try:
@@ -39,6 +42,8 @@ for (src_folder, folders, files) in os.walk(src):
                 I.zoom(dst_size)
         except RuntimeError:
             I = None
+        else:
+            debug("\"%s\" is an image." % src_path)
 
         if not I:
             txt = ''
@@ -47,8 +52,9 @@ for (src_folder, folders, files) in os.walk(src):
                 for i in range(int(math.ceil(dst_size.height() / font_size))-1):
                     txt += fp.readline().decode('utf-8')
             except UnicodeDecodeError:
-                I = None 
+                debug("\"%s\" is a binary file." % src_path)
             else:
+                debug("\"%s\" is a text file." % src_path)
                 I = pm.Image(dst_size.to_std_string(), background)
                 I.font(font)
                 I.fontPointsize(font_size)
@@ -56,9 +62,8 @@ for (src_folder, folders, files) in os.walk(src):
                 I.annotate(txt.encode('utf-8'), pm.Geometry())
 
         if I:
-            I.write(dst_path+'.png')
-        else:
-            fp = open(dst_path+'.txt', 'w')
-            fp.write(txt.encode('utf-8'))
-            fp.close()
-
+            notice("Saving thumbnail \"%s\"" % dst_path)
+            try:
+                I.write(dst_path)
+            except RuntimeError as e:
+                error(str(e))
