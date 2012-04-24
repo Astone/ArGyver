@@ -21,7 +21,8 @@
                     <th>Date</th>
                     <th>Time</th>
                     <th>Size</th>
-                    <th colspan="2">Versions</th>
+                    <th>Versions</th>
+                    <th>&nbsp;</th>
                 </tr>
             </thead>
             <tbody>
@@ -40,7 +41,13 @@
                     <?php echo $f->get_size(false) === null ? '<img src="./img/loader.gif" alt="ArGyver is busy"/>' : $f->get_size(true) ?>
                     </td>
                     <td class="versions"><?=sizeof($f->get_versions())?></td>
-                    <td class="thumbnail"><?php if ($f->has_thumbnail()) : ?><img src="./img/thumbnail.png" alt="<?=$f->name?>" /><?php endif ?></td>
+                    <td class="thumbnail">
+                    <?php if ($f->has_thumbnail()) : ?>
+                        <a href="./?aid=<?=$aid?>&fid=<?=$fid?>&id=<?=$f->id?>" target="_top" title="Show preview of <?=$f->name?>">
+                            <img src="./img/thumbnail.png" alt="<?=$f->name?>" width="16" height="14" />
+                        </a>
+                    <?php endif ?>
+                    </td>
                 </tr>
 <?php endforeach ?>
             </tbody>
