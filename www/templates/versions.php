@@ -11,7 +11,6 @@
 <?php if (empty($versions)) :?>
 	<p>No versions found.</p>
 <?php else :?>
-        <p>Click to download:</p>
         <ul>
 <?php $v_ = null; foreach ($versions as $v) : ?>
 <?php if ($v_ && $v_->get_deleted() != $v->get_created()) : ?>
