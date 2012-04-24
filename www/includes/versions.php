@@ -12,7 +12,7 @@ else
 
         $aid = get('aid', 1);
         $archive = get_archive($aid);
-        if ($archive && $archive->db_exists() && $iterations = $archive->get_iterations())
+        if ($archive && $archive->exists() && $iterations = $archive->get_iterations())
 	{
             $last = array_pop($iterations);
             $_SESSION['MAX_V'] = $last['id'];

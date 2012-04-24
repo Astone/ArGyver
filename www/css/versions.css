@@ -59,7 +59,8 @@ li.deleted
 
 img.thumbnail
 {
-    border              : 1px solid #69C;
-    border-radius       : 4px;
+    display             : block;
+    border-radius       : 3px;
+    box-shadow          : 1px 1px 6px #888;
     margin              : auto;
 }

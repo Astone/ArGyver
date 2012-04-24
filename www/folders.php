@@ -8,7 +8,7 @@ $fid      = get('fid', 0);
 if ( ! empty($aid))
 {
     $archive  = get_archive($aid);
-    if (empty($archive) || !$archive->db_exists()) exit();
+    if (empty($archive) || !$archive->exists()) exit();
 
     $folder   = $archive->get_folder($fid);
     $parent   = $folder->get_parent();

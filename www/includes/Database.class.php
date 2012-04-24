@@ -12,10 +12,11 @@ class Database
 
     public function __construct( $path )
     {
-        $this->connect( $path )
+        $this->connect( $path );
     }
 
     public function connect( $path )
+    {
         $this->path = $path;
         try
         {
@@ -46,6 +47,12 @@ class Database
     }
 
     public function get_item($fid, $class='Item')
+    {
+        $qry = sprintf("SELECT id, parent, name FROM items WHERE id = %d", $fid);
+        return $this->get_object($qry, $class);
+    }
+
+    public function get_file($fid, $class='File')
     {
         $qry = sprintf("SELECT id, parent, name FROM items WHERE id = %d", $fid);
         return $this->get_object($qry, $class);

@@ -6,7 +6,7 @@
         <link rel="stylesheet" type="text/css" href="./css/archives.css" />
     <head>
     <body>
-<?php if ($archive && $archive->db_exists()): ?>
+<?php if ($archive && $archive->exists()): ?>
     <form action="./" target="_top" method="GET" style="float:right">
     <input type="hidden" name="aid" value="<?=$aid?>" />
     <input type="hidden" name="fid" value="<?=$fid?>" />
@@ -32,13 +32,13 @@
 <?php elseif ($ok > 1) : ?>
         <ul class="archives">
 <?php foreach ($archives as $a) : ?>
-<?php if ($a->db_exists()) : ?>
+<?php if ($a->exists()) : ?>
             <li class="enabled<?= $a->id == $aid ? ' current' : '' ?>">
                 <a href="./?aid=<?= $a->id ?>" target="_top"><?= $a->name ?></a>
             </li>
 <?php else: ?>
                 <li class="disabled">
-                    <a title="<?= $a->db_error() ?>"><?= $a->name ?></a>
+                    <a title="<?= $a->error() ?>"><?= $a->name ?></a>
                 </li>
 <?php endif ?>
 <?php endforeach ?>

@@ -8,10 +8,10 @@ class Archive extends Database
     public $id;
     public $name;
 
-    private $cfg_path
-    private $repository;
-    private $database;
-    private $thumbnails;
+    public $repository;
+    public $thumbnails;
+
+    private $cfg_path;
 
     private $root_pattern = "/^root\s*:\s*(\.*)/";
     private $repo_pattern = "/^repository\s*:\s*(\.*)/";
@@ -30,7 +30,7 @@ class Archive extends Database
         $this->cfg_path = $cfg_path;
     }
 
-    private function read_config()
+    public function read_config()
     {
         $file = file_get_contents($this->cfg_path);
         $lines = explode("\n", $file);
@@ -43,27 +43,9 @@ class Archive extends Database
         $db    = empty($db_matches)    ? $this->default_db    : trim(array_pop(explode(':', array_pop($db_matches   ))));
         $thumb = empty($thumb_matches) ? $this->default_thumb : trim(array_pop(explode(':', array_pop($thumb_matches))));
         $this->repository = rtrim($root, '/') . '/' . $repo;
-        $this->database   = rtrim($root, '/') . '/' . $db;
+        $this->path       = rtrim($root, '/') . '/' . $db;
         $this->thumbnails = rtrim($root, '/') . '/' . $thumb;
-        $this->connect(db($this->database));
-    }
-
-    public function get_repository()
-    {
-        if ($this->repository == null)
-        {
-            $this->read_config();
-        }
-        return $this->repository;
-    }
-
-    public function get_thumbnails()
-    {
-        if ($this->thumbnails == null)
-        {
-            $this->read_config();
-        }
-        return $this->thumbnails;
+        $this->connect($this->path);
     }
 }
 

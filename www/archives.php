@@ -10,7 +10,7 @@ $archive = get_archive($aid);
 $archives = get_archives();
 
 $ok = 0;
-foreach ($archives as $a) if ($a->db_exists()) $ok += 1;
+foreach ($archives as $a) if ($a->exists()) $ok += 1;
 
 include('templates/archives.php');
 
