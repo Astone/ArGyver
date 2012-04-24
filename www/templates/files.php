@@ -40,7 +40,7 @@
                     <?php echo $f->get_size(false) === null ? '<img src="./img/loader.gif" alt="ArGyver is busy"/>' : $f->get_size(true) ?>
                     </td>
                     <td class="versions"><?=sizeof($f->get_versions())?></td>
-                    <td class="thumbnail"><?php if ($f->has_thumbnail()) ?><img src="./img/thumbnail.png" alt="<?=$f->name?>" /><?php endif ?></td>
+                    <td class="thumbnail"><?php if ($f->has_thumbnail()) : ?><img src="./img/thumbnail.png" alt="<?=$f->name?>" /><?php endif ?></td>
                 </tr>
 <?php endforeach ?>
             </tbody>
