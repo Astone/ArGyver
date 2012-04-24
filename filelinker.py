@@ -168,5 +168,5 @@ if __name__ == "__main__":
     linker = FileLinker()
     linker.parse_arguments()
     linker.run()
-    print linker
+    notice(str(linker))
 
