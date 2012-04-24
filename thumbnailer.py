@@ -7,13 +7,13 @@ from verbose import *
 
 src         = '../backup/.data/'
 dst         = '../backup/.thumbs/'
-dst_size    = (160, 120)
+dst_size    = (240, 120)
 font        = 'fonts/courier.ttf'
 font_size   = 12
 font_color  = '#003366FF'
 background  = '#FFFFFF00'
 
-set_verbosity(5)
+set_verbosity(4)
 
 dst_size = pm.Geometry(dst_size[0], dst_size[1])
 
