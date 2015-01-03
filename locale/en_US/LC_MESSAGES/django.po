@@ -1,0 +1,127 @@
+# Copyright (C) 2015
+# This file is distributed under the same license as the ArGyver package.
+# Bram Stoeller <bram@stoeller.nl>, 2015.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: 4.0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-01-03 23:37+0000\n"
+"PO-Revision-Date: 2015-01-03 18:00+0000\n"
+"Last-Translator: Bram Stoeller <bram@stoeller.nl>\n"
+"Language-Team: English\n"
+"Language: Anglish\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: argyver/management/commands/runargyver.py:69
+#, python-format
+msgid "Archiving \"%(location)s\" at %(timestamp)s"
+msgstr ""
+
+#: argyver/management/commands/runargyver.py:70
+#, python-format
+msgid "Remote path: %s"
+msgstr ""
+
+#: argyver/management/commands/runargyver.py:71
+#, python-format
+msgid "Local path: %s"
+msgstr ""
+
+#: argyver/management/commands/runargyver.py:94
+#, python-format
+msgid "Finished in %d seconds"
+msgstr ""
+
+#: argyver/management/commands/runargyver.py:103
+#, python-format
+msgid "Unkownn RSYNC file type received: %s"
+msgstr ""
+
+#: argyver/management/commands/runargyver.py:108
+#, python-format
+msgid "Unkownn RSYNC status received: %s"
+msgstr ""
+
+#: argyver/management/commands/runargyver.py:141
+#, python-format
+msgid "%s was removed by RSYNC, but it doesn't exist in the database!"
+msgstr ""
+
+#: argyver/management/commands/runargyver.py:150
+#, python-format
+msgid "Tried to add %s to the repository, but the file doesn't exist!"
+msgstr ""
+
+#: argyver/management/commands/runargyver.py:182
+#, python-format
+msgid ""
+"Tried to add %s in the repository, but the containing directory seems to be "
+"a file!"
+msgstr ""
+
+#: argyver/models.py:75
+msgid "file system node"
+msgstr ""
+
+#: argyver/models.py:76
+msgid "file system nodes"
+msgstr ""
+
+#: argyver/models.py:94 argyver/models.py:95
+msgid "file in repository"
+msgstr ""
+
+#: argyver/models.py:107
+msgid "deleted"
+msgstr ""
+
+#: argyver/models.py:109
+msgid "created"
+msgstr ""
+
+#: argyver/models.py:112
+msgid "version"
+msgstr ""
+
+#: argyver/models.py:113
+msgid "versions"
+msgstr ""
+
+#: argyver/models.py:121 argyver/models.py:127 argyver/models.py:130
+#, python-format
+msgid "For example: %s"
+msgstr ""
+
+#: argyver/models.py:124
+#, python-format
+msgid "Default is: %s"
+msgstr ""
+
+#: argyver/models.py:130
+msgid "which is equal to"
+msgstr ""
+
+#: argyver/models.py:135
+msgid "AGV_WARNING_RSYNC_ARGUMENTS"
+msgstr ""
+"Only use this if you know what you are doing, it might break the ArGyver. "
+"Using -exclude and --include should be fine."
+
+#: argyver/models.py:141
+msgid "AGV_EXCEPTION_LOCATION_ROOT_FOLDER_EXISTS"
+msgstr ""
+"Someone tried to create a new location. The slug of a location defines the "
+"root folder of the corresponding archive and according to the database this "
+"root folder already exists. This should definitely not happen."
+
+#: argyver/models.py:158
+msgid "remote location"
+msgstr ""
+
+#: argyver/models.py:159
+msgid "remote locations"
+msgstr ""
