@@ -116,12 +116,12 @@ class Command(BaseCommand):
         node = Node.get_or_create_from_path(path)
 
         try:
-            version = node.get_latest_version()
+            old_version = node.get_latest_version()
         except Version.DoesNotExist:
-            pass
+            old_version = None
         else:
-            version.deleted = timezone.now()
-            version.save()
+            old_version.deleted = timezone.now()
+            old_version.save()
 
         timestamp = timezone.datetime.fromtimestamp(os.path.getmtime(node.abs_path()))
 
@@ -130,9 +130,13 @@ class Command(BaseCommand):
         else:
             data = None
 
-        version = Version(node=node, data=data, timestamp=timestamp, created=timezone.now())
-        version.save()
-
+        new_version = Version(node=node, data=data, timestamp=timestamp, created=timezone.now())
+        if old_version and old_version.data == new_version.data:
+            old_version.timestamp = new_version.timestamp
+            old_version.deleted = None
+            old_version.save()
+        else:
+            new_version.save()
 
     def _delete_node(self, path):
         try:
