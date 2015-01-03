@@ -123,12 +123,14 @@ class Command(BaseCommand):
             version.deleted = timezone.now()
             version.save()
 
+        timestamp = timezone.datetime.fromtimestamp(os.path.getmtime(node.abs_path()))
+
         if node.is_file():
            data = self._add_file_to_repo(node)
         else:
             data = None
 
-        version = Version(node=node, data=data, created=timezone.now())
+        version = Version(node=node, data=data, timestamp=timestamp, created=timezone.now())
         version.save()
 
 
@@ -164,9 +166,7 @@ class Command(BaseCommand):
         try:
             data = Data.objects.get(hash=md5sum)
         except Data.DoesNotExist:
-            timestamp = timezone.datetime.fromtimestamp(os.path.getmtime(node_path))
-            size = os.path.getsize(node_path)
-            data = Data(hash=md5sum, timestamp=timestamp, size=size)
+            data = Data(hash=md5sum, size=os.path.getsize(node_path))
             data.save()
 
         data_path = data.abs_path()

@@ -78,7 +78,6 @@ class Node(models.Model):
 
 class Data(models.Model):
     hash = models.CharField(max_length=32, unique=True, db_index=True)
-    timestamp = models.DateTimeField()
     size = models.IntegerField()
 
     @property
@@ -99,6 +98,7 @@ class Data(models.Model):
 class Version(models.Model):
     node = models.ForeignKey(Node, db_index=True)
     data = models.ForeignKey(Data, blank=True, null=True)
+    timestamp = models.DateTimeField()
     created = models.DateTimeField(db_index=True)
     deleted = models.DateTimeField(blank=True, null=True, db_index=True)
 
