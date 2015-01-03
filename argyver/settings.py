@@ -2,8 +2,8 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 # CONVENIENCE
-LANGUAGE_CODE = 'nl-nl'
-TIME_ZONE = 'CET'
+LANGUAGE_CODE = 'en-us'
+TIME_ZONE = 'GMT'
 
 # SECURITY
 SECRET_KEY = 'ReplaceThisWithYourOwnSecret'

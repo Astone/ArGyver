@@ -2,9 +2,10 @@ from django.core.management.base import BaseCommand, CommandError
 from argyver.models import Location, Node, Data, Version
 from django.utils.translation import ugettext as _
 from django.conf import settings
-from datetime import datetime
+from django.utils import timezone
 from threading import Thread, Lock
 from time import sleep
+from hashlib import md5
 import subprocess
 import signal
 import os
@@ -48,6 +49,8 @@ class Command(BaseCommand):
     args = '<location location ...>'
     help = 'Runs the ArGyver for specified locations'
 
+    BUFFER_SIZE = 4 * (2**16)  # 4MB
+
     def handle(self, *args, **options):
         location_list = []
         for slug in args:
@@ -62,7 +65,7 @@ class Command(BaseCommand):
     def _archive(self, location):
         global mutex
 
-        started = datetime.now()
+        started = timezone.now()
         self.stdout.write(_('Archiving "%(location)s" at %(timestamp)s') % {'location': location.name, 'timestamp' :started})
         self.stdout.write(_('Remote path: %s') % location.url)
         self.stdout.write(_('Local path: %s') % location.root_node.abs_path())
@@ -85,6 +88,11 @@ class Command(BaseCommand):
             mutex.release()
             self.stderr.write("%s: %s" % (type(exception).__name__, str(exception)))
 
+        if thread.error:
+            self.stderr.write(thread.error)
+
+        self.stdout.write(_('Finished in %d seconds') % (timezone.now() - started).total_seconds())
+
     def _process_output(self, line, location):
         action = line[0]
         node_type = line[1]
@@ -105,7 +113,24 @@ class Command(BaseCommand):
             self._add_or_update_node(path)
 
     def _add_or_update_node(self, path):
-        n = Node.get_or_create_from_path(path)
+        node = Node.get_or_create_from_path(path)
+
+        try:
+            version = node.get_latest_version()
+        except Version.DoesNotExist:
+            pass
+        else:
+            version.deleted = timezone.now()
+            version.save()
+
+        if node.is_file():
+           data = self._add_file_to_repo(node)
+        else:
+            data = None
+
+        version = Version(node=node, data=data, created=timezone.now())
+        version.save()
+
 
     def _delete_node(self, path):
         try:
@@ -114,10 +139,57 @@ class Command(BaseCommand):
             self.stderr.write(_("%s was removed by RSYNC, but it doesn't exist in the database!") % path)
             return
         version = node.get_latest_version()
+        version.deleted = timezone.now()
+        version.save()
+
+    def _add_file_to_repo(self, node):
+        node_path = node.abs_path()
+        if not os.path.exists(node_path):
+            self.stderr.write(_("Tried to add %s to the repository, but the file doesn't exist!") % node_path)
+            return
+
+        try:
+            with open(node_path, 'rb') as fp:
+                md5sum = md5()
+                while True:
+                    content = fp.read(self.BUFFER_SIZE)
+                    if not content:
+                        break
+                    md5sum.update(content)
+            md5sum = md5sum.hexdigest()
+        except BaseException as exception:
+            self.stderr.write("%s: %s" % (type(exception).__name__, str(exception)))
+            return
+
+        try:
+            data = Data.objects.get(hash=md5sum)
+        except Data.DoesNotExist:
+            timestamp = timezone.datetime.fromtimestamp(os.path.getmtime(node_path))
+            size = os.path.getsize(node_path)
+            data = Data(hash=md5sum, timestamp=timestamp, size=size)
+            data.save()
+
+        data_path = data.abs_path()
+
+        if os.path.exists(data_path):
+            if data.size > 0:
+                os.remove(node_path)
+                os.link(data.abs_path(), node_path)
+        else:
+            data_dir = os.path.dirname(data.abs_path())
+            if not os.path.isdir(data_dir):
+                if os.path.exists(data_dir):
+                    self.stderr.write(_("Tried to add %s in the repository, but the containing directory seems to be a file!") % data.path)
+                    return
+                os.makedirs(data_dir)
+            os.link(node_path, data_path)
+
+
+        return data
 
 class RsyncThread(Thread):
 
-    MAX_BUFFER = 1000 # lines of output
+    MAX_BUFFER = 1000  # lines of output
 
     def __init__(self, location, mutex):
         self.location = location

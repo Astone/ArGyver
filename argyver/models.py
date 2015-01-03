@@ -34,6 +34,12 @@ class Node(models.Model):
     def __unicode__(self):
         return unicode(self.path)
 
+    def is_dir(self):
+        return self.name.endswith(os.path.sep)
+
+    def is_file(self):
+        return not self.name.endswith(os.path.sep)
+
     @classmethod
     def get_or_create(cls, parent, name):
         try:
@@ -96,6 +102,12 @@ class Version(models.Model):
     created = models.DateTimeField(db_index=True)
     deleted = models.DateTimeField(blank=True, null=True, db_index=True)
 
+    def __unicode__(self):
+        if self.deleted:
+            return "%s %s: (%s)" % (unicode(self.node), _('deleted'), self.deleted)
+        else:
+            return "%s %s: (%s)" % (unicode(self.node), _('created'), self.created)
+
     class Meta:
         verbose_name = _('version')
         verbose_name_plural = _('versions')
@@ -129,6 +141,7 @@ class Location(models.Model):
                 raise ArGyverException(_('AGV_EXCEPTION_LOCATION_ROOT_FOLDER_EXISTS'))
             self.root_node = Node(name=self.slug + '/')
             self.root_node.save()
+            self.root_node_id = self.root_node.id
         self.remote_path = self.remote_path.replace('*', '').rstrip('/') + '/'
         super(Location, self).save(*args, **kwargs)
 
