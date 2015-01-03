@@ -2,8 +2,8 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 # CONVENIENCE
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+LANGUAGE_CODE = 'nl-nl'
+TIME_ZONE = 'CET'
 
 # SECURITY
 SECRET_KEY = 'ReplaceThisWithYourOwnSecret'
@@ -21,6 +21,9 @@ DATABASES = {
         'NAME': os.path.join(AGV_DATA_DIR, 'database.sqlite3'),
     }
 }
+
+# BINARIES
+AGV_RSYNC_BIN = '/usr/bin/rsync'
 
 # YOU SHOULD NOT HAVE TO EDIT THE SETTINGS BELOW #
 
