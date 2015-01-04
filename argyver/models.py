@@ -67,7 +67,7 @@ class Node(models.Model):
 
     def exists(self):
         try:
-            self.get_latest_version()
+            self.get_current_version()
         except Version.DoesNotExist:
             return False
         return True
