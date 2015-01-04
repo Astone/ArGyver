@@ -9,8 +9,10 @@ ArGyverException = Exception
 
 
 class Node(models.Model):
-    parent = models.ForeignKey('Node', blank=True, null=True)
+    parent = models.ForeignKey('self', blank=True, null=True)
     name = models.CharField(max_length=255, db_index=True)
+
+    unique_together = (('parent', 'name'),)
 
     @property
     def path(self):
@@ -22,12 +24,12 @@ class Node(models.Model):
         return os.path.join(settings.AGV_SNAP_DIR, self.path)
 
     def get_versions(self):
-        version_set = Version.objects.filter(node=self, deleted=None).order_by('-created')
+        version_set = Version.objects.filter(node=self).order_by('-created')
         return version_set
 
     def get_latest_version(self):
         version_set = self.get_versions()
-        if not version_set.exists():
+        if not version_set.exists() or version_set[0].deleted:
             raise Version.DoesNotExist
         return version_set[0]
 
@@ -102,6 +104,8 @@ class Version(models.Model):
     created = models.DateTimeField(db_index=True)
     deleted = models.DateTimeField(blank=True, null=True, db_index=True)
 
+    unique_together = (('node', 'data', 'timestamp'),)
+
     def __unicode__(self):
         if self.deleted:
             return "%s %s: (%s)" % (unicode(self.node), _('deleted'), self.deleted)
@@ -145,10 +149,10 @@ class Location(models.Model):
         self.remote_path = self.remote_path.replace('*', '').rstrip('/') + '/'
         super(Location, self).save(*args, **kwargs)
 
-
     @property
     def url(self):
-        return "%s@%s:%s" % (self.remote_user, self.remote_host, self.remote_path)
+        remote_path = self.remote_path.replace(r' ', r'\ ').replace(r'\\ ', r'\ ')
+        return "%s@%s:%s" % (self.remote_user, self.remote_host, remote_path)
 
     def __unicode__(self):
         return unicode(self.name)

@@ -49,7 +49,7 @@ class Command(BaseCommand):
     args = '<location location ...>'
     help = 'Runs the ArGyver for specified locations'
 
-    BUFFER_SIZE = 4 * (2**16)  # 4MB
+    BUFFER_SIZE = 4 * (2 ** 20)  # 4MB
 
     def handle(self, *args, **options):
         location_list = []
@@ -59,16 +59,22 @@ class Command(BaseCommand):
             except Location.DoesNotExist:
                 raise CommandError('Location "%s" does not exist' % slug)
 
+        started = timezone.now()
+
         for location in location_list:
             self._archive(location)
 
+        self.stdout.write(_('Finished in %d seconds') % (timezone.now() - started).total_seconds())
+
     def _archive(self, location):
         global mutex
-
-        started = timezone.now()
-        self.stdout.write(_('Archiving "%(location)s" at %(timestamp)s') % {'location': location.name, 'timestamp' :started})
+        self.stdout.write(_('Archiving "%(location)s" at %(timestamp)s') % {'location': location.name, 'timestamp': timezone.now()})
         self.stdout.write(_('Remote path: %s') % location.url)
         self.stdout.write(_('Local path: %s') % location.root_node.abs_path())
+
+        local_dir = os.path.dirname(location.root_node.abs_path())
+        if not os.path.isdir(local_dir):
+            os.makedirs(local_dir)
 
         mutex = Lock()
         thread = RsyncThread(location, mutex)
@@ -76,27 +82,31 @@ class Command(BaseCommand):
 
         try:
             while thread.isAlive() or thread.buffer:
-                if thread.buffer:
+                if len(thread.buffer) > 1 or not thread.isAlive():
                     mutex.acquire()
                     line = thread.buffer.pop(0)
                     mutex.release()
-                    self._process_output(line, location)
-        except BaseException as exception:
+                    try:
+                        self._process_output(line, location)
+                    except KeyboardInterrupt as exception:
+                        self.stderr.write(_("Error in: %s") % line)
+                        self.stderr.write("%s: %s" % (type(exception).__name__, str(exception)))
+            else:
+                sleep(1)
+        except KeyboardInterrupt:
             thread.process.kill()
-            mutex.acquire()
-            thread.buffer = []
-            mutex.release()
-            self.stderr.write("%s: %s" % (type(exception).__name__, str(exception)))
+            self.stderr.write(_("Keyboard Interrupt, finishing %d items in buffer...") % max(len(thread.buffer) - 1, 0  ))
+            while len(thread.buffer) > 1:
+                self._process_output(thread.buffer.pop(0), location)
 
         if thread.error:
             self.stderr.write(thread.error)
 
-        self.stdout.write(_('Finished in %d seconds') % (timezone.now() - started).total_seconds())
-
     def _process_output(self, line, location):
+        line = line.decode('utf-8')
         action = line[0]
         node_type = line[1]
-        path = os.path.join(location.root_node.path, line[12:])
+        path = os.path.join(location.root_node.path, line[12:]).replace('/./', '/')
 
         # check file type
         if node_type not in ['f', 'd']:
@@ -108,11 +118,14 @@ class Command(BaseCommand):
                 self.stderr.write(_('Unkownn RSYNC status received: %s') % line)
                 return
             self._delete_node(path)
-
+        elif action == 'h':
+            # TODO handle hardlinks, might involve storing inodes in data table
+            self._add_or_update_node(path)
         else:
             self._add_or_update_node(path)
 
     def _add_or_update_node(self, path):
+        print "Add:", path
         node = Node.get_or_create_from_path(path)
 
         try:
@@ -123,10 +136,12 @@ class Command(BaseCommand):
             old_version.deleted = timezone.now()
             old_version.save()
 
-        timestamp = timezone.datetime.fromtimestamp(os.path.getmtime(node.abs_path()))
+        timestamp = os.path.getmtime(node.abs_path())
+        timestamp = timezone.datetime.fromtimestamp(timestamp)
+        timestamp = timezone.make_aware(timestamp, timezone.get_default_timezone())
 
         if node.is_file():
-           data = self._add_file_to_repo(node)
+            data = self._add_file_to_repo(node)
         else:
             data = None
 
@@ -139,10 +154,11 @@ class Command(BaseCommand):
             new_version.save()
 
     def _delete_node(self, path):
+        print "Delete:", path
         try:
             node = Node.get_from_path(path)
         except Node.DoesNotExist:
-            self.stderr.write(_("%s was removed by RSYNC, but it doesn't exist in the database!") % path)
+            self.stderr.write(_("%s was removed by RSYNC, but it does not exist in the database!") % path)
             return
         version = node.get_latest_version()
         version.deleted = timezone.now()
@@ -182,14 +198,11 @@ class Command(BaseCommand):
         else:
             data_dir = os.path.dirname(data.abs_path())
             if not os.path.isdir(data_dir):
-                if os.path.exists(data_dir):
-                    self.stderr.write(_("Tried to add %s in the repository, but the containing directory seems to be a file!") % data.path)
-                    return
                 os.makedirs(data_dir)
             os.link(node_path, data_path)
 
-
         return data
+
 
 class RsyncThread(Thread):
 
@@ -228,8 +241,9 @@ class RsyncThread(Thread):
 
     def _get_rsync_cmd(self):
         rsync = settings.AGV_RSYNC_BIN
-        rsync += ' -aAHX --out-format=\'%i %n\' --outbuf=l --delete '
+        rsync += ' -aH --out-format=\'%i %n\' --outbuf=l --delete --delete-excluded '
         if self.location.remote_port != 22:
             rsync += '-e \'ssh -p %d\'' % self.location.remote_port
-        rsync += self.location.url + ' ' + self.location.root_node.abs_path()
+        rsync += self.location.rsync_arguments
+        rsync += " \"%s\" \"%s\"" % (self.location.url, self.location.root_node.abs_path())
         return rsync

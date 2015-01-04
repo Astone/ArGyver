@@ -2,8 +2,8 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 # CONVENIENCE
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'GMT'
+LANGUAGE_CODE = 'nl-nl'
+TIME_ZONE = 'CET'
 
 # SECURITY
 SECRET_KEY = 'ReplaceThisWithYourOwnSecret'
@@ -17,6 +17,13 @@ AGV_REPO_DIR = os.path.join(AGV_DATA_DIR, 'repository')
 # DATABASE
 DATABASES = {
     'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'HOST': 'localhost',
+        'NAME': 'argyver',
+        'USER': 'angus',
+        'PASSWORD': 'Q8nCfYxXL9fT7KmU',
+    },
+    'development': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(AGV_DATA_DIR, 'database.sqlite3'),
     }
@@ -29,6 +36,8 @@ AGV_RSYNC_BIN = '/usr/bin/rsync'
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
+
+
 
 INSTALLED_APPS = (
     'django.contrib.admin',
