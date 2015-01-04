@@ -245,7 +245,7 @@ class RsyncThread(Thread):
 
     def _get_rsync_cmd(self):
         rsync = settings.AGV_RSYNC_BIN
-        rsync += ' -aH --out-format=\'%i %n\' --delete --delete-excluded '
+        rsync += ' -aH --out-format=\'%i %n\' --outbuf=l --delete --delete-excluded '
         if self.archive.remote_port != 22:
             rsync += '-e \'ssh -p %d\'' % self.archive.remote_port
         rsync += self.archive.rsync_arguments
