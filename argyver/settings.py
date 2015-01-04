@@ -34,10 +34,10 @@ AGV_RSYNC_BIN = '/usr/bin/rsync'
 
 # YOU SHOULD NOT HAVE TO EDIT THE SETTINGS BELOW #
 
+AGV_VERSION = '4.0.0'
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
-
-
 
 INSTALLED_APPS = (
     'django.contrib.admin',
@@ -72,4 +72,4 @@ STATICFILES_DIRS = (
     AGV_SNAP_DIR,
 )
 
-STATIC_URL = '/data/'
+STATIC_URL = '/static/'

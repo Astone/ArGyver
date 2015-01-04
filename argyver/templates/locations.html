@@ -1,0 +1,21 @@
+<div class="container">
+    <form style="float:right">
+        Time window:
+        <select name="min_vid"></select>
+        -
+        <select name="max_vid"></select>
+        <input type="submit" value="Go" />
+    </form>
+
+    <h1>ArGyver v{{ settings.AGV_VERSION }}</h1>
+
+    {% if location_list %}
+    <ul class="locations">
+        {% for location in location_list %}
+        <li{% if location == curent %} class="current"{% endif %}><a href="/{{ location.root_node.path }}">{{ location.name }}</a>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>No archives found check your configurations</p>
+    {% endif %}
+</div>

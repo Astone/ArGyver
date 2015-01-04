@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>ArGyver v{{settings.AGV_VERSION}}</title>
+        <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}" />
+    </head>
+    <div id="locations">{{ locations }}</div>
+    <div id="folders"></div>
+    <div id="files"></div>
+    <div id="versions"></div>
+</html>

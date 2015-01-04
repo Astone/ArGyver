@@ -108,6 +108,8 @@ class Command(BaseCommand):
         node_type = line[1]
         path = os.path.join(location.root_node.path, line[12:]).replace('/./', '/')
 
+        self.stdout.write(line)
+
         # check file type
         if node_type not in ['f', 'd']:
             self.stderr.write(_('Unkownn RSYNC file type received: %s') % line)
@@ -127,6 +129,10 @@ class Command(BaseCommand):
     def _add_or_update_node(self, path):
         print "Add:", path
         node = Node.get_or_create_from_path(path)
+
+        if not os.path.exists(node.abs_path()):
+            self.stderr.write(_('Tried to add node %s, but it does not exist on disk!') % node.path)
+            return
 
         try:
             old_version = node.get_latest_version()

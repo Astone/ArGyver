@@ -1,0 +1,90 @@
+html, body, div
+{
+    margin: 0;
+    padding: 0;
+}
+
+body
+{
+    font-family: Arial;
+    font-size: 10pt;
+    color: #333;
+}
+
+a
+{
+    color: #333;
+    text-decoration: none;
+}
+
+a:hover
+{
+    color: #F60;
+}
+
+img
+{
+    border: 0;
+}
+
+.container
+{
+    margin: 0 1em;
+}
+
+/* LOCATIONS */
+#locations
+{
+    width: 100%;
+    height: 100px;
+    border-bottom: 4px solid #ccc;
+}
+
+ul.locations
+{
+    padding: 0;
+}
+
+ul.locations li
+{
+    display: block;
+    float: left;
+    padding: 0;
+    margin: 0px 4px;
+}
+
+ul.locations li a
+{
+    display: block;
+    padding: 4px 8px;
+    background: #9cf;
+    color: #000;
+    text-decoration: none;
+}
+
+ul.locations li:hover a,
+ul.locations li.current a
+{
+    background: #f60;
+}
+
+ul.locations li:hover a,
+ul.locations li.current a
+{
+    color: #fff;
+}
+
+#folders
+{
+
+}
+
+#files
+{
+
+}
+
+#versions
+{
+
+}

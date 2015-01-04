@@ -157,6 +157,13 @@ class Location(models.Model):
     def __unicode__(self):
         return unicode(self.name)
 
+    @classmethod
+    def get_first(cls):
+        if Location.objects.exists():
+            return Location.objects.order_by('name')[0]
+        else:
+            raise Location.DoesNotExist
+
     class Meta:
         ordering = ['name']
         verbose_name = _('remote location')
