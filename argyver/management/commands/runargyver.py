@@ -108,8 +108,6 @@ class Command(BaseCommand):
         node_type = line[1]
         path = os.path.join(location.root_node.path, line[12:]).replace('/./', '/')
 
-        self.stdout.write(line)
-
         # check file type
         if node_type not in ['f', 'd']:
             self.stderr.write(_('Unkownn RSYNC file type received: %s') % line)
@@ -135,7 +133,7 @@ class Command(BaseCommand):
             return
 
         try:
-            old_version = node.get_latest_version()
+            old_version = node.get_current_version()
         except Version.DoesNotExist:
             old_version = None
         else:
@@ -166,7 +164,7 @@ class Command(BaseCommand):
         except Node.DoesNotExist:
             self.stderr.write(_("%s was removed by RSYNC, but it does not exist in the database!") % path)
             return
-        version = node.get_latest_version()
+        version = node.get_current_version()
         version.deleted = timezone.now()
         version.save()
 

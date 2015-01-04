@@ -29,9 +29,15 @@ class Node(models.Model):
 
     def get_latest_version(self):
         version_set = self.get_versions()
-        if not version_set.exists() or version_set[0].deleted:
+        if not version_set.exists():
             raise Version.DoesNotExist
         return version_set[0]
+
+    def get_current_version(self):
+        version = self.get_latest_version()
+        if version.deleted:
+            raise Version.DoesNotExist
+        return version
 
     def __unicode__(self):
         return unicode(self.path)
@@ -41,6 +47,13 @@ class Node(models.Model):
 
     def is_file(self):
         return not self.name.endswith(os.path.sep)
+
+    def restore(self):
+        if self.is_dir():
+            os.mkdir(self.abs_path())
+        elif self.is_file():
+            data = self.get_current_version().data
+            os.link(data.abs_path(), self.abs_path())
 
     @classmethod
     def get_or_create(cls, parent, name):
