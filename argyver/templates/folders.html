@@ -1,6 +1,6 @@
 {% load staticfiles %}
 
-<a href="/{{ location.root_node.path }}" title="{{ location.name }}""><h1><img src="{% static 'img/archive.png' %}" alt="{{ location.name }}" /> {{ location.name }}</h1></a>
+<a href="/{{ location.root_node.path }}"><h1><img src="{% static 'img/archive.png' %}" alt="{{ location.name }}" /> {{ location.name }}</h1></a>
 
 <ul class="folders">
 {% if current.parent %}
@@ -41,7 +41,7 @@
 {% if child.is_dir %}
     <li class="{% if child.exists %}open{% else %}closed{% endif %}">
         <a href="{{ child.url }}">
-            <img src="{% static 'img/ext/folder.png' %}" alt="{{ child.name | slice:":-1" }}" width="16" height="16" />
+            <img src="{% static 'img/ext/folder.png' %}" width="16" height="16" />
             {{ child.name | slice:":-1" }}
         </a>
     </li>

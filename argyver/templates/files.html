@@ -1,1 +1,65 @@
-FILES {{ node }}
+{% load staticfiles %}
+
+<h1>
+    <img src="{% static 'img/folder.png' %}" alt="{{ folder.name | slice:':-1' }}" />
+    {% if folder.parent %}{{ folder.name | slice:':-1' }}{% else %}{{ location.name }}{% endif %}
+</h1>
+
+{% if folder.node_set.exists %}
+<table width="100%" cellspacing="0" border="0" class="files">
+    <thead>
+        <tr>
+            <th>File</th>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Size</th>
+            <th>Versions</th>
+            <th>&nbsp;</th>
+        </tr>
+    </thead>
+    <tbody>
+{% for node in folder.node_set.all %}
+{% if node.is_dir %}
+        <tr class="file{% if node == current %} current{% endif %}{% if node.exists %} open{% else %} closed{% endif %}">
+            <td class="name">
+                <a href="{{ node.url }}">
+                    <img src="{{ node.icon }}" alt="{{ node.name | slice:':-1' | escape}}" width="16" height="16" />
+                    {{ node.name | slice:':-1' | escape}}
+                </a>
+            </td>
+            <td class="date">{{ node.get_latest_version.timestamp | date:"d-m-Y"}}</td>
+            <td class="time">{{ node.get_latest_version.timestamp | date:"H:i:s"}}</td>
+            <td class="size"></td>
+            <td class="versions">{{ node.version_set.count }}</td>
+            <td class="thumbnail"></td>
+        </tr>
+{% endif %}
+{% endfor %}
+{% for node in folder.node_set.all %}
+{% if node.is_file %}
+        <tr class="file{% if node == current %} current{% endif %}{% if node.exists %} open{% else %} closed{% endif %}">
+            <td class="name">
+                <a href="{{ node.url }}">
+                    <img src="{{ node.icon }}" alt="{{ node.name | escape }}" width="16" height="16" />
+                    {{ node.name | escape }}
+                </a>
+            </td>
+            <td class="date">{{ node.get_latest_version.timestamp | date:"d-m-Y"}}</td>
+            <td class="time">{{ node.get_latest_version.timestamp | date:"H:i:s"}}</td>
+            <td class="size">{{ node.get_latest_version.data.size | filesizeformat }}</td>
+            <td class="versions">{{ node.version_set.count }}</td>
+            <td class="thumbnail">
+                {% if node.thumbnail %}
+                <a href="{{ node.url }}">
+                    <img src="{% static 'img/thumbnail.png' %}" alt="{{ node.name | escape}}" width="16" height="14" />
+                </a>
+                {% endif %}
+            </td>
+        </tr>
+{% endif %}
+{% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>This folder is empty.</p>
+{% endif %}

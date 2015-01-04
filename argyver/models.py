@@ -1,6 +1,7 @@
 import os
 
 from django.utils.translation import ugettext as _
+from django.templatetags.static import static
 from django.db import models
 from django.conf import settings
 from django.utils.text import slugify
@@ -72,7 +73,7 @@ class Node(models.Model):
         return True
 
     def save(self, *args, **kwargs):
-        self.slug = slugify(self.name)
+        self.slug = slugify(self.name.replace('.', '-'))
         super(Node, self).save(*args, **kwargs)
 
     def __unicode__(self):
@@ -90,6 +91,32 @@ class Node(models.Model):
         elif self.is_file():
             data = self.get_current_version().data
             os.link(data.abs_path(), self.abs_path())
+
+    def icon(self):
+        if self.is_dir():
+            ext = 'folder'
+        else:
+            ext = self.name.lower().split('.')[-1]
+        icon = "img/ext/%s.png" % ext
+        if not os.path.isfile(os.path.join(settings.BASE_DIR, 'argyver', 'static', icon)):
+            icon = "img/ext/file.png"
+        return static(icon)
+
+    def thumbnail(self):
+        if self.is_dir():
+            return None
+        try:
+            version = self.get_latest_version()
+        except Version.DoesNotExist:
+            return None
+
+        thumb = version.data.path + '.png'
+        thumb = os.path.join(settings.AGV_THMB_DIR, thumb)
+        thumb = os.path.relpath(thumb, settings.AGV_DATA_DIR)
+        if not os.path.isfile(os.path.join(settings.AGV_DATA_DIR, thumb)):
+            return False
+
+        return static(thumb)
 
     @classmethod
     def get_or_create(cls, parent, name):

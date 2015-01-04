@@ -2,9 +2,9 @@
 {% if location_list %}
 <ul class="locations">
     {% for location in location_list %}
-    <li{% if location == current %} class="current"{% endif %}><a href="{{ location.root_node.url }}" title="{{ location.name }}">{{ location.name }}</a></li>
+    <li{% if location == current %} class="current"{% endif %}><a href="{{ location.root_node.url }}">{{ location.name }}</a></li>
     {% endfor %}
-    <li><a href="{% url 'admin:argyver_location_add' %}"" title="Add a location">+</a></li>
+    <li><a href="{% url 'admin:argyver_location_add' %}">+</a></li>
 </ul>
 {% else %}
 <p>No archives found. <a href="/admin/argyver/location/add/">Add a location</a></p>

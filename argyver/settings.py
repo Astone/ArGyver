@@ -13,6 +13,7 @@ ALLOWED_HOSTS = ['0.0.0.0']
 AGV_DATA_DIR = os.path.join(BASE_DIR, 'data')
 AGV_SNAP_DIR = os.path.join(AGV_DATA_DIR, 'snapshot')
 AGV_REPO_DIR = os.path.join(AGV_DATA_DIR, 'repository')
+AGV_THMB_DIR = os.path.join(AGV_DATA_DIR, 'thumbnails')
 
 # DATABASE
 DATABASES = {
@@ -69,7 +70,7 @@ USE_TZ = True
 
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'static'),
-    AGV_SNAP_DIR,
+    AGV_DATA_DIR,
 )
 
 STATIC_URL = '/static/'

@@ -1,4 +1,4 @@
-html, body, table
+html, body, table#argyver
 {
     margin: 0;
     padding: 0;
@@ -13,9 +13,9 @@ body, td
     color: #333;
 }
 
-td
+table td
 {
-    padding: 1em;
+    padding: 10px;
     text-align: left;
     vertical-align: top;
 }
@@ -170,8 +170,103 @@ ul.folders li img
 /* FILES */
 #files
 {
-
 }
+
+table.files
+{
+    border-top       : 1px solid #DEF;
+}
+
+table.files th
+{
+    background          : #9CF;
+}
+
+table.files th,
+table.files td
+{
+    font-size           : 10pt;
+    border-bottom       : 1px solid #DEF;
+    padding             : 1px 4px 3px 4px;
+    white-space         : nowrap;
+}
+
+table.files td img
+{
+    margin-bottom       : -4px;
+}
+
+table.files tbody tr:hover,
+table.files tr.current,
+table.files tr.current td a
+{
+    background          : #DEF;
+    color               : #F60;
+}
+
+table.files tr.current
+{
+    font-weight         : bold;
+}
+
+table.files tr.open td a
+{
+}
+
+table.files tr.closed td,
+table.files tr.closed td a
+{
+    color               : #AAA;
+}
+
+table.files tr.closed td a
+{
+    text-decoration     : line-through;
+}
+
+table.files tr.current.closed td a
+{
+    color               : #C96;
+}
+
+table.files tr.closed td a:hover
+{
+    color               : #F60;
+}
+
+table.files tr.closed td a img
+{
+    opacity             : 0.5;
+}
+
+
+table.files td.name
+{
+    overflow            : hidden;
+}
+
+table.files td.date,
+table.files td.time,
+table.files td.versions
+{
+    text-align          : center;
+}
+
+table.files td.size
+{
+    text-align          : right;
+}
+
+#files h1 img
+{
+    margin-bottom       : -8px;
+}
+
+table.files td.thumbnail
+{
+    text-align          : right;
+}
+
 
 /* VERSIONS */
 #versions

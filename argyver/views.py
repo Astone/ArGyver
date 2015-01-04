@@ -4,7 +4,7 @@ from django.template.loader import render_to_string
 from django.core.urlresolvers import reverse
 from django.conf import settings
 from models import Location, Node
-
+import re
 
 class ArgyverView(View):
     def get(self, request, path):
@@ -14,6 +14,7 @@ class ArgyverView(View):
             raise Http404()
         if html is None:
             return HttpResponseRedirect(reverse('admin:argyver_location_add'))
+        html = re.sub(r'\n\s+', '\n', html)
         return HttpResponse(html)
 
     def render_main(self, path):
@@ -33,7 +34,7 @@ class ArgyverView(View):
             'settings': settings,
             'locations': self.render_locations(location),
             'folders': self.render_folders(location, node),
-            'files': self.render_files(node),
+            'files': self.render_files(location, node),
             'versions': self.render_versions(node),
         }
         return render_to_string('main.html', context)
@@ -54,10 +55,12 @@ class ArgyverView(View):
         }
         return render_to_string('folders.html', context)
 
-    def render_files(self, node):
+    def render_files(self, location, node):
         context = {
             'settings': settings,
-            'node': node,
+            'location': location,
+            'folder': [node, node.parent][node.is_file()],
+            'current': node,
         }
         return render_to_string('files.html', context)
 
