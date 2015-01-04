@@ -2,7 +2,7 @@
 
 <h1>
     <img src="{% static 'img/folder.png' %}" alt="{{ folder.name | slice:':-1' }}" />
-    {% if folder.parent %}{{ folder.name | slice:':-1' }}{% else %}{{ location.name }}{% endif %}
+    {% if folder.parent %}{{ folder.name | slice:':-1' }}{% else %}{{ archive.name }}{% endif %}
 </h1>
 
 {% if folder.node_set.exists %}

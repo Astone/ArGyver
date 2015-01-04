@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-01-04 17:36+0100\n"
+"POT-Creation-Date: 2015-01-04 22:25+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,8 +19,8 @@ msgstr ""
 
 #: argyver/management/commands/cleanuparchive.py:24
 #, python-format
-msgid "Cleaning up \"%(location)s\" at %(timestamp)s"
-msgstr "\"%(location)s\" opruimen om %(timestamp)s"
+msgid "Cleaning up \"%(archive)s\" at %(timestamp)s"
+msgstr "\"%(archive)s\" opruimen om %(timestamp)s"
 
 #: argyver/management/commands/cleanuparchive.py:27
 msgid ""
@@ -74,8 +74,8 @@ msgstr "%s vrijgemaakt"
 
 #: argyver/management/commands/resetarchive.py:24
 #, python-format
-msgid "Resetting \"%(location)s\" at %(timestamp)s"
-msgstr "Ressetten van \"%(location)s\" om %(timestamp)s"
+msgid "Resetting \"%(archive)s\" at %(timestamp)s"
+msgstr "Ressetten van \"%(archive)s\" om %(timestamp)s"
 
 #: argyver/management/commands/resetarchive.py:28
 #, fuzzy
@@ -101,8 +101,8 @@ msgstr "Directory verwijderen: %s"
 
 #: argyver/management/commands/runargyver.py:71
 #, python-format
-msgid "Archiving \"%(location)s\" at %(timestamp)s"
-msgstr "Archiveren van \"%(location)s\" om %(timestamp)s"
+msgid "Archiving \"%(archive)s\" at %(timestamp)s"
+msgstr "Archiveren van \"%(archive)s\" om %(timestamp)s"
 
 #: argyver/management/commands/runargyver.py:72
 #, python-format
@@ -116,13 +116,13 @@ msgstr "Lokaal pad: %s"
 
 #: argyver/management/commands/runargyver.py:92
 #, python-format
-msgid "Error in: %s"
-msgstr "Fout in: %s"
-
-#: argyver/management/commands/runargyver.py:98
-#, python-format
 msgid "Keyboard Interrupt, finishing %d items in buffer..."
 msgstr "Keyboard Interrupt, %d items in de buffer worden nog afgerond..."
+
+#: argyver/management/commands/runargyver.py:97
+#, python-format
+msgid "Error in: %s"
+msgstr "Fout in: %s"
 
 #: argyver/management/commands/runargyver.py:113
 #, python-format
@@ -153,53 +153,53 @@ msgstr ""
 "Geprobeerd om %s aan de repository toe te voegen, maar het bestand bestaat "
 "niet!"
 
-#: argyver/models.py:90
+#: argyver/models.py:164
 msgid "file system node"
 msgstr "bestandsnode"
 
-#: argyver/models.py:91
+#: argyver/models.py:165
 msgid "file system nodes"
 msgstr "bestandsnodes"
 
-#: argyver/models.py:109
+#: argyver/models.py:184
 msgid "file in repository"
 msgstr "bestand in repository"
 
-#: argyver/models.py:110
+#: argyver/models.py:185
 msgid "files in repository"
 msgstr "bestanden in repository"
 
-#: argyver/models.py:124
+#: argyver/models.py:199
 msgid "deleted"
 msgstr "verwijderd"
 
-#: argyver/models.py:126
+#: argyver/models.py:201
 msgid "created"
 msgstr "aangemaakt"
 
-#: argyver/models.py:129
+#: argyver/models.py:204
 msgid "version"
 msgstr "versie"
 
-#: argyver/models.py:130
+#: argyver/models.py:205
 msgid "versions"
 msgstr "versies"
 
-#: argyver/models.py:138 argyver/models.py:144 argyver/models.py:147
+#: argyver/models.py:213 argyver/models.py:219 argyver/models.py:222
 #, python-format
 msgid "For example: %s"
 msgstr "Bijvoorbeeld: %s"
 
-#: argyver/models.py:141
+#: argyver/models.py:216
 #, python-format
 msgid "Default is: %s"
 msgstr "Standaard is: %s"
 
-#: argyver/models.py:147
+#: argyver/models.py:222
 msgid "which is equal to"
 msgstr "wat gelijk is aan"
 
-#: argyver/models.py:152
+#: argyver/models.py:227
 msgid ""
 "Only use this if you know what you are doing, it might break the ArGyver. "
 "Using -exclude and --include should be fine."
@@ -207,9 +207,9 @@ msgstr ""
 "Gebruik dit alleen als je weet waar je mee bezig bent, het kan de ArGyver "
 "stukmaken. Je kunt wel gewoon --exclude en --include gebruiken."
 
-#: argyver/models.py:158
+#: argyver/models.py:233
 msgid ""
-"Someone tried to create a new location. The slug of a location defines the "
+"Someone tried to create a new archive. The slug of a archive defines the "
 "root folder of the corresponding archive and according to the database this "
 "root folder already exists."
 msgstr ""
@@ -217,10 +217,10 @@ msgstr ""
 "definieert de 'root' directory van het archief en volgens de database "
 "bestaat deze 'root' directory al."
 
-#: argyver/models.py:182
-msgid "remote location"
-msgstr "remote lokatie"
+#: argyver/models.py:257
+msgid "archive"
+msgstr "archief"
 
-#: argyver/models.py:183
-msgid "remote locations"
-msgstr "remote lokaties"
+#: argyver/models.py:258
+msgid "archives"
+msgstr "archieven"

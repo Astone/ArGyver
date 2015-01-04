@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand, CommandError
-from argyver.models import Location, Node, Data, Version
+from argyver.models import Archive, Node, Data, Version
 from django.utils.translation import ugettext as _
 from django.conf import settings
 from django.utils import timezone
@@ -46,38 +46,38 @@ YXcstpoguax  path/to/file
 
 
 class Command(BaseCommand):
-    args = '<location location ...>'
-    help = 'Runs the ArGyver for specified locations'
+    args = '<archive archive ...>'
+    help = 'Runs the ArGyver for specified archives'
 
     BUFFER_SIZE = 4 * (2 ** 20)  # 4MB
 
     def handle(self, *args, **options):
-        location_list = []
+        archive_list = []
         for slug in args:
             try:
-                location_list.append(Location.objects.get(slug=slug))
-            except Location.DoesNotExist:
-                raise CommandError('Location "%s" does not exist' % slug)
+                archive_list.append(Archive.objects.get(slug=slug))
+            except Archive.DoesNotExist:
+                raise CommandError('Archive "%s" does not exist' % slug)
 
         started = timezone.now()
 
-        for location in location_list:
-            self._archive(location)
+        for archive in archive_list:
+            self._archive(archive)
 
         self.stdout.write(_('Finished in %d seconds') % (timezone.now() - started).total_seconds())
 
-    def _archive(self, location):
+    def _archive(self, archive):
         global mutex
-        self.stdout.write(_('Archiving "%(location)s" at %(timestamp)s') % {'location': location.name, 'timestamp': timezone.now()})
-        self.stdout.write(_('Remote path: %s') % location.url)
-        self.stdout.write(_('Local path: %s') % location.root_node.abs_path())
+        self.stdout.write(_('Archiving "%(archive)s" at %(timestamp)s') % {'archive': archive.name, 'timestamp': timezone.now()})
+        self.stdout.write(_('Remote path: %s') % archive.url)
+        self.stdout.write(_('Local path: %s') % archive.root_node.abs_path())
 
-        local_dir = os.path.dirname(location.root_node.abs_path())
+        local_dir = os.path.dirname(archive.root_node.abs_path())
         if not os.path.isdir(local_dir):
             os.makedirs(local_dir)
 
         mutex = Lock()
-        thread = RsyncThread(location, mutex)
+        thread = RsyncThread(archive, mutex)
         thread.start()
 
         while thread.isAlive() or thread.buffer:
@@ -86,12 +86,12 @@ class Command(BaseCommand):
                 line = thread.buffer.pop(0)
                 mutex.release()
                 try:
-                    self._process_output(line, location)
+                    self._process_output(line, archive)
                 except KeyboardInterrupt:
                     thread.process.kill()
                     self.stderr.write(_("Keyboard Interrupt, finishing %d items in buffer...") % max(len(thread.buffer) - 1, 0))
                     while len(thread.buffer) > 1:
-                        self._process_output(thread.buffer.pop(0), location)
+                        self._process_output(thread.buffer.pop(0), archive)
                     break
                 except BaseException as exception:
                     self.stderr.write(_("Error in: %s") % line)
@@ -102,11 +102,11 @@ class Command(BaseCommand):
         if thread.error:
             self.stderr.write(thread.error)
 
-    def _process_output(self, line, location):
+    def _process_output(self, line, archive):
         line = line.decode('utf-8')
         action = line[0]
         node_type = line[1]
-        path = os.path.join(location.root_node.path, line[12:]).replace('/./', '/')
+        path = os.path.join(archive.root_node.path, line[12:]).replace('/./', '/')
 
         # check file type
         if node_type not in ['f', 'd']:
@@ -212,8 +212,8 @@ class RsyncThread(Thread):
 
     MAX_BUFFER = 1000  # lines of output
 
-    def __init__(self, location, mutex):
-        self.location = location
+    def __init__(self, archive, mutex):
+        self.archive = archive
         self.mutex = mutex
         self.process = None
         self.buffer = []
@@ -246,8 +246,8 @@ class RsyncThread(Thread):
     def _get_rsync_cmd(self):
         rsync = settings.AGV_RSYNC_BIN
         rsync += ' -aH --out-format=\'%i %n\' --delete --delete-excluded '
-        if self.location.remote_port != 22:
-            rsync += '-e \'ssh -p %d\'' % self.location.remote_port
-        rsync += self.location.rsync_arguments
-        rsync += " \"%s\" \"%s\"" % (self.location.url, self.location.root_node.abs_path())
+        if self.archive.remote_port != 22:
+            rsync += '-e \'ssh -p %d\'' % self.archive.remote_port
+        rsync += self.archive.rsync_arguments
+        rsync += " \"%s\" \"%s\"" % (self.archive.url, self.archive.root_node.abs_path())
         return rsync

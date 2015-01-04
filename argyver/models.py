@@ -205,7 +205,7 @@ class Version(models.Model):
         verbose_name_plural = _('versions')
 
 
-class Location(models.Model):
+class Archive(models.Model):
     name = models.CharField(max_length=255, unique=True)
     slug = models.SlugField(max_length=32, unique=True)
     remote_host = models.CharField(
@@ -230,12 +230,12 @@ class Location(models.Model):
     def save(self, *args, **kwargs):
         if self.id is None:
             if Node.objects.filter(name=self.slug + '/', parent=None).exists():
-                raise ArGyverException(_("Someone tried to create a new location. The slug of a location defines the root folder of the corresponding archive and according to the database this root folder already exists."))
+                raise ArGyverException(_("Someone tried to create a new archive. The slug of a archive defines the root folder of the corresponding archive and according to the database this root folder already exists."))
             self.root_node = Node(name=self.slug + '/')
             self.root_node.save()
             self.root_node_id = self.root_node.id
         self.remote_path = self.remote_path.replace('*', '').rstrip('/') + '/'
-        super(Location, self).save(*args, **kwargs)
+        super(Archive, self).save(*args, **kwargs)
 
     @property
     def url(self):
@@ -247,12 +247,12 @@ class Location(models.Model):
 
     @classmethod
     def get_first(cls):
-        if Location.objects.exists():
-            return Location.objects.order_by('name')[0]
+        if Archive.objects.exists():
+            return Archive.objects.order_by('name')[0]
         else:
-            raise Location.DoesNotExist
+            raise Archive.DoesNotExist
 
     class Meta:
         ordering = ['name']
-        verbose_name = _('remote location')
-        verbose_name_plural = _('remote locations')
+        verbose_name = _('archive')
+        verbose_name_plural = _('archives')

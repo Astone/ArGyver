@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand, CommandError
-from argyver.models import Location
+from argyver.models import Archive
 from django.utils.translation import ugettext as _
 from django.utils import timezone
 import shutil
@@ -7,22 +7,22 @@ import os
 
 
 class Command(BaseCommand):
-    args = '<location location ...>'
+    args = '<archive archive ...>'
     help = 'Syncs the files on disk with the files in the database (db is leading)'
 
     def handle(self, *args, **options):
-        location_list = []
+        archive_list = []
         for slug in args:
             try:
-                location_list.append(Location.objects.get(slug=slug))
-            except Location.DoesNotExist:
-                raise CommandError('Location "%s" does not exist' % slug)
+                archive_list.append(Archive.objects.get(slug=slug))
+            except Archive.DoesNotExist:
+                raise CommandError('Archive "%s" does not exist' % slug)
 
         started = timezone.now()
 
-        for location in location_list:
-            self.stdout.write(_('Cleaning up "%(location)s" at %(timestamp)s') % {'location': location.name, 'timestamp': started})
-            self._cleanup(location.root_node)
+        for archive in archive_list:
+            self.stdout.write(_('Cleaning up "%(archive)s" at %(timestamp)s') % {'archive': archive.name, 'timestamp': started})
+            self._cleanup(archive.root_node)
 
         self.stdout.write(_('Note that only the links are removed; the actual data is still stored in the repository.'))
         self.stdout.write(_('Run ./manage.py cleanupargyver to remove the data as well.'))

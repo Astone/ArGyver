@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 4.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-01-04 17:36+0100\n"
+"POT-Creation-Date: 2015-01-04 22:25+0100\n"
 "PO-Revision-Date: 2015-01-03 18:00+0000\n"
 "Last-Translator: Bram Stoeller <bram@stoeller.nl>\n"
 "Language-Team: English\n"
@@ -18,7 +18,7 @@ msgstr ""
 
 #: argyver/management/commands/cleanuparchive.py:24
 #, python-format
-msgid "Cleaning up \"%(location)s\" at %(timestamp)s"
+msgid "Cleaning up \"%(archive)s\" at %(timestamp)s"
 msgstr ""
 
 #: argyver/management/commands/cleanuparchive.py:27
@@ -71,7 +71,7 @@ msgstr ""
 
 #: argyver/management/commands/resetarchive.py:24
 #, python-format
-msgid "Resetting \"%(location)s\" at %(timestamp)s"
+msgid "Resetting \"%(archive)s\" at %(timestamp)s"
 msgstr ""
 
 #: argyver/management/commands/resetarchive.py:28
@@ -92,7 +92,7 @@ msgstr ""
 
 #: argyver/management/commands/runargyver.py:71
 #, python-format
-msgid "Archiving \"%(location)s\" at %(timestamp)s"
+msgid "Archiving \"%(archive)s\" at %(timestamp)s"
 msgstr ""
 
 #: argyver/management/commands/runargyver.py:72
@@ -107,12 +107,12 @@ msgstr ""
 
 #: argyver/management/commands/runargyver.py:92
 #, python-format
-msgid "Error in: %s"
+msgid "Keyboard Interrupt, finishing %d items in buffer..."
 msgstr ""
 
-#: argyver/management/commands/runargyver.py:98
+#: argyver/management/commands/runargyver.py:97
 #, python-format
-msgid "Keyboard Interrupt, finishing %d items in buffer..."
+msgid "Error in: %s"
 msgstr ""
 
 #: argyver/management/commands/runargyver.py:113
@@ -140,69 +140,69 @@ msgstr ""
 msgid "Tried to add %s to the repository, but the file doesn't exist!"
 msgstr ""
 
-#: argyver/models.py:90
+#: argyver/models.py:164
 msgid "file system node"
 msgstr ""
 
-#: argyver/models.py:91
+#: argyver/models.py:165
 msgid "file system nodes"
 msgstr ""
 
-#: argyver/models.py:109
+#: argyver/models.py:184
 msgid "file in repository"
 msgstr ""
 
-#: argyver/models.py:110
+#: argyver/models.py:185
 msgid "files in repository"
 msgstr ""
 
-#: argyver/models.py:124
+#: argyver/models.py:199
 msgid "deleted"
 msgstr ""
 
-#: argyver/models.py:126
+#: argyver/models.py:201
 msgid "created"
 msgstr ""
 
-#: argyver/models.py:129
+#: argyver/models.py:204
 msgid "version"
 msgstr ""
 
-#: argyver/models.py:130
+#: argyver/models.py:205
 msgid "versions"
 msgstr ""
 
-#: argyver/models.py:138 argyver/models.py:144 argyver/models.py:147
+#: argyver/models.py:213 argyver/models.py:219 argyver/models.py:222
 #, python-format
 msgid "For example: %s"
 msgstr ""
 
-#: argyver/models.py:141
+#: argyver/models.py:216
 #, python-format
 msgid "Default is: %s"
 msgstr ""
 
-#: argyver/models.py:147
+#: argyver/models.py:222
 msgid "which is equal to"
 msgstr ""
 
-#: argyver/models.py:152
+#: argyver/models.py:227
 msgid ""
 "Only use this if you know what you are doing, it might break the ArGyver. "
 "Using -exclude and --include should be fine."
 msgstr ""
 
-#: argyver/models.py:158
+#: argyver/models.py:233
 msgid ""
-"Someone tried to create a new location. The slug of a location defines the "
+"Someone tried to create a new archive. The slug of a archive defines the "
 "root folder of the corresponding archive and according to the database this "
 "root folder already exists."
 msgstr ""
 
-#: argyver/models.py:182
-msgid "remote location"
+#: argyver/models.py:257
+msgid "archive"
 msgstr ""
 
-#: argyver/models.py:183
-msgid "remote locations"
+#: argyver/models.py:258
+msgid "archives"
 msgstr ""

@@ -1,11 +1,11 @@
 <h1>ArGyver v{{ settings.AGV_VERSION }}</h1>
-{% if location_list %}
-<ul class="locations">
-    {% for location in location_list %}
-    <li{% if location == current %} class="current"{% endif %}><a href="{{ location.root_node.url }}">{{ location.name }}</a></li>
+{% if archive_list %}
+<ul class="archives">
+    {% for archive in archive_list %}
+    <li{% if archive == current %} class="current"{% endif %}><a href="{{ archive.root_node.url }}">{{ archive.name }}</a></li>
     {% endfor %}
-    <li><a href="{% url 'admin:argyver_location_add' %}">+</a></li>
+    <li><a href="{% url 'admin:argyver_archive_add' %}">+</a></li>
 </ul>
 {% else %}
-<p>No archives found. <a href="/admin/argyver/location/add/">Add a location</a></p>
+<p>No archives found. <a href="/admin/argyver/archive/add/">Add a archive</a></p>
 {% endif %}

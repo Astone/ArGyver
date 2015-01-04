@@ -3,7 +3,7 @@ from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.template.loader import render_to_string
 from django.core.urlresolvers import reverse
 from django.conf import settings
-from models import Location, Node
+from models import Archive, Node
 import re
 
 class ArgyverView(View):
@@ -13,52 +13,52 @@ class ArgyverView(View):
         except Node.DoesNotExist:
             raise Http404()
         if html is None:
-            return HttpResponseRedirect(reverse('admin:argyver_location_add'))
+            return HttpResponseRedirect(reverse('admin:argyver_archive_add'))
         html = re.sub(r'\n\s+', '\n', html)
         return HttpResponse(html)
 
     def render_main(self, path):
         if path:
             root_node = Node.get_from_url(path.split('/')[0])
-            location = Location.objects.get(root_node=root_node)
+            archive = Archive.objects.get(root_node=root_node)
             node = Node.get_from_url(path)
         else:
             try:
-                location = Location.get_first()
-            except Location.DoesNotExist:
+                archive = Archive.get_first()
+            except Archive.DoesNotExist:
                 return None
             else:
-                node = location.root_node
+                node = archive.root_node
 
         context = {
             'settings': settings,
-            'locations': self.render_locations(location),
-            'folders': self.render_folders(location, node),
-            'files': self.render_files(location, node),
+            'archives': self.render_archives(archive),
+            'folders': self.render_folders(archive, node),
+            'files': self.render_files(archive, node),
             'versions': self.render_versions(node),
         }
         return render_to_string('main.html', context)
 
-    def render_locations(self, location):
+    def render_archives(self, archive):
         context = {
             'settings': settings,
-            'location_list': Location.objects.all(),
-            'current': location,
+            'archive_list': Archive.objects.all(),
+            'current': archive,
         }
-        return render_to_string('locations.html', context)
+        return render_to_string('archives.html', context)
 
-    def render_folders(self, location, node):
+    def render_folders(self, archive, node):
         context = {
             'settings': settings,
-            'location': location,
+            'archive': archive,
             'current': node,
         }
         return render_to_string('folders.html', context)
 
-    def render_files(self, location, node):
+    def render_files(self, archive, node):
         context = {
             'settings': settings,
-            'location': location,
+            'archive': archive,
             'folder': [node, node.parent][node.is_file()],
             'current': node,
         }
