@@ -2,7 +2,7 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 # CONVENIENCE
-LANGUAGE_CODE = 'nl-nl'
+LANGUAGE_CODE = 'en-gb'
 TIME_ZONE = 'CET'
 
 # SECURITY

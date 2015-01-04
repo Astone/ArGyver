@@ -6,8 +6,14 @@
         <title>ArGyver v{{settings.AGV_VERSION}}</title>
         <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}" />
     </head>
-    <div id="locations">{{ locations }}</div>
-    <div id="folders"></div>
-    <div id="files"></div>
-    <div id="versions"></div>
+    <table id="argyver" cellspacing="0" cellpadding="0" border="0">
+        <tr>
+            <td colspan="3" id="locations">{{ locations }}</td>
+        </tr>
+        <tr>
+            <td id="folders">{{ folders }}</td>
+            <td id="files">{{ files }}</td>
+            <td id="versions">{{ versions }}</td>
+        </tr>
+    </table>
 </html>

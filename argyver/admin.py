@@ -1,10 +1,5 @@
 from django.contrib import admin
-from models import Location, Node, Data, Version
-
-
-class VersionInline(admin.TabularInline):
-    model = Version
-    extra = 0
+from models import Location
 
 
 class LocationAdmin(admin.ModelAdmin):
@@ -17,16 +12,4 @@ class LocationAdmin(admin.ModelAdmin):
             fields += ('slug',)
         return fields
 
-
-class NodeAdmin(admin.ModelAdmin):
-    inlines = [VersionInline]
-
-
-class DataAdmin(admin.ModelAdmin):
-    inlines = [VersionInline]
-
-
 admin.site.register(Location, LocationAdmin)
-admin.site.register(Node, NodeAdmin)
-admin.site.register(Data, DataAdmin)
-admin.site.register(Version)

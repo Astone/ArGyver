@@ -1,14 +1,23 @@
-html, body, div
+html, body, table
 {
     margin: 0;
     padding: 0;
+    width: 100%;
+    height: 100%;
 }
 
-body
+body, td
 {
     font-family: Arial;
     font-size: 10pt;
     color: #333;
+}
+
+td
+{
+    padding: 1em;
+    text-align: left;
+    vertical-align: top;
 }
 
 a
@@ -27,17 +36,16 @@ img
     border: 0;
 }
 
-.container
-{
-    margin: 0 1em;
-}
-
 /* LOCATIONS */
 #locations
 {
-    width: 100%;
-    height: 100px;
+    height: 80px;
     border-bottom: 4px solid #ccc;
+}
+
+#locations h1
+{
+    margin: 0;
 }
 
 ul.locations
@@ -74,17 +82,100 @@ ul.locations li.current a
     color: #fff;
 }
 
+/* FOLDERS */
 #folders
 {
-
+    width: 240px;
+    border-right: 4px solid #ccc;
 }
 
+ul.folders
+{
+    margin: 0;
+    padding: 0;
+}
+
+ul.folders ul
+{
+    padding-left: 1.2em;
+}
+
+ul.folders li
+{
+    list-style: none;
+    white-space: nowrap;
+}
+
+ul.folders li.current,
+ul.folders li.current a
+{
+    font-weight: bold;
+    color: #F60;
+}
+
+ul.folders li.current li,
+ul.folders li.current li a
+{
+    font-weight: normal;
+    color: #333;
+}
+
+ul.folders li.current li a:hover
+{
+    color: #F60;
+}
+
+ul.folders li.open a,
+ul.folders li.current.open a
+{
+}
+
+ul.folders li.closed,
+ul.folders li.closed a
+{
+    text-decoration: line-through;
+    color: #AAA;
+}
+
+ul.folders li.closed a img
+{
+    opacity: 0.5;
+}
+
+ul.folders li.current.closed a
+{
+    text-decoration: line-through;
+    color: #C96;
+}
+
+ul.folders li.current li.closed a
+{
+    text-decoration: line-through;
+    color: #AAA;
+}
+
+ul.folders h1 img
+{
+    margin-bottom: -8px;
+}
+
+ul.folders li img
+{
+    margin-top: 2px;
+    margin-bottom: -4px;
+    margin-right: 2px;
+}
+
+
+/* FILES */
 #files
 {
 
 }
 
+/* VERSIONS */
 #versions
 {
-
+    width: 240px;
+    border-left: 4px solid #ccc;
 }

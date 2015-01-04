@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'verbose_name': 'file in repository',
-                'verbose_name_plural': 'file in repository',
+                'verbose_name_plural': 'files in repository',
             },
             bases=(models.Model,),
         ),
@@ -47,6 +47,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('name', models.CharField(max_length=255, db_index=True)),
+                ('slug', models.CharField(max_length=255, db_index=True)),
                 ('parent', models.ForeignKey(blank=True, to='argyver.Node', null=True)),
             ],
             options={

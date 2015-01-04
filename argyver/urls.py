@@ -4,6 +4,6 @@ from views import ArgyverView
 
 urlpatterns = patterns(
     '',
-    url(r'^(?P<path>.*)/?$', ArgyverView.as_view()),
     url(r'^admin/', include(admin.site.urls)),
+    url(r'^(?P<path>.*)/?$', ArgyverView.as_view()),
 )

@@ -3,7 +3,7 @@ import os
 from django.utils.translation import ugettext as _
 from django.db import models
 from django.conf import settings
-
+from django.utils.text import slugify
 
 ArGyverException = Exception
 
@@ -11,6 +11,7 @@ ArGyverException = Exception
 class Node(models.Model):
     parent = models.ForeignKey('self', blank=True, null=True)
     name = models.CharField(max_length=255, db_index=True)
+    slug = models.CharField(max_length=255, db_index=True)
 
     unique_together = (('parent', 'name'),)
 
@@ -20,8 +21,32 @@ class Node(models.Model):
             return os.path.join(self.parent.path, self.name)
         return self.name
 
+    @property
+    def url(self):
+        if self.parent:
+            url = self.parent.url
+        else:
+            url = '/'
+        url += self.slug
+        if self.name.endswith(os.path.sep):
+            url += '/'
+        return url
+
     def abs_path(self):
         return os.path.join(settings.AGV_SNAP_DIR, self.path)
+
+    def parents(self):
+        parents = []
+        node = self.parent
+        while node and node.parent:
+            parents = [node] + parents
+            node = node.parent
+        return parents
+
+    def siblings(self):
+        if self.parent:
+            return self.parent.node_set.all()
+        return []
 
     def get_versions(self):
         version_set = Version.objects.filter(node=self).order_by('-created')
@@ -38,6 +63,17 @@ class Node(models.Model):
         if version.deleted:
             raise Version.DoesNotExist
         return version
+
+    def exists(self):
+        try:
+            self.get_latest_version()
+        except Version.DoesNotExist:
+            return False
+        return True
+
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.name)
+        super(Node, self).save(*args, **kwargs)
 
     def __unicode__(self):
         return unicode(self.path)
@@ -86,9 +122,21 @@ class Node(models.Model):
             node = Node.objects.get(parent=node, name=name)
         return node
 
+    @classmethod
+    def get_from_url(cls, url):
+        node_list = url.split('/')
+        node = None
+        for slug in node_list[:-1]:
+            node = Node.objects.get(parent=node, slug=slug)
+        slug = node_list[-1]
+        if slug:
+            node = Node.objects.get(parent=node, slug=slug)
+        return node
+
     class Meta:
         verbose_name = _('file system node')
         verbose_name_plural = _('file system nodes')
+        ordering = ['name']
 
 
 class Data(models.Model):

@@ -80,24 +80,24 @@ class Command(BaseCommand):
         thread = RsyncThread(location, mutex)
         thread.start()
 
-        try:
-            while thread.isAlive() or thread.buffer:
-                if len(thread.buffer) > 1 or not thread.isAlive():
-                    mutex.acquire()
-                    line = thread.buffer.pop(0)
-                    mutex.release()
-                    try:
-                        self._process_output(line, location)
-                    except KeyboardInterrupt as exception:
-                        self.stderr.write(_("Error in: %s") % line)
-                        self.stderr.write("%s: %s" % (type(exception).__name__, str(exception)))
+        while thread.isAlive() or thread.buffer:
+            if len(thread.buffer) > 1 or not thread.isAlive():
+                mutex.acquire()
+                line = thread.buffer.pop(0)
+                mutex.release()
+                try:
+                    self._process_output(line, location)
+                except KeyboardInterrupt:
+                    thread.process.kill()
+                    self.stderr.write(_("Keyboard Interrupt, finishing %d items in buffer...") % max(len(thread.buffer) - 1, 0))
+                    while len(thread.buffer) > 1:
+                        self._process_output(thread.buffer.pop(0), location)
+                    break
+                except BaseException as exception:
+                    self.stderr.write(_("Error in: %s") % line)
+                    self.stderr.write("%s: %s" % (type(exception).__name__, str(exception)))
             else:
                 sleep(1)
-        except KeyboardInterrupt:
-            thread.process.kill()
-            self.stderr.write(_("Keyboard Interrupt, finishing %d items in buffer...") % max(len(thread.buffer) - 1, 0  ))
-            while len(thread.buffer) > 1:
-                self._process_output(thread.buffer.pop(0), location)
 
         if thread.error:
             self.stderr.write(thread.error)
