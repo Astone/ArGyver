@@ -107,7 +107,7 @@ class Data(models.Model):
 
     class Meta:
         verbose_name = _('file in repository')
-        verbose_name_plural = _('file in repository')
+        verbose_name_plural = _('files in repository')
 
 
 class Version(models.Model):
@@ -149,13 +149,13 @@ class Location(models.Model):
         max_length=255,
         blank=True,
         null=True,
-        help_text=_('AGV_WARNING_RSYNC_ARGUMENTS'))
+        help_text=_('Only use this if you know what you are doing, it might break the ArGyver. Using -exclude and --include should be fine.'))
     root_node = models.ForeignKey(Node, unique=True, editable=False)
 
     def save(self, *args, **kwargs):
         if self.id is None:
             if Node.objects.filter(name=self.slug + '/', parent=None).exists():
-                raise ArGyverException(_('AGV_EXCEPTION_LOCATION_ROOT_FOLDER_EXISTS'))
+                raise ArGyverException(_("Someone tried to create a new location. The slug of a location defines the root folder of the corresponding archive and according to the database this root folder already exists."))
             self.root_node = Node(name=self.slug + '/')
             self.root_node.save()
             self.root_node_id = self.root_node.id

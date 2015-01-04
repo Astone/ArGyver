@@ -33,7 +33,7 @@ class Migration(migrations.Migration):
                 ('remote_port', models.SmallIntegerField(default=22, help_text='Default is: 22')),
                 ('remote_user', models.CharField(help_text='For example: angus', max_length=64)),
                 ('remote_path', models.CharField(help_text='For example: Documents/ (which is equal to /home/angus/Documents/)', max_length=255)),
-                ('rsync_arguments', models.CharField(help_text='AGV_WARNING_RSYNC_ARGUMENTS', max_length=255, null=True, blank=True)),
+                ('rsync_arguments', models.CharField(help_text='Only use this if you know what you are doing, it might break the ArGyver. Using -exclude and --include should be fine.', max_length=255, null=True, blank=True)),
             ],
             options={
                 'ordering': ['name'],

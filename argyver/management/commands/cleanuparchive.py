@@ -24,7 +24,7 @@ class Command(BaseCommand):
             self.stdout.write(_('Cleaning up "%(location)s" at %(timestamp)s') % {'location': location.name, 'timestamp': started})
             self._cleanup(location.root_node)
 
-        self.stdout.write(_('Note that only the links are removed; the actual data is still stored in the repository'))
+        self.stdout.write(_('Note that only the links are removed; the actual data is still stored in the repository.'))
         self.stdout.write(_('Run ./manage.py cleanupargyver to remove the data as well.'))
         self.stdout.write(_('Finished in %d seconds') % (timezone.now() - started).total_seconds())
 

@@ -129,7 +129,7 @@ class Command(BaseCommand):
         node = Node.get_or_create_from_path(path)
 
         if not os.path.exists(node.abs_path()):
-            self.stderr.write(_('Tried to add node %s, but it does not exist on disk!') % node.path)
+            self.stderr.write(_('Tried to add %s to the database, but it does not exist on disk!') % node.path)
             return
 
         try:
