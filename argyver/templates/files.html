@@ -28,7 +28,7 @@
                 </a>
             </td>
             <td class="date">{{ node.get_latest_version.timestamp | date:"d-m-Y"}}</td>
-            <td class="time">{{ node.get_latest_version.timestamp | date:"H:i:s"}}</td>
+            <td class="time">{{ node.get_latest_version.timestamp | date:"H:i"}}</td>
             <td class="size"></td>
             <td class="versions">{{ node.version_set.count }}</td>
             <td class="thumbnail"></td>
@@ -45,7 +45,7 @@
                 </a>
             </td>
             <td class="date">{{ node.get_latest_version.timestamp | date:"d-m-Y"}}</td>
-            <td class="time">{{ node.get_latest_version.timestamp | date:"H:i:s"}}</td>
+            <td class="time">{{ node.get_latest_version.timestamp | date:"H:i"}}</td>
             <td class="size">{{ node.get_latest_version.data.size | filesizeformat }}</td>
             <td class="versions">{{ node.version_set.count }}</td>
             <td class="thumbnail">

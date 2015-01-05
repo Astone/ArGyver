@@ -3,7 +3,9 @@ from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.template.loader import render_to_string
 from django.core.urlresolvers import reverse
 from django.conf import settings
-from models import Archive, Node
+from models import Archive, Node, Version
+from django.utils import timezone
+from datetime import datetime
 import re
 
 class ArgyverView(View):
@@ -70,3 +72,29 @@ class ArgyverView(View):
             'node': node,
         }
         return render_to_string('versions.html', context)
+
+
+class DownloadView(View):
+    def get(self, request, path, version):
+        try:
+            node = Node.get_from_url(path)
+        except Node.DoesNotExist:
+            raise Http404()
+
+        try:
+            created = datetime.strptime(version, '%Y%m%d-%H%M%S')
+            created = timezone.get_current_timezone().localize(created)
+            version = node.version_set.get(created=created)
+        except Version.DoesNotExist:
+            raise Http404()
+
+        response = HttpResponse()
+        del response['Content-Type']
+        response['Content-Disposition'] = 'attachment; filename=%s' % node.name.encode('utf-8')
+        response['Content-Length'] = version.data.size
+        if settings.DEBUG:
+            with open(version.data.abs_path(), 'rb') as fp:
+                response.content = fp.read()
+        else:
+            response['X-Sendfile'] = version.data.abs_path().encode('utf-8')
+        return response

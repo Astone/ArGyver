@@ -1,1 +1,26 @@
-VERSIONS {{ node }}
+{% load staticfiles %}
+
+<h1>{% if node %}{{ node.name }}{% else %}Versions{% endif %}</h1>
+{% if node.thumbnail %}<img src="{{ node.thumbnail }}" class="thumbnail" />{% endif %}
+<ul>
+{% for version in node.version_set.all %}
+    <li class="open">
+        <a href="{{ version.url }}" target="_blank">
+        <img src="{{ version.node.icon }}" width="16" height="16" />
+        {% if forloop.last and not version.deleted %}<strong>{% endif %}
+        {{ version.created | date:"D d M Y" }}
+        <ul><li>{{ version.created | date:"d-m-Y | H:i" }}{% if node.is_file %} | {{ version.data.size | filesizeformat }}{% endif %}</li></ul>
+        {% if forloop.last and not version.deleted %}</strong>{% endif %}
+    </a>
+</li>
+{% if version.deleted %}
+    <li class="closed">
+        <img src="{% static 'img/deleted.png' %}" width="16" height="16" />
+        {{ version.deleted | date:"D d M Y" }}
+        <ul><li>deleted</li></ul>
+    </li>
+{% endif %}
+{% empty %}
+<p>No versions found.</p>
+{% endfor %}
+</ul>

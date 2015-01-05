@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand, CommandError
-from argyver.models import Archive, Node, Data, Version
+from argyver.models import Archive, Node, Data, Version, ArGyverException
 from django.utils.translation import ugettext as _
 from django.conf import settings
 from django.utils import timezone
@@ -9,6 +9,8 @@ from hashlib import md5
 import subprocess
 import signal
 import os
+import re
+
 
 """
 Some background information on rsync output:
@@ -50,6 +52,7 @@ class Command(BaseCommand):
     help = 'Runs the ArGyver for specified archives'
 
     BUFFER_SIZE = 4 * (2 ** 20)  # 4MB
+    valid_line = re.compile(r'^[<>ch.*][fdLDS][.+c][.+s][.+t][.+p][.+o][.+g][.+u][.+a][.+x] ')
 
     def handle(self, *args, **options):
         archive_list = []
@@ -103,6 +106,9 @@ class Command(BaseCommand):
             self.stderr.write(thread.error)
 
     def _process_output(self, line, archive):
+        if not line.startswith('*') and not self.valid_line.match(line):
+            raise ArGyverException('Invalid line')
+
         line = line.decode('utf-8')
         action = line[0]
         node_type = line[1]
@@ -125,7 +131,7 @@ class Command(BaseCommand):
             self._add_or_update_node(path)
 
     def _add_or_update_node(self, path):
-        print "Add:", path
+        self.stdout.write(_("Add: %s") % path)
         node = Node.get_or_create_from_path(path)
 
         if not os.path.exists(node.abs_path()):
@@ -150,15 +156,14 @@ class Command(BaseCommand):
             data = None
 
         new_version = Version(node=node, data=data, timestamp=timestamp, created=timezone.now())
-        if old_version and old_version.data == new_version.data:
-            old_version.timestamp = new_version.timestamp
+        if old_version and old_version.data == new_version.data and old_version.timestamp == new_version.timestamp:
             old_version.deleted = None
             old_version.save()
         else:
             new_version.save()
 
     def _delete_node(self, path):
-        print "Delete:", path
+        self.stdout.write(_("Delete: %s") % path)
         try:
             node = Node.get_from_path(path)
         except Node.DoesNotExist:

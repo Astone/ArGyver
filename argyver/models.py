@@ -5,6 +5,8 @@ from django.templatetags.static import static
 from django.db import models
 from django.conf import settings
 from django.utils.text import slugify
+from django.core.urlresolvers import reverse
+from django.utils import timezone
 
 ArGyverException = Exception
 
@@ -110,13 +112,7 @@ class Node(models.Model):
         except Version.DoesNotExist:
             return None
 
-        thumb = version.data.path + '.png'
-        thumb = os.path.join(settings.AGV_THMB_DIR, thumb)
-        thumb = os.path.relpath(thumb, settings.AGV_DATA_DIR)
-        if not os.path.isfile(os.path.join(settings.AGV_DATA_DIR, thumb)):
-            return False
-
-        return static(thumb)
+        return version.data.thumbnail()
 
     @classmethod
     def get_or_create(cls, parent, name):
@@ -174,11 +170,25 @@ class Data(models.Model):
     def path(self):
         return os.path.join(self.hash[:2], self.hash)
 
+    @property
+    def url(self):
+        url = os.path.relpath(self.abs_path(), settings.AGV_DATA_DIR)
+        return static(url)
+
     def abs_path(self):
         return os.path.join(settings.AGV_REPO_DIR, self.path)
 
     def __unicode__(self):
         return unicode(self.path)
+
+    def thumbnail(self):
+        thumb = self.path + '.png'
+        thumb = os.path.join(settings.AGV_THMB_DIR, thumb)
+        thumb = os.path.relpath(thumb, settings.AGV_DATA_DIR)
+        if not os.path.isfile(os.path.join(settings.AGV_DATA_DIR, thumb)):
+            return False
+
+        return static(thumb)
 
     class Meta:
         verbose_name = _('file in repository')
@@ -200,9 +210,16 @@ class Version(models.Model):
         else:
             return "%s %s: (%s)" % (unicode(self.node), _('created'), self.created)
 
+    @property
+    def url(self):
+        if not self.data:
+            return '.'
+        return reverse('download', kwargs={'path': self.node.url.strip('/'), 'version': self.created.astimezone(timezone.get_current_timezone()).strftime('%Y%m%d-%H%M%S')})
+
     class Meta:
         verbose_name = _('version')
         verbose_name_plural = _('versions')
+        ordering = ['created']
 
 
 class Archive(models.Model):

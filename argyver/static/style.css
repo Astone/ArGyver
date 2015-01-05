@@ -13,7 +13,7 @@ body, td
     color: #333;
 }
 
-table td
+td
 {
     padding: 10px;
     text-align: left;
