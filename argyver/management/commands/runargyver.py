@@ -146,9 +146,12 @@ class Command(BaseCommand):
             old_version.deleted = timezone.now()
             old_version.save()
 
-        timestamp = os.path.getmtime(node.abs_path())
-        timestamp = timezone.datetime.fromtimestamp(timestamp)
-        timestamp = timezone.make_aware(timestamp, timezone.get_default_timezone())
+        if node.is_file():
+            timestamp = os.path.getmtime(node.abs_path())
+            timestamp = timezone.datetime.fromtimestamp(timestamp)
+            timestamp = timezone.make_aware(timestamp, timezone.get_default_timezone())
+        else:
+            timestamp = None
 
         if node.is_file():
             data = self._add_file_to_repo(node)
@@ -253,6 +256,7 @@ class RsyncThread(Thread):
         rsync += ' -aH --out-format=\'%i %n\' --outbuf=l --delete --delete-excluded '
         if self.archive.remote_port != 22:
             rsync += '-e \'ssh -p %d\'' % self.archive.remote_port
-        rsync += self.archive.rsync_arguments
+        if self.archive.rsync_arguments:
+            rsync += self.archive.rsync_arguments
         rsync += " \"%s\" \"%s\"" % (self.archive.url, self.archive.root_node.abs_path())
         return rsync

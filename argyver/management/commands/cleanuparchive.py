@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand, CommandError
-from argyver.models import Archive
+from argyver.models import Archive, ArGyverException
 from django.utils.translation import ugettext as _
 from django.utils import timezone
 import shutil
@@ -56,7 +56,9 @@ class Command(BaseCommand):
         for node in node_list:
             node_path = os.path.join(path, node)
             self.stdout.write(_('Removing %s') % node_path)
-            if os.path.isdir(node_path):
+            if os.path.islink(node_path):
+                os.remove(node_path)
+            elif os.path.isdir(node_path):
                 shutil.rmtree(node_path)
             elif os.path.isfile(node_path):
                 os.remove(node_path)
@@ -64,4 +66,7 @@ class Command(BaseCommand):
     def _restore_fs(self, node_list):
         for node in node_list:
             self.stdout.write(_('Restoring %s') % node.abs_path())
-            node.restore()
+            try:
+                node.restore()
+            except ArGyverException as e:
+                self.stderr.write(str(e))
