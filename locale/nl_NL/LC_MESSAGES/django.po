@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-01-04 22:25+0100\n"
+"POT-Creation-Date: 2015-01-10 00:16+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,6 +16,94 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+#: argyver/models.py:99
+#, fuzzy, python-format
+msgid "Tried to restore %(dst)s, but %(str)s does not exist!"
+msgstr ""
+"Geprobeerd om %s toe te voegen aan de database, maar het bestaat niet op de "
+"schijf."
+
+#: argyver/models.py:165
+msgid "file system node"
+msgstr "bestandsnode"
+
+#: argyver/models.py:166
+msgid "file system nodes"
+msgstr "bestandsnodes"
+
+#: argyver/models.py:199
+msgid "file in repository"
+msgstr "bestand in repository"
+
+#: argyver/models.py:200
+msgid "files in repository"
+msgstr "bestanden in repository"
+
+#: argyver/models.py:213
+msgid "deleted"
+msgstr "verwijderd"
+
+#: argyver/models.py:215
+msgid "created"
+msgstr "aangemaakt"
+
+#: argyver/models.py:224
+msgid "version"
+msgstr "versie"
+
+#: argyver/models.py:225
+msgid "versions"
+msgstr "versies"
+
+#: argyver/models.py:234 argyver/models.py:240 argyver/models.py:243
+#, python-format
+msgid "For example: %s"
+msgstr "Bijvoorbeeld: %s"
+
+#: argyver/models.py:237
+#, python-format
+msgid "Default is: %s"
+msgstr "Standaard is: %s"
+
+#: argyver/models.py:243
+msgid "which is equal to"
+msgstr "wat gelijk is aan"
+
+#: argyver/models.py:248
+msgid ""
+"Only use this if you know what you are doing, it might break the ArGyver. "
+"Using -exclude and --include should be fine."
+msgstr ""
+"Gebruik dit alleen als je weet waar je mee bezig bent, het kan de ArGyver "
+"stukmaken. Je kunt wel gewoon --exclude en --include gebruiken."
+
+#: argyver/models.py:254
+msgid ""
+"Someone tried to create a new archive. The slug of a archive defines the "
+"root folder of the corresponding archive and according to the database this "
+"root folder already exists."
+msgstr ""
+"Iemand probeerde een nieuwe locatie aan te maken. De 'slug' van een locatie "
+"definieert de 'root' directory van het archief en volgens de database "
+"bestaat deze 'root' directory al."
+
+#: argyver/models.py:278
+msgid "archive"
+msgstr "archief"
+
+#: argyver/models.py:279
+msgid "archives"
+msgstr "archieven"
+
+#: argyver/models.py:292
+msgid "iteration"
+msgstr ""
+
+#: argyver/models.py:293
+#, fuzzy
+msgid "iterations"
+msgstr "versies"
 
 #: argyver/management/commands/cleanuparchive.py:24
 #, python-format
@@ -38,7 +126,7 @@ msgstr "Start ./manage.py cleanupargyver om de data ook te verwijderen."
 #: argyver/management/commands/cleanuparchive.py:29
 #: argyver/management/commands/cleanupargyver.py:17
 #: argyver/management/commands/resetarchive.py:30
-#: argyver/management/commands/runargyver.py:67
+#: argyver/management/commands/runargyver.py:70
 #, python-format
 msgid "Finished in %d seconds"
 msgstr "Voltooid in %d seconden"
@@ -48,7 +136,7 @@ msgstr "Voltooid in %d seconden"
 msgid "Removing %s"
 msgstr "Verwijderen: %s"
 
-#: argyver/management/commands/cleanuparchive.py:66
+#: argyver/management/commands/cleanuparchive.py:68
 #, python-format
 msgid "Restoring %s"
 msgstr "Herstellen: %s"
@@ -79,9 +167,6 @@ msgstr "Ressetten van \"%(archive)s\" om %(timestamp)s"
 
 #: argyver/management/commands/resetarchive.py:28
 #, fuzzy
-#| msgid ""
-#| "Note that only the links are removed; the actual data is still stored in "
-#| "the repository."
 msgid ""
 "Note that only the links are removed; the actual data is still stored in the "
 "repository"
@@ -99,128 +184,66 @@ msgstr "Database objecten onder %s verwijderen"
 msgid "Removing directory: %s"
 msgstr "Directory verwijderen: %s"
 
-#: argyver/management/commands/runargyver.py:71
+#: argyver/management/commands/runargyver.py:74
 #, python-format
 msgid "Archiving \"%(archive)s\" at %(timestamp)s"
 msgstr "Archiveren van \"%(archive)s\" om %(timestamp)s"
 
-#: argyver/management/commands/runargyver.py:72
+#: argyver/management/commands/runargyver.py:75
 #, python-format
 msgid "Remote path: %s"
 msgstr "Remote pad: %s"
 
-#: argyver/management/commands/runargyver.py:73
+#: argyver/management/commands/runargyver.py:76
 #, python-format
 msgid "Local path: %s"
 msgstr "Lokaal pad: %s"
 
-#: argyver/management/commands/runargyver.py:92
+#: argyver/management/commands/runargyver.py:95
 #, python-format
 msgid "Keyboard Interrupt, finishing %d items in buffer..."
 msgstr "Keyboard Interrupt, %d items in de buffer worden nog afgerond..."
 
-#: argyver/management/commands/runargyver.py:97
+#: argyver/management/commands/runargyver.py:100
 #, python-format
 msgid "Error in: %s"
 msgstr "Fout in: %s"
 
-#: argyver/management/commands/runargyver.py:113
+#: argyver/management/commands/runargyver.py:119
 #, python-format
 msgid "Unkownn RSYNC file type received: %s"
 msgstr "Onbekend RSYNC file type ontvangen: %s"
 
-#: argyver/management/commands/runargyver.py:118
+#: argyver/management/commands/runargyver.py:124
 #, python-format
 msgid "Unkownn RSYNC status received: %s"
 msgstr "Onbekende RSYNC status ontvangen: %s"
 
-#: argyver/management/commands/runargyver.py:132
+#: argyver/management/commands/runargyver.py:134
+#, python-format
+msgid "Add: %s"
+msgstr ""
+
+#: argyver/management/commands/runargyver.py:138
 #, python-format
 msgid "Tried to add %s to the database, but it does not exist on disk!"
 msgstr ""
 "Geprobeerd om %s toe te voegen aan de database, maar het bestaat niet op de "
 "schijf."
 
-#: argyver/management/commands/runargyver.py:165
+#: argyver/management/commands/runargyver.py:169
+#, fuzzy, python-format
+msgid "Delete: %s"
+msgstr "Standaard is: %s"
+
+#: argyver/management/commands/runargyver.py:173
 #, python-format
 msgid "%s was removed by RSYNC, but it does not exist in the database!"
 msgstr "%s is verwijderd door RSYNC, maar het bestaat niet in de database!"
 
-#: argyver/management/commands/runargyver.py:174
+#: argyver/management/commands/runargyver.py:182
 #, python-format
 msgid "Tried to add %s to the repository, but the file doesn't exist!"
 msgstr ""
 "Geprobeerd om %s aan de repository toe te voegen, maar het bestand bestaat "
 "niet!"
-
-#: argyver/models.py:164
-msgid "file system node"
-msgstr "bestandsnode"
-
-#: argyver/models.py:165
-msgid "file system nodes"
-msgstr "bestandsnodes"
-
-#: argyver/models.py:184
-msgid "file in repository"
-msgstr "bestand in repository"
-
-#: argyver/models.py:185
-msgid "files in repository"
-msgstr "bestanden in repository"
-
-#: argyver/models.py:199
-msgid "deleted"
-msgstr "verwijderd"
-
-#: argyver/models.py:201
-msgid "created"
-msgstr "aangemaakt"
-
-#: argyver/models.py:204
-msgid "version"
-msgstr "versie"
-
-#: argyver/models.py:205
-msgid "versions"
-msgstr "versies"
-
-#: argyver/models.py:213 argyver/models.py:219 argyver/models.py:222
-#, python-format
-msgid "For example: %s"
-msgstr "Bijvoorbeeld: %s"
-
-#: argyver/models.py:216
-#, python-format
-msgid "Default is: %s"
-msgstr "Standaard is: %s"
-
-#: argyver/models.py:222
-msgid "which is equal to"
-msgstr "wat gelijk is aan"
-
-#: argyver/models.py:227
-msgid ""
-"Only use this if you know what you are doing, it might break the ArGyver. "
-"Using -exclude and --include should be fine."
-msgstr ""
-"Gebruik dit alleen als je weet waar je mee bezig bent, het kan de ArGyver "
-"stukmaken. Je kunt wel gewoon --exclude en --include gebruiken."
-
-#: argyver/models.py:233
-msgid ""
-"Someone tried to create a new archive. The slug of a archive defines the "
-"root folder of the corresponding archive and according to the database this "
-"root folder already exists."
-msgstr ""
-"Iemand probeerde een nieuwe locatie aan te maken. De 'slug' van een locatie "
-"definieert de 'root' directory van het archief en volgens de database "
-"bestaat deze 'root' directory al."
-
-#: argyver/models.py:257
-msgid "archive"
-msgstr "archief"
-
-#: argyver/models.py:258
-msgid "archives"
-msgstr "archieven"
