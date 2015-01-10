@@ -169,7 +169,7 @@ class Node(models.Model):
 
 class Data(models.Model):
     hash = models.CharField(max_length=32, unique=True, db_index=True)
-    size = models.IntegerField()
+    size = models.IntegerField(blank=True, null=True)
 
     @property
     def path(self):
@@ -282,7 +282,7 @@ class Archive(models.Model):
 class Iteration(models.Model):
     started = models.DateTimeField()
     finished = models.DateTimeField(blank=True, null=True)
-    errors = models.TextField()
+    errors = models.TextField(blank=True, null=True)
 
     def __unicode__(self):
         return unicode(self.started)
