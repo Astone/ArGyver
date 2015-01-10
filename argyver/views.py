@@ -22,6 +22,7 @@ class ArgyverView(View):
         return HttpResponse(html)
 
     def _handle_date_filters(self, request):
+        global DATE_MIN, DATE_MAX
         if request.GET.get('date_min'):
             request.session['date_min'] = datetime.strptime(request.GET['date_min'], '%d-%m-%Y').strftime('%d-%m-%Y')
         if request.GET.get('date_max'):
@@ -30,6 +31,8 @@ class ArgyverView(View):
             request.session['date_min'] = (date.today() - timedelta(days=30)).strftime('%d-%m-%Y')
         if not 'date_max' in request.session:
             request.session['date_max'] = date.today().strftime('%d-%m-%Y')
+        DATE_MIN = datetime.strptime(request.session['date_min'], '%d-%m-%Y')
+        DATE_MAX = datetime.strptime(request.session['date_max'], '%d-%m-%Y') + timedelta(days=1)
 
     def render_main(self, request, path):
         if path:

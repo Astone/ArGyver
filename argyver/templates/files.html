@@ -19,7 +19,7 @@
     </thead>
     <tbody>
 {% for node in folder.node_set.all %}
-{% if node.is_dir %}
+{% if node.is_dir and node.in_timespan %}
         <tr class="file{% if node == current %} current{% endif %}{% if node.exists %} open{% else %} closed{% endif %}">
             <td class="name">
                 <a href="{{ node.url }}">
@@ -30,13 +30,13 @@
             <td class="date">{{ node.get_latest_version.timestamp | date:"d-m-Y"}}</td>
             <td class="time">{{ node.get_latest_version.timestamp | date:"H:i"}}</td>
             <td class="size"></td>
-            <td class="versions">{{ node.version_set.count }}</td>
+            <td class="versions">{{ node.version_set_in_timespan.count }}</td>
             <td class="thumbnail"></td>
         </tr>
 {% endif %}
 {% endfor %}
 {% for node in folder.node_set.all %}
-{% if node.is_file %}
+{% if node.is_file and node.in_timespan  %}
         <tr class="file{% if node == current %} current{% endif %}{% if node.exists %} open{% else %} closed{% endif %}">
             <td class="name">
                 <a href="{{ node.url }}">
@@ -47,7 +47,7 @@
             <td class="date">{{ node.get_latest_version.timestamp | date:"d-m-Y"}}</td>
             <td class="time">{{ node.get_latest_version.timestamp | date:"H:i"}}</td>
             <td class="size">{{ node.get_latest_version.data.size | filesizeformat }}</td>
-            <td class="versions">{{ node.version_set.count }}</td>
+            <td class="versions">{{ node.version_set_in_timespan.count }}</td>
             <td class="thumbnail">
                 {% if node.thumbnail %}
                 <a href="{{ node.url }}">

@@ -3,7 +3,7 @@
 <h1>{% if node %}{{ node.name }}{% else %}Versions{% endif %}</h1>
 {% if node.thumbnail %}<img src="{{ node.thumbnail }}" class="thumbnail" />{% endif %}
 <ul>
-{% for version in node.version_set.all %}
+{% for version in node.version_set_in_timespan.all %}
     <li class="open">
         <a href="{{ version.url }}" target="_blank">
         <img src="{{ version.node.icon }}" width="16" height="16" />

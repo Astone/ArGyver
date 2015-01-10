@@ -10,7 +10,7 @@
     <ul>
 {% endfor %}
 {% for node in current.siblings %}
-{% if node.is_dir %}
+{% if node.is_dir and node.in_timespan %}
         <li class="{% if node == current %}current {% endif %}{% if node.exists %}open{% else %}closed{% endif %}">
             <a href="{{ node.url }}">
                <img src="{% if node == current %}{% static 'img/ext/folder_open.png' %}{% else %}{% static 'img/ext/folder.png' %}{% endif %}" alt="{{ node.name | slice:":-1" }}" width="16" height="16" />
@@ -19,7 +19,7 @@
 {% if node == current or current.is_file and node = current.parent %}
             <ul>
 {% for child in node.node_set.all %}
-{% if child.is_dir %}
+{% if child.is_dir and child.in_timespan %}
                 <li class="{% if child.exists %}open{% else %}closed{% endif %}">
                     <a href="{{ child.url }}">
                         <img src="{% static 'img/ext/folder.png' %}" alt="{{ child.name | slice:":-1" }}" width="16" height="16" />
@@ -38,7 +38,7 @@
 {% endfor %}
 {% else %}
 {% for child in current.node_set.all %}
-{% if child.is_dir %}
+{% if child.is_dir and child.in_timespan %}
     <li class="{% if child.exists %}open{% else %}closed{% endif %}">
         <a href="{{ child.url }}">
             <img src="{% static 'img/ext/folder.png' %}" width="16" height="16" />

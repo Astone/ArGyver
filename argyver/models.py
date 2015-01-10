@@ -7,6 +7,8 @@ from django.conf import settings
 from django.utils.text import slugify
 from django.core.urlresolvers import reverse
 from django.utils import timezone
+from django.contrib.sessions.backends.db import SessionStore
+from datetime import date, timedelta
 
 ArGyverException = Exception
 
@@ -51,14 +53,25 @@ class Node(models.Model):
             return self.parent.node_set.all()
         return []
 
-    def get_versions(self):
-        version_set = Version.objects.filter(node=self)
-        if version_set.exists():
-            version_set = version_set.order_by('-created')
-        return version_set
+    def in_timespan(self):
+        return self.version_set_in_timespan().exists()
+
+    def version_set_in_timespan(self):
+        global DATE_MIN, DATE_MAX
+        if not 'DATE_MIN' in globals():
+            DATE_MIN = date.today() - timedelta(days=30)
+        if not 'DATE_MAX' in globals():
+            DATE_MAX = date.today()
+
+        version_set = self.version_set
+        if 'DATE_MIN' in globals():
+            version_set = version_set.filter(deleted__gte=DATE_MIN)
+        if 'DATE_MAX' in globals():
+            version_set = version_set.filter(created__lte=DATE_MAX)
+        return version_set.order_by('created')
 
     def get_latest_version(self):
-        version_set = self.get_versions()
+        version_set = self.version_set.order_by('-created')
         if not version_set.exists():
             raise Version.DoesNotExist
         return version_set[0]
@@ -116,7 +129,8 @@ class Node(models.Model):
             version = self.get_latest_version()
         except Version.DoesNotExist:
             return None
-
+        if not version.data:
+            return None
         return version.data.thumbnail()
 
     @classmethod
