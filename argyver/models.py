@@ -169,7 +169,7 @@ class Node(models.Model):
 
 class Data(models.Model):
     hash = models.CharField(max_length=32, unique=True, db_index=True)
-    size = models.IntegerField(blank=True, null=True)
+    size = models.BigIntegerField(blank=True, null=True)
 
     @property
     def path(self):
