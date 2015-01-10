@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import models, migrations
+import argyver.models
 
 
 class Migration(migrations.Migration):
@@ -34,11 +35,26 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('hash', models.CharField(unique=True, max_length=32, db_index=True)),
-                ('size', models.IntegerField()),
+                ('size', models.IntegerField(null=True, blank=True)),
             ],
             options={
                 'verbose_name': 'file in repository',
                 'verbose_name_plural': 'files in repository',
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Iteration',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('started', models.DateTimeField()),
+                ('finished', models.DateTimeField(null=True, blank=True)),
+                ('errors', models.TextField(null=True, blank=True)),
+            ],
+            options={
+                'ordering': ['started'],
+                'verbose_name': 'iteration',
+                'verbose_name_plural': 'iteraties',
             },
             bases=(models.Model,),
         ),
@@ -61,13 +77,14 @@ class Migration(migrations.Migration):
             name='Version',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('timestamp', models.DateTimeField()),
+                ('timestamp', models.DateTimeField(null=True, verbose_name=argyver.models.Data, blank=True)),
                 ('created', models.DateTimeField(db_index=True)),
                 ('deleted', models.DateTimeField(db_index=True, null=True, blank=True)),
                 ('data', models.ForeignKey(blank=True, to='argyver.Data', null=True)),
                 ('node', models.ForeignKey(to='argyver.Node')),
             ],
             options={
+                'ordering': ['created'],
                 'verbose_name': 'version',
                 'verbose_name_plural': 'versions',
             },

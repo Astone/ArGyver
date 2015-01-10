@@ -4,16 +4,43 @@
     <head>
         <meta charset="UTF-8">
         <title>ArGyver v{{settings.AGV_VERSION}}</title>
-        <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}" />
+        <link rel="stylesheet" type="text/css" href="{% static 'argyver.css' %}" />
+        <link rel="stylesheet" type="text/css" href="{% static 'pikaday.css' %}" />
     </head>
-    <table id="argyver" cellspacing="0" cellpadding="0" border="0">
-        <tr>
-            <td colspan="3" id="archives">{{ archives }}</td>
-        </tr>
-        <tr>
-            <td id="folders">{{ folders }}</td>
-            <td id="files">{{ files }}</td>
-            <td id="versions">{{ versions }}</td>
-        </tr>
-    </table>
+    <body>
+        <table id="argyver" cellspacing="0" cellpadding="0" border="0">
+            <tr>
+                <td colspan="3" id="archives">
+                    <form action="." method="GET" style="float: right;">
+                        Time window:
+                        <input type="text" id="date_min" name="date_min" value="{{ date_min }}" size="10" style="text-align: center" />
+                        -
+                        <input type="text" id="date_max" name="date_max" value="{{ date_max }}" size="10" style="text-align: center" />
+                        <input type="submit" value="Go" />
+                    </form>
+                    <h1>ArGyver v{{ settings.AGV_VERSION }}</h1>
+                    {{ archives }}
+                </td>
+            </tr>
+            <tr>
+                <td id="folders">{{ folders }}</td>
+                <td id="files">{{ files }}</td>
+                <td id="versions">{{ versions }}</td>
+            </tr>
+        </table>
+        <script src="{% static 'moment.js' %}"></script>
+        <script src="{% static 'pikaday.js' %}"></script>
+        <script>
+            var picker_min = new Pikaday({
+                field: document.getElementById('date_min'),
+                format: 'DD-MM-YYYY',
+                maxDate: new Date()
+            });
+            var picker_max = new Pikaday({
+                field: document.getElementById('date_max'),
+                format: 'DD-MM-YYYY',
+                maxDate: new Date()
+            });
+        </script>
+    </body>
 </html>

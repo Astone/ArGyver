@@ -5,13 +5,15 @@ from django.core.urlresolvers import reverse
 from django.conf import settings
 from models import Archive, Node, Version
 from django.utils import timezone
-from datetime import datetime
+from datetime import datetime, date, timedelta
 import re
+
 
 class ArgyverView(View):
     def get(self, request, path):
+        self._handle_date_filters(request)
         try:
-            html = self.render_main(path)
+            html = self.render_main(request, path)
         except Node.DoesNotExist:
             raise Http404()
         if html is None:
@@ -19,7 +21,17 @@ class ArgyverView(View):
         html = re.sub(r'\n\s+', '\n', html)
         return HttpResponse(html)
 
-    def render_main(self, path):
+    def _handle_date_filters(self, request):
+        if request.GET.get('date_min'):
+            request.session['date_min'] = datetime.strptime(request.GET['date_min'], '%d-%m-%Y').strftime('%d-%m-%Y')
+        if request.GET.get('date_max'):
+            request.session['date_max'] = datetime.strptime(request.GET['date_max'], '%d-%m-%Y').strftime('%d-%m-%Y')
+        if not 'date_min' in request.session:
+            request.session['date_min'] = (date.today() - timedelta(days=30)).strftime('%d-%m-%Y')
+        if not 'date_max' in request.session:
+            request.session['date_max'] = date.today().strftime('%d-%m-%Y')
+
+    def render_main(self, request, path):
         if path:
             root_node = Node.get_from_url(path.split('/')[0])
             archive = Archive.objects.get(root_node=root_node)
@@ -34,6 +46,8 @@ class ArgyverView(View):
 
         context = {
             'settings': settings,
+            'date_min': request.session.get('date_min'),
+            'date_max': request.session.get('date_max'),
             'archives': self.render_archives(archive),
             'folders': self.render_folders(archive, node),
             'files': self.render_files(archive, node),

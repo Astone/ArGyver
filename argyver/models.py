@@ -52,7 +52,9 @@ class Node(models.Model):
         return []
 
     def get_versions(self):
-        version_set = Version.objects.filter(node=self).order_by('-created')
+        version_set = Version.objects.filter(node=self)
+        if version_set.exists():
+            version_set = version_set.order_by('-created')
         return version_set
 
     def get_latest_version(self):
@@ -91,7 +93,10 @@ class Node(models.Model):
         if self.is_dir():
             os.mkdir(self.abs_path())
         elif self.is_file():
+            return
             data = self.get_current_version().data
+            if not os.path.isfile(data.abs_path()):
+                raise ArGyverException(_('Tried to restore %(dst)s, but %(str)s does not exist!') % {'dst': self.abs_path(), 'src':data.abs_path()})
             os.link(data.abs_path(), self.abs_path())
 
     def icon(self):
@@ -164,7 +169,7 @@ class Node(models.Model):
 
 class Data(models.Model):
     hash = models.CharField(max_length=32, unique=True, db_index=True)
-    size = models.IntegerField()
+    size = models.IntegerField(blank=True, null=True)
 
     @property
     def path(self):
@@ -198,10 +203,9 @@ class Data(models.Model):
 class Version(models.Model):
     node = models.ForeignKey(Node, db_index=True)
     data = models.ForeignKey(Data, blank=True, null=True)
-    timestamp = models.DateTimeField()
+    timestamp = models.DateTimeField(Data, blank=True, null=True)
     created = models.DateTimeField(db_index=True)
     deleted = models.DateTimeField(blank=True, null=True, db_index=True)
-
     unique_together = (('node', 'data', 'timestamp'),)
 
     def __unicode__(self):
@@ -273,3 +277,17 @@ class Archive(models.Model):
         ordering = ['name']
         verbose_name = _('archive')
         verbose_name_plural = _('archives')
+
+
+class Iteration(models.Model):
+    started = models.DateTimeField()
+    finished = models.DateTimeField(blank=True, null=True)
+    errors = models.TextField(blank=True, null=True)
+
+    def __unicode__(self):
+        return unicode(self.started)
+
+    class Meta:
+        ordering = ['started']
+        verbose_name = _('iteration')
+        verbose_name_plural = _('iterations')
