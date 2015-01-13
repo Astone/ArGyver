@@ -1,5 +1,6 @@
 {% load staticfiles %}
 
+<!-- node #{{ node.id }} -->
 <h1>{% if node %}{{ node.name }}{% else %}Versions{% endif %}</h1>
 {% if node.thumbnail %}<img src="{{ node.thumbnail }}" class="thumbnail" />{% endif %}
 <ul>

@@ -109,9 +109,11 @@ class DownloadView(View):
         del response['Content-Type']
         response['Content-Disposition'] = 'attachment; filename=%s' % node.name.encode('utf-8')
         response['Content-Length'] = version.data.size
-        if settings.DEBUG:
-            with open(version.data.abs_path(), 'rb') as fp:
-                response.content = fp.read()
-        else:
-            response['X-Sendfile'] = version.data.abs_path().encode('utf-8')
+        # if settings.DEBUG:
+        #     with open(version.data.abs_path(), 'rb') as fp:
+        #         response.content = fp.read()
+        # else:
+        #     response['X-Sendfile'] = version.data.abs_path().encode('utf-8')
+        with open(version.data.abs_path(), 'rb') as fp:
+            response.content = fp.read()
         return response

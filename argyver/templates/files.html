@@ -46,7 +46,7 @@
             </td>
             <td class="date">{{ node.get_latest_version.timestamp | date:"d-m-Y"}}</td>
             <td class="time">{{ node.get_latest_version.timestamp | date:"H:i"}}</td>
-            <td class="size">{{ node.get_latest_version.data.size | filesizeformat }}</td>
+            <td class="size">{% if node.get_latest_version.data %}{{ node.get_latest_version.data.size | filesizeformat }}{% else %}-{% endif %}</td>
             <td class="versions">{{ node.version_set_in_timespan.count }}</td>
             <td class="thumbnail">
                 {% if node.thumbnail %}
