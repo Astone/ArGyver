@@ -30,9 +30,9 @@ class Command(BaseCommand):
         for (path, folder_list, file_list) in os.walk(settings.AGV_REPO_DIR):
             for file_name in file_list:
                 if not Data.objects.filter(hash=file_name).exists():
-                    path = os.path.abspath(os.path.join(path, file_name))
+                    file_path = os.path.abspath(os.path.join(path, file_name))
                     count += 1
-                    total_size += os.path.getsize(path)
-                    os.remove(path)
+                    total_size += os.path.getsize(file_path)
+                    os.remove(file_path)
         self.stdout.write(_('%d objects removed') % count)
         self.stdout.write(_('%s freed') % filesizeformat(total_size))

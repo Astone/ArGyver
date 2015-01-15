@@ -30,6 +30,9 @@ class Command(BaseCommand):
 
     def _cleanup(self, db_node):
 
+        if not os.path.exists(db_node.abs_path()):
+            os.makedirs(db_node.abs_path())
+
         db_node.node_set.filter(version=None).delete()
 
         db_sub_nodes = [node for node in db_node.node_set.all() if node.get_latest_version().deleted is None]

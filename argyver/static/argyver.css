@@ -297,13 +297,13 @@ table.files td.thumbnail
 
 #versions li.closed
 {
-    color               : #C33;
+    color               : #F00;
 }
 
 #versions li.unavailable,
 #versions li.unavailable a
 {
-    color               : #C33;
+    color               : #F00;
 }
 
 #versions li img

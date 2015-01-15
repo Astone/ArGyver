@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand, CommandError
-from argyver.models import Archive, Node, Data, Version, ArGyverException
+from argyver.models import Iteration, Archive, Node, Data, Version, ArGyverException
 from django.utils.translation import ugettext as _
 from django.conf import settings
 from django.utils import timezone
@@ -64,8 +64,15 @@ class Command(BaseCommand):
 
         started = timezone.now()
 
+        self.iteration = Iteration(started=timezone.now(), errors="")
+        self.iteration.save()
         for archive in archive_list:
             self._archive(archive)
+
+        self.iteration.finished = timezone.now()
+        if not self.iteration.errors:
+            self.iterations.errors = None
+        self.iteration.save()
 
         self.stdout.write(_('Finished in %d seconds') % (timezone.now() - started).total_seconds())
 
@@ -97,8 +104,9 @@ class Command(BaseCommand):
                         self._process_output(thread.buffer.pop(0), archive)
                     break
                 except BaseException as exception:
-                    self.stderr.write(_("Error in: %s") % line)
-                    self.stderr.write("%s: %s" % (type(exception).__name__, str(exception)))
+                    msg = "%Error in: %s" % (_("Error in: %s") % line) + "\n%s: %s\n" % (type(exception).__name__, str(exception))
+                    self.stderr.write(msg)
+                    self.iteration.errors += msg
             else:
                 sleep(1)
 
