@@ -3,6 +3,7 @@ from argyver.models import Iteration, Archive, Node, Data, Version, ArGyverExcep
 from django.utils.translation import ugettext as _
 from django.conf import settings
 from django.utils import timezone
+from django.db.models import Q
 from threading import Thread, Lock
 from time import sleep
 from hashlib import md5
@@ -71,7 +72,7 @@ class Command(BaseCommand):
 
         self.iteration.finished = timezone.now()
         if not self.iteration.errors:
-            self.iterations.errors = None
+            self.iteration.errors = None
         self.iteration.save()
 
         self.stdout.write(_('Finished in %d seconds') % (timezone.now() - started).total_seconds())
@@ -99,19 +100,22 @@ class Command(BaseCommand):
                     self._process_output(line, archive)
                 except KeyboardInterrupt:
                     thread.process.kill()
-                    self.stderr.write(_("Keyboard Interrupt, finishing %d items in buffer...") % max(len(thread.buffer) - 1, 0))
+                    msg = _("Keyboard Interrupt, finishing %d items in buffer...") % max(len(thread.buffer) - 1, 0)
+                    self.stderr.write(msg)
+                    self.iteration.errors += msg + "\n"
                     while len(thread.buffer) > 1:
                         self._process_output(thread.buffer.pop(0), archive)
                     break
                 except BaseException as exception:
-                    msg = "%Error in: %s" % (_("Error in: %s") % line) + "\n%s: %s\n" % (type(exception).__name__, str(exception))
+                    msg = "%Error in: %s" % (_("Error in: %s") % line) + "\n%s: %s" % (type(exception).__name__, str(exception))
                     self.stderr.write(msg)
-                    self.iteration.errors += msg
+                    self.iteration.errors += msg + "\n"
             else:
                 sleep(1)
 
         if thread.error:
             self.stderr.write(thread.error)
+            self.iteration.errors += thread.error + "\n"
 
     def _process_output(self, line, archive):
         if not line.startswith('*') and not self.valid_line.match(line):
@@ -146,14 +150,6 @@ class Command(BaseCommand):
             self.stderr.write(_('Tried to add %s to the database, but it does not exist on disk!') % node.path)
             return
 
-        try:
-            old_version = node.get_current_version()
-        except Version.DoesNotExist:
-            old_version = None
-        else:
-            old_version.deleted = timezone.now()
-            old_version.save()
-
         if node.is_file():
             timestamp = os.path.getmtime(node.abs_path())
             timestamp = timezone.datetime.fromtimestamp(timestamp)
@@ -166,11 +162,19 @@ class Command(BaseCommand):
         else:
             data = None
 
-        new_version = Version(node=node, data=data, timestamp=timestamp, created=timezone.now())
-        if old_version and old_version.data == new_version.data and old_version.timestamp == new_version.timestamp:
-            old_version.deleted = None
+        try:
+            old_version = node.get_current_version()
+        except Version.DoesNotExist:
+            old_version = None
+
+        if old_version and old_version.data == data:
+            old_version.timestamp = timestamp
             old_version.save()
         else:
+            new_version = Version(node=node, data=data, timestamp=timestamp, created=timezone.now())
+            if old_version:
+                old_version.deleted = new_version.created
+                old_version.save()
             new_version.save()
 
     def _delete_node(self, path):
@@ -180,6 +184,12 @@ class Command(BaseCommand):
         except Node.DoesNotExist:
             self.stderr.write(_("%s was removed by RSYNC, but it does not exist in the database!") % path)
             return
+        if node.is_dir():
+            for file_node in node.node_set.filter(~Q(name__endswith=os.path.sep)):
+                if file_node.exists():
+                    version = file_node.get_current_version()
+                    version.deleted = timezone.now()
+                    version.save()
         version = node.get_current_version()
         version.deleted = timezone.now()
         version.save()
@@ -261,7 +271,8 @@ class RsyncThread(Thread):
 
     def _get_rsync_cmd(self):
         rsync = settings.AGV_RSYNC_BIN
-        rsync += ' -aH --out-format=\'%i %n\' --outbuf=l --delete --delete-excluded '
+#        rsync += ' -aH --out-format=\'%i %n\' --outbuf=L --delete --delete-excluded '
+        rsync += ' -aH --out-format=\'%i %n\' --delete --delete-excluded '
         if self.archive.remote_port != 22:
             rsync += '-e \'ssh -p %d\'' % self.archive.remote_port
         if self.archive.rsync_arguments:

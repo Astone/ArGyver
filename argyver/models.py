@@ -59,9 +59,9 @@ class Node(models.Model):
     def version_set_in_timespan(self):
         global DATE_MIN, DATE_MAX
         if not 'DATE_MIN' in globals():
-            DATE_MIN = date.today() - timedelta(days=30)
+            DATE_MIN = date.today()
         if not 'DATE_MAX' in globals():
-            DATE_MAX = date.today()
+            DATE_MAX = date.today() + timedelta(days=30)
 
         version_set = self.version_set
         if 'DATE_MIN' in globals():
@@ -106,9 +106,12 @@ class Node(models.Model):
         if self.is_dir():
             os.mkdir(self.abs_path())
         elif self.is_file():
-            return
-            data = self.get_current_version().data
+            data = self.get_latest_version().data
+            if not data:
+                open(self.abs_path(), 'a').close()
+                raise ArGyverException(_('Tried to restore %(dst)s, but the data is not available!') % {'dst': self.abs_path()})
             if not os.path.isfile(data.abs_path()):
+                open(self.abs_path(), 'a').close()
                 raise ArGyverException(_('Tried to restore %(dst)s, but %(str)s does not exist!') % {'dst': self.abs_path(), 'src':data.abs_path()})
             os.link(data.abs_path(), self.abs_path())
 
@@ -231,7 +234,9 @@ class Version(models.Model):
     @property
     def url(self):
         if not self.data:
-            return '.'
+            return None
+        if not os.path.exists(self.data.abs_path()):
+            return None
         return reverse('download', kwargs={'path': self.node.url.strip('/'), 'version': self.created.astimezone(timezone.get_current_timezone()).strftime('%Y%m%d-%H%M%S')})
 
     class Meta:

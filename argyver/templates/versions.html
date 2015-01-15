@@ -14,7 +14,7 @@
         {% if forloop.last and not version.deleted %}</strong>{% endif %}
     </a>
 </li>
-{% if version.deleted %}
+{% if forloop.last and version.deleted %}
     <li class="closed">
         <img src="{% static 'img/deleted.png' %}" width="16" height="16" />
         {{ version.deleted | date:"D d M Y" }}
