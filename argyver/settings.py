@@ -30,6 +30,9 @@ DATABASES = {
     }
 }
 
+# ERROR NOTIFICATION
+ADMINS = [('John Doe', 'john@doe.com')]
+
 # BINARIES
 AGV_RSYNC_BIN = '/usr/bin/rsync'
 
