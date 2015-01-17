@@ -1,4 +1,5 @@
 import os
+import re
 
 from django.utils.translation import ugettext as _
 from django.templatetags.static import static
@@ -19,6 +20,7 @@ class Node(models.Model):
     slug = models.CharField(max_length=255, db_index=True)
 
     unique_together = (('parent', 'name'),)
+    unique_together = (('parent', 'slug'),)
 
     @property
     def path(self):
@@ -59,15 +61,15 @@ class Node(models.Model):
     def version_set_in_timespan(self):
         global DATE_MIN, DATE_MAX
         if not 'DATE_MIN' in globals():
-            DATE_MIN = date.today()
+            DATE_MIN = date.today() - timedelta(days=30)
         if not 'DATE_MAX' in globals():
-            DATE_MAX = date.today() + timedelta(days=30)
+            DATE_MAX = date.today()
 
         version_set = self.version_set
         if 'DATE_MIN' in globals():
             version_set = version_set.filter(deleted__gte=DATE_MIN)
         if 'DATE_MAX' in globals():
-            version_set = version_set.filter(created__lte=DATE_MAX)
+            version_set = version_set.filter(created__lt=DATE_MAX + timedelta(days=1))
         return version_set.order_by('created')
 
     def get_latest_version(self):
@@ -90,7 +92,13 @@ class Node(models.Model):
         return True
 
     def save(self, *args, **kwargs):
-        self.slug = slugify(self.name.replace('.', '-'))
+        slug = re.sub(r'-+', '-', slugify(re.sub(r'[_.()\'\s]+', '-', self.name))).strip('-')
+        self.slug = slug
+        if self.parent:
+            i = 0
+            while self.parent.node_set.filter(Q(slug=self.slug) & ~Q(id=self.id)):
+                i = i + 1
+                self.slug = "%s-%d" % (self.slug, i)
         super(Node, self).save(*args, **kwargs)
 
     def __unicode__(self):
@@ -103,17 +111,23 @@ class Node(models.Model):
         return not self.name.endswith(os.path.sep)
 
     def restore(self):
+        if not self.exists():
+            return
         if self.is_dir():
             os.mkdir(self.abs_path())
         elif self.is_file():
-            data = self.get_latest_version().data
-            if not data:
+            version = self.get_latest_version()
+            if not version.data:
                 open(self.abs_path(), 'a').close()
                 raise ArGyverException(_('Tried to restore %(dst)s, but the data is not available!') % {'dst': self.abs_path()})
-            if not os.path.isfile(data.abs_path()):
+            if not os.path.isfile(version.data.abs_path()):
                 open(self.abs_path(), 'a').close()
-                raise ArGyverException(_('Tried to restore %(dst)s, but %(str)s does not exist!') % {'dst': self.abs_path(), 'src':data.abs_path()})
-            os.link(data.abs_path(), self.abs_path())
+                raise ArGyverException(_('Tried to restore %(dst)s, but %(str)s does not exist!') % {'dst': self.abs_path(), 'src': version.data.abs_path()})
+            if os.path.isfile(self.abs_path()):
+                if os.stat(version.data.abs_path()).st_ino == os.stat(self.abs_path()).st_ino:
+                    return
+                os.remove(self.abs_path())
+            os.link(version.data.abs_path(), self.abs_path())
 
     def icon(self):
         if self.is_dir():
