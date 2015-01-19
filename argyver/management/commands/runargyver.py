@@ -65,15 +65,14 @@ class Command(BaseCommand):
 
         started = timezone.now()
 
-        self.iteration = Iteration(started=timezone.now(), errors="")
-        self.iteration.save()
         for archive in archive_list:
+            self.iteration = Iteration(archive=archive, started=timezone.now(), errors='')
+            self.iteration.save()
             self._archive(archive)
-
-        self.iteration.finished = timezone.now()
-        if not self.iteration.errors:
-            self.iteration.errors = None
-        self.iteration.save()
+            self.iteration.finished = timezone.now()
+            if not self.iteration.errors:
+                self.iteration.errors = None
+            self.iteration.save()
 
         self.stdout.write(_('Finished in %d seconds') % (timezone.now() - started).total_seconds())
 
@@ -99,23 +98,34 @@ class Command(BaseCommand):
                 try:
                     self._process_output(line, archive)
                 except KeyboardInterrupt:
-                    thread.process.kill()
-                    msg = _("Keyboard Interrupt, finishing %d items in buffer...") % max(len(thread.buffer) - 1, 0)
-                    self.stderr.write(msg)
-                    self.iteration.errors += msg + "\n"
-                    while len(thread.buffer) > 1:
-                        self._process_output(thread.buffer.pop(0), archive)
-                    break
+                    self._stop_thread(thread)
                 except BaseException as exception:
-                    msg = "%Error in: %s" % (_("Error in: %s") % line) + "\n%s: %s" % (type(exception).__name__, str(exception))
+                    msg = _("Error in: %s") % line.decode('utf-8') + "\n%s: %s" % (type(exception).__name__, str(exception).decode('utf-8'))
                     self.stderr.write(msg)
                     self.iteration.errors += msg + "\n"
+                    self.iteration.save()
             else:
-                sleep(1)
+                try:
+                    sleep(1)
+                except KeyboardInterrupt:
+                    self._stop_thread(thread)
 
         if thread.error:
             self.stderr.write(thread.error)
             self.iteration.errors += thread.error + "\n"
+            self.iteration.save()
+
+    def _stop_thread(self, thread):
+        thread.process.kill()
+        msg = _("Stopping thread") + ", " + _("finishing %d items in buffer...") % max(len(thread.buffer) - 1, 0)
+        self.stderr.write(msg)
+        self.iteration.errors += msg + "\n"
+        self.iteration.save()
+
+        while len(thread.buffer) > 1:
+            msg = _("finishing %d items in buffer...") % max(len(thread.buffer) - 1, 0)
+            self.stdout.write(msg)
+            self._process_output(thread.buffer.pop(0), archive)
 
     def _process_output(self, line, archive):
         if not line.startswith('*') and not self.valid_line.match(line):
@@ -166,6 +176,13 @@ class Command(BaseCommand):
             old_version = node.get_current_version()
         except Version.DoesNotExist:
             old_version = None
+
+        # TEMP FIX FOR MISSING DATA OBJECTS
+        try:
+            old_version and old_version.data
+        except Data.DoesNotExist:
+            old_version.data = None
+            old_version.save()
 
         if old_version and old_version.data == data:
             old_version.timestamp = timestamp

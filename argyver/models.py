@@ -117,6 +117,11 @@ class Node(models.Model):
             os.mkdir(self.abs_path())
         elif self.is_file():
             version = self.get_latest_version()
+            try:  # This can only happen if your database is not consistent
+                version.data
+            except Data.DoesNotExist:
+                open(self.abs_path(), 'a').close()
+                raise ArGyverException(_('IMPORTANT ERROR: Tried to restore %(dst)s, but the data record does not exist in the DB!') % {'dst': self.abs_path()})
             if not version.data:
                 open(self.abs_path(), 'a').close()
                 raise ArGyverException(_('Tried to restore %(dst)s, but the data is not available!') % {'dst': self.abs_path()})
@@ -313,6 +318,7 @@ class Archive(models.Model):
 
 
 class Iteration(models.Model):
+    archive = models.ForeignKey(Archive, blank=True, null=True)
     started = models.DateTimeField()
     finished = models.DateTimeField(blank=True, null=True)
     errors = models.TextField(blank=True, null=True)
