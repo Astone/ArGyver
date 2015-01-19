@@ -156,9 +156,25 @@ class Node(models.Model):
         return version.data.thumbnail()
 
     @classmethod
-    def get_or_create(cls, parent, name):
+    def get_utf8_safe(cls, parent, name):
         try:
             node = Node.objects.get(parent=parent, name=name)
+        except Node.MultipleObjectsReturned:
+            node = None
+            for n in Node.objects.filter(parent=parent, name=name):
+                if n.name == name:
+                    if node is None:
+                        node = node
+                    else:
+                        raise Node.MultipleObjectsReturned
+            if node is None:
+                raise Node.DoesNotExist
+        return node
+
+    @classmethod
+    def get_or_create(cls, parent, name):
+        try:
+            node = Node.get_utf8_safe(parent=parent, name=name)
         except Node.DoesNotExist:
             node = Node(parent=parent, name=name)
             node.save()
@@ -169,7 +185,7 @@ class Node(models.Model):
         node_list = path.split(os.path.sep)
         node = None
         for name in node_list[:-1]:
-            node = Node.get_or_create(parent=node, name=name + os.path.sep)
+            node = Node.get_utf8_safe(parent=node, name=name + os.path.sep)
         name = node_list[-1]
         if name:
             node = Node.get_or_create(parent=node, name=name)
@@ -322,6 +338,7 @@ class Iteration(models.Model):
     started = models.DateTimeField()
     finished = models.DateTimeField(blank=True, null=True)
     errors = models.TextField(blank=True, null=True)
+    fix = models.NullBooleanField()
 
     def __unicode__(self):
         return unicode(self.started)

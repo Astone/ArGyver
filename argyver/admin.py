@@ -1,5 +1,5 @@
 from django.contrib import admin
-from models import Archive
+from models import Archive, Iteration
 
 
 class ArchiveAdmin(admin.ModelAdmin):
@@ -13,3 +13,4 @@ class ArchiveAdmin(admin.ModelAdmin):
         return fields
 
 admin.site.register(Archive, ArchiveAdmin)
+admin.site.register(Iteration)

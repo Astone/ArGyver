@@ -66,12 +66,13 @@ class Command(BaseCommand):
         started = timezone.now()
 
         for archive in archive_list:
-            self.iteration = Iteration(archive=archive, started=timezone.now(), errors='')
+            self.iteration = Iteration(archive=archive, started=timezone.now(), errors='', fix=False)
             self.iteration.save()
             self._archive(archive)
             self.iteration.finished = timezone.now()
             if not self.iteration.errors:
                 self.iteration.errors = None
+                self.iteration.fix = None
             self.iteration.save()
 
         self.stdout.write(_('Finished in %d seconds') % (timezone.now() - started).total_seconds())
@@ -98,7 +99,7 @@ class Command(BaseCommand):
                 try:
                     self._process_output(line, archive)
                 except KeyboardInterrupt:
-                    self._stop_thread(thread)
+                    self._stop_thread(archive, thread)
                 except BaseException as exception:
                     msg = _("Error in: %s") % line.decode('utf-8') + "\n%s: %s" % (type(exception).__name__, str(exception).decode('utf-8'))
                     self.stderr.write(msg)
@@ -108,14 +109,14 @@ class Command(BaseCommand):
                 try:
                     sleep(1)
                 except KeyboardInterrupt:
-                    self._stop_thread(thread)
+                    self._stop_thread(archive, thread)
 
         if thread.error:
             self.stderr.write(thread.error)
             self.iteration.errors += thread.error + "\n"
             self.iteration.save()
 
-    def _stop_thread(self, thread):
+    def _stop_thread(self, archive, thread):
         thread.process.kill()
         msg = _("Stopping thread") + ", " + _("finishing %d items in buffer...") % max(len(thread.buffer) - 1, 0)
         self.stderr.write(msg)
@@ -146,10 +147,14 @@ class Command(BaseCommand):
                 self.stderr.write(_('Unkownn RSYNC status received: %s') % line)
                 return
             self._delete_node(path)
-        elif action == 'h':
-            # TODO handle hardlinks, might involve storing inodes in data table
-            self._add_or_update_node(path)
+#        elif action == 'h':
+#            # TODO handle hardlinks, might involve storing inodes in data table
+#            self._add_or_update_node(path)
         else:
+            if node_type == 'd':
+                assert path.endswith(os.path.sep)
+            else:
+                assert not path.endswith(os.path.sep)
             self._add_or_update_node(path)
 
     def _add_or_update_node(self, path):
@@ -288,8 +293,7 @@ class RsyncThread(Thread):
 
     def _get_rsync_cmd(self):
         rsync = settings.AGV_RSYNC_BIN
-#        rsync += ' -aH --out-format=\'%i %n\' --outbuf=L --delete --delete-excluded '
-        rsync += ' -aH --out-format=\'%i %n\' --delete --delete-excluded '
+        rsync += ' -au --modify-window=2 --out-format=\'%i %n\' --delete --delete-excluded '
         if self.archive.remote_port != 22:
             rsync += '-e \'ssh -p %d\'' % self.archive.remote_port
         if self.archive.rsync_arguments:
